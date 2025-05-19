@@ -1,5 +1,7 @@
+'user'
+
 import SigninNavbar from "@/app/Components/Navbar/SigninNavbar";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function Hero() {
     const router = useRouter();

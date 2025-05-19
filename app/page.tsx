@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import Hero from "@/app/home/Hero";
+import Hero from "@/app/home/page";
 
 export default function Home() {
   const router = useRouter();
