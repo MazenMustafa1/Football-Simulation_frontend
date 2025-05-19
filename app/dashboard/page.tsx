@@ -5,7 +5,12 @@ import {
     Calendar,
     Package,
     LayoutDashboardIcon,
-    LogOutIcon, ClubIcon
+    LogOutIcon, ClubIcon,
+    Bell,
+    Users,
+    User,
+    Search,
+    Home
 } from 'lucide-react';
 import Navbar from "@/app/Components/Navbar/Navbar";
 import DashboardImage from "@/app/Components/DashboardImage/DashboardImage";
@@ -42,6 +47,21 @@ export default function Home() {
                 </Link>
                 <Link href="/logout">
                     <SidebarItem icon={<LogOutIcon size={20} />} text="Logout" />
+                </Link>
+                <Link href="/notifications">
+                    <SidebarItem icon={<Bell size={20} />} text="Notifications" />
+                </Link>
+                <Link href="/coaches">
+                    <SidebarItem icon={<Users size={20} />} text="Coaches" />
+                </Link>
+                <Link href="/players">
+                    <SidebarItem icon={<User size={20} />} text="Players" />
+                </Link>
+                <Link href="/stadiums">
+                    <SidebarItem icon={<Home size={20} />} text="Stadiums" />
+                </Link>
+                <Link href="/search">
+                    <SidebarItem icon={<Search size={20} />} text="Search" />
                 </Link>
             </Sidebar>
             <div className="w-full">

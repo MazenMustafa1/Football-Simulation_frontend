@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { ChevronFirst, ChevronLast, MoreVertical } from 'lucide-react';
+import { ChevronFirst, ChevronLast, MoreVertical, Bell, Users, User, Home, Search } from 'lucide-react';
 import Image from 'next/image';
 
 interface SidebarProps {
@@ -42,9 +42,14 @@ export default function Sidebar({ children }: SidebarProps) {
 
                 <SidebarContext.Provider value={{ expanded }} >
                     <ul className="flex-1 px-3 space-y-1 py-5">{children}</ul>
+                    <ul className="flex-1 px-3 space-y-1 py-5">
+                        <SidebarItem icon={<Bell size={20} />} text="Notifications" />
+                        <SidebarItem icon={<Users size={20} />} text="Coaches" />
+                        <SidebarItem icon={<User size={20} />} text="Players" />
+                        <SidebarItem icon={<Home size={20} />} text="Stadiums" />
+                        <SidebarItem icon={<Search size={20} />} text="Search" />
+                    </ul>
                 </SidebarContext.Provider>
-
-
             </nav>
         </aside>
     );
