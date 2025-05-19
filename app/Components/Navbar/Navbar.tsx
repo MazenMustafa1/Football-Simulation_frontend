@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 
 export default function Navbar() {
     const [notifications, setNotifications] = useState([]);
@@ -12,8 +13,8 @@ export default function Navbar() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/api/notifications');
-            const data = await response.json();
+            const response = await axios.get('https://localhost:7082/api/notifications');
+            const data = await response.data;
             setNotifications(data);
             // setUnreadCount(data.filter(notification => !notification.read).length);
         } catch (error) {
