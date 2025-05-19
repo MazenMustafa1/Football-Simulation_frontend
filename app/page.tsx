@@ -2,13 +2,13 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import Hero from "@/app/Components/Hero Section/Hero";
+import Hero from "@/app/home/Hero";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push('/firstpage');
+    router.push('/home');
   }, [router]);
 
   return (

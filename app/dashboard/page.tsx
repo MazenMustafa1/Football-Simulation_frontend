@@ -25,12 +25,24 @@ export default function Home() {
     return (
         <div className="flex">
             <Sidebar>
-                <SidebarItem icon={<LayoutDashboardIcon size={20} />} text="Dashboard" />
-                <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-                <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-                <SidebarItem icon={<Package size={20} />} text="Products" alert />
-                <SidebarItem icon={<Settings size={20} />} text="Settings" />
-                <SidebarItem icon={<LogOutIcon size={20} />} text="Logout" />
+                <Link href="/dashboard">
+                    <SidebarItem icon={<LayoutDashboardIcon size={20} />} text="Dashboard" />
+                </Link>
+                <Link href="/teams">
+                    <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
+                </Link>
+                <Link href="/schedule">
+                    <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
+                </Link>
+                <Link href="/products">
+                    <SidebarItem icon={<Package size={20} />} text="Products" alert />
+                </Link>
+                <Link href="/settings">
+                    <SidebarItem icon={<Settings size={20} />} text="Settings" />
+                </Link>
+                <Link href="/logout">
+                    <SidebarItem icon={<LogOutIcon size={20} />} text="Logout" />
+                </Link>
             </Sidebar>
             <div className="w-full">
                 <Navbar></Navbar>
