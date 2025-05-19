@@ -2,10 +2,19 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 const ModelViewer = dynamic(() => import("../Components/ModelViewer"), { ssr: false });
 
 export default function SignIn() {
+    const router = useRouter();
+
+    const handleSignIn = () => {
+        // Add your login logic here
+        // After successful login, redirect to the dashboard
+        router.push('/dashboard');
+    };
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-lg dark:bg-gray-800 lg:max-w-4xl">
@@ -81,7 +90,7 @@ export default function SignIn() {
 
                     {/* Sign In Button */}
                     <div className="mt-6">
-                        <button className="w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-gray-800 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-50">
+                        <button className="w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-gray-800 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-50" onClick={handleSignIn}>
                             Sign In
                         </button>
                     </div>

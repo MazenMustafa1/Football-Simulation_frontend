@@ -1,6 +1,13 @@
 import SigninNavbar from "@/app/Components/Navbar/SigninNavbar";
+import { useRouter } from 'next/router';
 
 export default function Hero() {
+    const router = useRouter();
+
+    const handleGetStarted = () => {
+        router.push('/login');
+    };
+
     return (
         <div
             className="hero min-h-screen"
@@ -22,7 +29,7 @@ export default function Hero() {
                         Dive into realistic football simulations powered by AI. Generate full match events, stats, and outcomes —
                         just like watching the real game unfold.
                     </p>
-                    <button className="btn btn-primary">Get Started</button>
+                    <button className="btn btn-primary" onClick={handleGetStarted}>Get Started</button>
                 </div>
             </div>
         </div>
