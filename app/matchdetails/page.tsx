@@ -11,6 +11,7 @@ import RightPanel from "@/app/Components/RightPanel/RightPanel";
 import LiveMatchPanel from "@/app/Components/RightPanel/LiveMatchPanel";
 import TeamsList from "@/app/Components/RightPanel/TeamsList";
 import {LogoBackground} from "@/app/Components/Logo3d/logo3d";
+import Link from 'next/link';
 
 export default function matchstats(){
     const [activeTab, setActiveTab] = useState<'stats' | 'lineup'>('stats');
@@ -122,6 +123,11 @@ export default function matchstats(){
 
                 </div>
 
+                <div className="flex justify-center mt-8">
+                    <Link href="/dashboard">
+                        <button className="btn btn-primary mx-2">Back to Dashboard</button>
+                    </Link>
+                </div>
 
                 {/*<div className=" w-210" >*/}
                 {/*    */}

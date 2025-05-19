@@ -1,16 +1,12 @@
-// pages/profile.tsx
-
-
 import {ProfileCard} from "@/app/Components/ProfileCard/ProfileCard";
 import Sidebar from "@/app/Components/Sidebar/Sidebar";
 import {SidebarItem} from "@/app/Components/Sidebar/SidebarItem";
 import {Calendar, ClubIcon, LayoutDashboardIcon, LogOutIcon, Package, Settings} from "lucide-react";
 import Navbar from "@/app/Components/Navbar/Navbar";
-import {MatchStats} from "@/app/Components/MatchStats/MatchStats";
+import Link from 'next/link';
 
 export default function ProfilePage() {
     return (
-
         <div className="flex">
             <Sidebar>
                 <SidebarItem icon={<LayoutDashboardIcon size={20} />} text="Dashboard" />
@@ -23,8 +19,7 @@ export default function ProfilePage() {
             <div className="w-full">
                 <Navbar></Navbar>
 
-
-                <div className=" my-20 flex items-center justify-center p-4">
+                <div className="my-20 flex items-center justify-center p-4">
                     <ProfileCard
                         initialProfile={{
                             avatarUrl: 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp',
@@ -36,9 +31,12 @@ export default function ProfilePage() {
                     />
                 </div>
 
+                <div className="flex justify-center mt-8">
+                    <Link href="/dashboard">
+                        <button className="btn btn-primary mx-2">Back to Dashboard</button>
+                    </Link>
+                </div>
             </div>
-
         </div>
-
     );
 }
