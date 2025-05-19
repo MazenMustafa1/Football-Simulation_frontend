@@ -1,4 +1,4 @@
-'user'
+'use client'
 
 import SigninNavbar from "@/app/Components/Navbar/SigninNavbar";
 import { useRouter } from 'next/navigation';

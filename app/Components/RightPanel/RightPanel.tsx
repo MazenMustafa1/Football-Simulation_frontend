@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { MoreVertical } from 'lucide-react';
 
 interface RightPanelProps {
     children: ReactNode;
