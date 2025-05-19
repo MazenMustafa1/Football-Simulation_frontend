@@ -13,6 +13,7 @@ import LatestMatches from "@/app/Components/LatestMatches/LatestMatches";
 import RightPanel from "@/app/Components/RightPanel/RightPanel";
 import LiveMatchPanel from "@/app/Components/RightPanel/LiveMatchPanel";
 import TeamsList from "@/app/Components/RightPanel/TeamsList";
+import Link from 'next/link';
 
 
 const teams = [
@@ -54,6 +55,14 @@ export default function Home() {
                     </div>
                 </div>
 
+                <div className="flex justify-center mt-8">
+                    <Link href="/matchdetails">
+                        <button className="btn btn-primary mx-2">Match Details</button>
+                    </Link>
+                    <Link href="/profile">
+                        <button className="btn btn-secondary mx-2">Profile</button>
+                    </Link>
+                </div>
 
                 {/*<div className=" w-210" >*/}
                 {/*    */}

@@ -1,5 +1,3 @@
-// components/Register.tsx
-
 import Link from "next/link";
 
 export default function Register() {
