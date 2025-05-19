@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { ChevronFirst, ChevronLast, MoreVertical, Bell, Users, User, Home, Search } from 'lucide-react';
+import {SidebarItem} from "./SidebarItem";
 import Image from 'next/image';
 
 interface SidebarProps {

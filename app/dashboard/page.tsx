@@ -1,3 +1,4 @@
+'use client';
 import Sidebar from '../Components/Sidebar/Sidebar';
 import { SidebarItem } from '../Components/Sidebar/SidebarItem';
 import {
@@ -26,7 +27,7 @@ const teams = [
     { id: 2, name: 'Real Madrid', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG-h7cChu-bbPejKnHSQrNS0MEtzsrO4el2Q&s' },
 ];
 
-export default function Home() {
+export default function dashboard() {
     return (
         <div className="flex">
             <Sidebar>

@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -14,7 +15,7 @@ export default function Navbar() {
             const response = await fetch('/api/notifications');
             const data = await response.json();
             setNotifications(data);
-            setUnreadCount(data.filter(notification => !notification.read).length);
+            // setUnreadCount(data.filter(notification => !notification.read).length);
         } catch (error) {
             console.error('Error fetching notifications:', error);
         }
@@ -58,7 +59,7 @@ export default function Navbar() {
                         ) : (
                             notifications.map((notification, index) => (
                                 <li key={index}>
-                                    <a>{notification.message}</a>
+                                    <a>{notification}</a>
                                 </li>
                             ))
                         )}
