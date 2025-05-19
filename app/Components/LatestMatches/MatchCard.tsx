@@ -1,51 +1,75 @@
+'use client';
+
+import Link from 'next/link';
+
 type MatchCardProps = {
     teamA: string;
     teamB: string;
     scoreA: number;
     scoreB: number;
-
+    status?: 'scheduled' | 'live' | 'completed' | 'cancelled';
+    date?: Date;
+    matchId?: string;
 };
 
-export default function MatchCard({ teamA, teamB, scoreA, scoreB }: MatchCardProps) {
+export default function MatchCard({ teamA, teamB, scoreA, scoreB, status = 'completed', date, matchId }: MatchCardProps) {
+    // Format date if available
+    const formattedDate = date
+        ? new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }).format(date)
+        : '';
+
+    // Determine status badge style
+    const getStatusBadge = () => {
+        switch(status) {
+            case 'live':
+                return <span className="badge badge-sm badge-error animate-pulse">LIVE</span>;
+            case 'scheduled':
+                return <span className="badge badge-sm badge-info">UPCOMING</span>;
+            case 'cancelled':
+                return <span className="badge badge-sm badge-warning">CANCELLED</span>;
+            case 'completed':
+            default:
+                return <span className="badge badge-sm badge-success">FINAL</span>;
+        }
+    };
+
     return (
-        <ul className="list bg-base-100 rounded-box shadow-md">
-            <li className="list-row items-center justify-between p-4 gap-4">
+        <Link href={matchId ? `/matchdetails/${matchId}` : '/matchdetails'} className="block">
+            <div className="list bg-base-100 rounded-box shadow-md hover:shadow-lg transition-shadow">
+                <div className="list-row items-center justify-between p-4 gap-4">
+                    {/* Team A */}
+                    <div className="flex items-center gap-2 px-8">
+                        <img className="size-10 rounded-box" src="/logos/barcelona.png" alt={teamA} />
+                        <div>
+                            <div className="font-semibold">{teamA}</div>
+                            <div className="text-xl font-bold">{scoreA}</div>
+                        </div>
+                    </div>
 
-                {/* Team A */}
-                <div className="flex items-center gap-2 px-8">
-                    <img className="size-10 rounded-box" src="https://img.daisyui.com/images/profile/demo/1@94.webp" />
-                    <div>
-                        <div>{teamA}</div>
-                        <div className="text-m uppercase font-semibold opacity-60">{scoreA}</div>
+                    {/* Center - Status and Time */}
+                    <div className="flex flex-col items-center">
+                        {getStatusBadge()}
+                        <div className="text-lg font-bold text-center mt-1">VS</div>
+                        {formattedDate && (
+                            <div className="text-xs text-gray-500 mt-1">{formattedDate}</div>
+                        )}
+                    </div>
+
+                    {/* Team B */}
+                    <div className="flex items-center gap-2 px-10">
+                        <div className="text-right">
+                            <div className="font-semibold">{teamB}</div>
+                            <div className="text-xl font-bold">{scoreB}</div>
+                        </div>
+                        <img className="size-10 rounded-box" src="/logos/real madrid.png" alt={teamB} />
                     </div>
                 </div>
-
-                {/* VS */}
-                <h1 className="text-lg font-bold text-center">VS</h1>
-
-                {/* Team B */}
-                <div className="flex items-center gap-2 px-10">
-                    <img className="size-10 rounded-box" src="https://img.daisyui.com/images/profile/demo/1@94.webp" />
-                    <div>
-                        <div>{teamB}</div>
-                        <div className="text-s uppercase font-semibold opacity-60">{scoreB}</div>
-                    </div>
-                </div>
-
-                {/* Optional Action */}
-                <button className="btn btn-square btn-ghost">
-                    <svg className="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor">
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-                        </g>
-                    </svg>
-                </button>
-
-                <div className="flex justify-end">
-                    <button className="btn btn-sm btn-primary">View Details</button>
-                </div>
-
-            </li>
-        </ul>
+            </div>
+        </Link>
     );
 }

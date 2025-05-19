@@ -5,7 +5,7 @@ const AdminDashboard = () => {
     const [adminData, setAdminData] = useState(null);
 
     useEffect(() => {
-        fetchAdminData();
+        fetchAdminData().then();
     }, []);
 
     const fetchAdminData = async () => {

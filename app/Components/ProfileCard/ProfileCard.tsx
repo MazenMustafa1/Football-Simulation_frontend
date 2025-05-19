@@ -9,6 +9,7 @@ interface Profile {
     email: string;
     age: number;
     gender: 'Male' | 'Female' | 'Other';
+    favoriteTeam: string;
 }
 
 export const ProfileCard: FC<{ initialProfile: Profile }> = ({ initialProfile }) => {
@@ -76,6 +77,11 @@ export const ProfileCard: FC<{ initialProfile: Profile }> = ({ initialProfile })
                     <h2 className="text-xl font-semibold">{profile.username}</h2>
                     <p className="text-sm text-gray-500">{profile.email}</p>
                 </div>
+                {/* Favorite Team */}
+                <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold">Favorite Team</h3>
+                    <p className="text-sm text-gray-500">{profile.favoriteTeam}</p>
+                </div>
 
                 <div className="divide-y divide-gray-200">
                     {(['email', 'username', 'age', 'gender'] as (keyof Profile)[]).map((field) => {
@@ -122,3 +128,11 @@ export const ProfileCard: FC<{ initialProfile: Profile }> = ({ initialProfile })
         </div>
     );
 };
+
+
+
+
+
+
+
+

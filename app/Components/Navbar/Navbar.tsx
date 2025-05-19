@@ -8,7 +8,7 @@ export default function Navbar() {
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
-        fetchNotifications();
+        fetchNotifications().then();
     }, []);
 
     const fetchNotifications = async () => {

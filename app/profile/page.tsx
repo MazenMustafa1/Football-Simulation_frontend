@@ -1,3 +1,5 @@
+'use client';
+
 import {ProfileCard} from "@/app/Components/ProfileCard/ProfileCard";
 import Sidebar from "@/app/Components/Sidebar/Sidebar";
 import {SidebarItem} from "@/app/Components/Sidebar/SidebarItem";
@@ -9,7 +11,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
-    const [profile, setProfile] = useState(null);
+    const genderOptions = ['Male','Female','Other'];
+    const [profile, setProfile] = useState(
+        {
+            ImageUrl: '',
+            Username: '',
+            Email: '',
+            Age: 0,
+            Gender: '',
+            FavoriteTeam: '',
+        }
+    );
     const router = useRouter();
 
     useEffect(() => {
@@ -57,11 +69,12 @@ export default function ProfilePage() {
                 <div className="my-20 flex items-center justify-center p-4">
                     <ProfileCard
                         initialProfile={{
-                            avatarUrl: profile.avatarUrl,
-                            username: profile.username,
-                            email: profile.email,
-                            age: profile.age,
-                            gender: profile.gender,
+                            avatarUrl: profile.ImageUrl,
+                            username: profile.Username,
+                            email: profile.Email,
+                            age: profile.Age,
+                            gender: genderOptions.includes(profile.Gender) ? profile.Gender as "Male" | "Female" | "Other" : "Other",
+                            favoriteTeam: profile.FavoriteTeam,
                         }}
                     />
                 </div>
@@ -75,3 +88,8 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+
+
+
+
