@@ -1,4 +1,5 @@
 'use client';
+import axios from 'axios';
 import Sidebar from '../Components/Sidebar/Sidebar';
 import { SidebarItem } from '../Components/Sidebar/SidebarItem';
 import {
@@ -20,14 +21,32 @@ import RightPanel from "@/app/Components/RightPanel/RightPanel";
 import LiveMatchPanel from "@/app/Components/RightPanel/LiveMatchPanel";
 import TeamsList from "@/app/Components/RightPanel/TeamsList";
 import Link from 'next/link';
-
-
-const teams = [
-    { id: 1, name: 'Barcelona', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVfk7_90kgqNqEZ-qSQ1VRBzLRCqVNTs0auQ&s' },
-    { id: 2, name: 'Real Madrid', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG-h7cChu-bbPejKnHSQrNS0MEtzsrO4el2Q&s' },
-];
+import { useEffect, useState } from 'react';
 
 export default function dashboard() {
+    const [teams, setTeams] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        fetchTeams();
+        checkAdmin();
+    }, []);
+
+    const fetchTeams = async () => {
+        try {
+            const response = await axios.get('https://localhost:7082/api/teams');
+            setTeams(response.data);
+        } catch (error) {
+            console.error('Error fetching teams:', error);
+        }
+    };
+
+    const checkAdmin = () => {
+        // Placeholder logic for checking if the user is an admin
+        const userRole = localStorage.getItem('userRole');
+        setIsAdmin(userRole === 'admin');
+    };
+
     return (
         <div className="flex">
             <Sidebar>
@@ -97,15 +116,14 @@ export default function dashboard() {
                     </Link>
                 </div>
 
-                {/*<div className=" w-210" >*/}
-                {/*    */}
-                {/*</div>*/}
-
+                {isAdmin && (
+                    <div className="flex justify-center mt-8">
+                        <Link href="/admin">
+                            <button className="btn btn-warning mx-2">Admin Dashboard</button>
+                        </Link>
+                    </div>
+                )}
             </div>
-
-
-
-            {/*<main className="flex-1 bg-gray-50 p-6">{children}</main>*/}
         </div>
     );
 }

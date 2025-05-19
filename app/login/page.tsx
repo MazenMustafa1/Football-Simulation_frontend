@@ -3,16 +3,35 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 const ModelViewer = dynamic(() => import("../Components/ModelViewer"), { ssr: false });
 
 export default function SignIn() {
     const router = useRouter();
 
-    const handleSignIn = () => {
-        // Add your login logic here
-        // After successful login, redirect to the dashboard
-        router.push('/dashboard');
+    const handleSignIn = async () => {
+        const email = document.getElementById('LoggingEmailAddress').value;
+        const password = document.getElementById('loggingPassword').value;
+
+        try {
+            const response = await axios.post('https://localhost:7082/api/auth/login', {
+                email,
+                password
+            });
+
+            if (response.status === 200) {
+                // Save the token in local storage or context
+                localStorage.setItem('token', response.data.token);
+                // Redirect to the dashboard
+                router.push('/dashboard');
+            } else {
+                // Handle login error
+                console.error('Login failed:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+        }
     };
 
     return (
