@@ -1,5 +1,6 @@
+'use client';
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 import Hero from "@/app/Components/Hero Section/Hero";
 
