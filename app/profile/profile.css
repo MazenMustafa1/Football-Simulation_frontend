@@ -52,75 +52,29 @@
   transform: translateX(-50%);
 }
 
-.goal-top {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 150px;
-  height: 50px;
-  border-bottom: 4px solid rgba(255, 255, 255, 0.7);
-  border-left: 4px solid rgba(255, 255, 255, 0.7);
-  border-right: 4px solid rgba(255, 255, 255, 0.7);
-  transform: translateX(-50%);
+/* Profile page layout fixes */
+.profile-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.goal-bottom {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 150px;
-  height: 50px;
-  border-top: 4px solid rgba(255, 255, 255, 0.7);
-  border-left: 4px solid rgba(255, 255, 255, 0.7);
-  border-right: 4px solid rgba(255, 255, 255, 0.7);
-  transform: translateX(-50%);
+.profile-content-wrapper {
+  display: flex;
+  flex: 1;
+  height: 100%;
 }
 
-.football {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  background-image: url('../../public/images/football-pattern.png');
-  background-size: cover;
-  border-radius: 50%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.sidebar-wrapper {
+  height: 100%;
+  min-height: 100vh;
 }
 
-.highlight-field {
-  animation: highlight-pulse 0.7s ease-in-out;
-}
-
-@keyframes highlight-pulse {
-  0% { background-color: transparent; }
-  50% { background-color: rgba(251, 191, 36, 0.2); }
-  100% { background-color: transparent; }
-}
-
-.loader-circle {
-  fill: none;
-  stroke: #f59e0b;
-  stroke-width: 4;
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: dash 1.5s ease-in-out infinite alternate;
-}
-
-.loader-circle-bg {
-  fill: none;
-  stroke: #fef3c7;
-  stroke-width: 4;
-}
-
-@keyframes dash {
-  from {
-    stroke-dashoffset: 200;
+/* Ensure sidebar fills full height */
+@media (min-height: 100vh) {
+  .sidebar-wrapper {
+    position: sticky;
+    top: 0;
+    height: 100vh;
   }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Profile pattern for header */
-.bg-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
 }

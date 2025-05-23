@@ -13,7 +13,7 @@ export interface Match {
   awayTeamScore?: number;
   date?: string;
   time?: string;
-  status?: 'Scheduled' | 'Live' | 'Completed' | 'Postponed' | 'Cancelled';
+  status?: string;
   stadiumId?: number;
   stadiumName?: string;
   matchWeek?: number;
@@ -24,13 +24,13 @@ export interface MatchDetail extends Match {
   homeTeam?: any;
   awayTeam?: any;
   stadium?: any;
-  // Add other detailed properties as needed
 }
 
 export interface MatchFilter {
   seasonId?: number;
   teamId?: number;
-  status?: 'Scheduled' | 'Live' | 'Completed' | 'Postponed' | 'Cancelled';
+  status?: string
+  // Add other detailed properties as needed;
   fromDate?: string;
   toDate?: string;
   matchWeek?: number;
@@ -61,6 +61,48 @@ export interface UpdateMatchDto {
   awayTeamScore?: number;
   matchWeek?: number;
 }
+export interface MatchesResponse {
+  matches: MatchResponse[];
+  succeeded: boolean;
+  error?: string;
+}
+
+export interface MatchResponse {
+  id: number;
+  seasonId: number;
+  seasonName: string;
+  homeTeamId: number;
+  homeTeamName: string;
+  awayTeamId: number;
+  awayTeamName: string;
+  scheduledDateTimeUtc: string;
+  stadiumId: number;
+  stadiumName: string;
+  matchWeek: number;
+  homeCoachId: number;
+  awayCoachId: number;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  winningTeamId: number;
+  losingTeamId: number;
+  isDraw: boolean;
+  matchStatus: string;
+  homeTeamPossession: number;
+  awayTeamPossession: number;
+  homeTeamShots: number;
+  awayTeamShots: number;
+  homeTeamShotsOnTarget: number;
+  awayTeamShotsOnTarget: number;
+  homeTeamCorners: number;
+  awayTeamCorners: number;
+  homeTeamFouls: number;
+  awayTeamFouls: number;
+  homeTeamYellowCards: number;
+  awayTeamYellowCards: number;
+  homeTeamRedCards: number;
+  awayTeamRedCards: number;
+  modelSimulationStartTimeUtc: string;
+}
 
 class MatchService {
   /**
@@ -68,7 +110,8 @@ class MatchService {
    */
   public async getMatches(filter?: MatchFilter): Promise<Match[]> {
     try {
-      return await apiService.get<Match[]>('/matches', { params: filter });
+      const matchesResponse=  await apiService.get<MatchesResponse>('/matches', {params: filter});
+      return matchesResponse.matches;
     } catch (error) {
       console.error('Error fetching matches:', error);
       throw error;
@@ -134,7 +177,22 @@ class MatchService {
       throw error;
     }
   }
+
+  /**
+   * Get latest matches
+   */
+  public async getLatestMatches(userId: string): Promise<Match[]> {
+    try {
+      const latestMatches = await apiService.get<MatchesResponse>(`/matches/${userId}`);
+      return latestMatches.matches;
+    } catch (error) {
+      console.error('Error fetching latest matches:', error);
+      throw error;
+    }
+
+  }
 }
+
 
 // Create and export a singleton instance
 const matchService = new MatchService();

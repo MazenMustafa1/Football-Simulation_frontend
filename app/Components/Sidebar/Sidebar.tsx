@@ -28,7 +28,7 @@ export default function Sidebar({ children }: SidebarProps) {
     };
 
     return (
-        <aside className="h-screen sticky top-0">
+        <aside className="h-full sticky top-0">
             <nav className="h-full flex flex-col bg-white border-r shadow-md dark:bg-gray-800 dark:border-gray-700 transition-all duration-300">
                 {/* Sidebar Header */}
                 <div className="p-4 pb-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">

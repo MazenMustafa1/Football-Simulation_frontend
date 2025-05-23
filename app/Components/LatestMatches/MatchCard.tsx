@@ -7,9 +7,9 @@ type MatchCardProps = {
     teamB: string;
     scoreA: number;
     scoreB: number;
-    status?: 'scheduled' | 'live' | 'completed' | 'cancelled';
+    status?: string;
     date?: Date;
-    matchId?: string;
+    matchId?: number;
 };
 
 export default function MatchCard({ teamA, teamB, scoreA, scoreB, status = 'completed', date, matchId }: MatchCardProps) {
