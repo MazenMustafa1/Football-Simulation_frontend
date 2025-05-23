@@ -11,12 +11,12 @@ export interface Team {
   secondaryColor?: string;
   city?: string;
   country?: string;
-  foundedYear?: number;
   stadiumId?: number;
   stadium?: Stadium;
   coachId?: number;
   coach?: Coach;
   league?: string;
+  foundationDate?: string;
 }
 
 export interface CreateTeamRequest {
@@ -27,9 +27,10 @@ export interface CreateTeamRequest {
   secondaryColor?: string;
   city?: string;
   country?: string;
-  foundedYear?: number;
+  FoundationDate?: string; // Date-time format
   stadiumId?: number;
   coachId?: number;
+  league?: string;
 }
 
 export interface UpdateTeamRequest {
@@ -40,9 +41,10 @@ export interface UpdateTeamRequest {
   secondaryColor?: string;
   city?: string;
   country?: string;
-  foundedYear?: number;
+  FoundationDate?: string; // Date-time format
   stadiumId?: number;
   coachId?: number;
+  league?: string;
 }
 
 class TeamService {
@@ -84,6 +86,18 @@ class TeamService {
   }
 
   /**
+   * Create a new team with image upload (multipart/form-data)
+   */
+  public async createTeamWithImage(formData: FormData): Promise<Team> {
+    try {
+      return await apiService.uploadForm<Team>('/teams', formData, 'post');
+    } catch (error) {
+      console.error('Error creating team with image:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Update a team (admin only)
    */
   public async updateTeam(id: number, teamData: UpdateTeamRequest): Promise<Team> {
@@ -91,6 +105,18 @@ class TeamService {
       return await apiService.put<Team>(`/teams/${id}`, teamData);
     } catch (error) {
       console.error(`Error updating team with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a team with image upload (multipart/form-data)
+   */
+  public async updateTeamWithImage(id: number, formData: FormData): Promise<Team> {
+    try {
+      return await apiService.uploadForm<Team>(`/teams/${id}`, formData, 'put');
+    } catch (error) {
+      console.error(`Error updating team with ID ${id} with image:`, error);
       throw error;
     }
   }

@@ -5,7 +5,176 @@
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark, cupcake;
 }
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
+.animate-dropdown {
+  animation: dropdownFade 0.2s ease-out forwards;
+}
+
+@keyframes dropdownItem {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-dropdown > div > div > div {
+  animation: dropdownItem 0.2s ease-out forwards;
+}
+/* Profile Page Background */
+.profile-page-container {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+}
+
+.profile-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+          radial-gradient(circle at 10% 20%, rgba(253, 230, 138, 0.1) 0%, transparent 30%),
+          radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.07) 0%, transparent 40%),
+          radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 60%);
+  z-index: -1;
+}
+
+/* Fancy Loader */
+.loader {
+  width: 80px;
+  height: 80px;
+}
+
+.loader-circle-bg {
+  fill: none;
+  stroke: rgba(245, 158, 11, 0.1);
+  stroke-width: 4;
+}
+
+.loader-circle {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  50% {
+    stroke-dashoffset: 50;
+  }
+  100% {
+    stroke-dashoffset: 200;
+  }
+}
+
+/* Profile card enhancements */
+.profile-card-container {
+  width: 100%;
+  max-width: 450px;
+  perspective: 1000px;
+}
+
+.profile-card-container > div {
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+  box-shadow: 0 10px 30px -15px rgba(245, 158, 11, 0.3);
+}
+
+.profile-card-container:hover > div {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px -20px rgba(245, 158, 11, 0.4);
+}
+
+/* Better avatar shadow */
+.profile-card-container .rounded-full {
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.3);
+}
+
+/* Floating animation for avatar */
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+}
+
+.profile-card-container .rounded-full:hover {
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Animated error icon */
+.error-icon {
+  font-size: 3rem;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
+
+/* Animation for dropdown elements */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Field highlight animation */
+@keyframes highlightField {
+  0% { background-color: rgba(251, 191, 36, 0); }
+  50% { background-color: rgba(251, 191, 36, 0.1); }
+  100% { background-color: rgba(251, 191, 36, 0); }
+}
+/* Background pattern for profile card header */
+.bg-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Highlight animation when editing fields */
+.highlight-field {
+  animation: highlightField 1s ease-in-out;
+}
+
+/* Smooth transitions for form elements */
+input, button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar for profile page */
+.profile-page-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-page-container::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+}
+
+.profile-page-container::-webkit-scrollbar-thumb {
+  background-color: rgba(245, 158, 11, 0.3);
+  border-radius: 20px;
+}
+
+.profile-page-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(245, 158, 11, 0.5);
+}
 /*:root {*/
 /*  --background: #ffffff;*/
 /*  --foreground: #171717;*/

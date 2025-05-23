@@ -2,32 +2,53 @@ import apiService from './ApiService';
 
 export interface Coach {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
+  name?: string; // Keep for backward compatibility
   nationality?: string;
   dateOfBirth?: string;
-  image?: string;
+  Photo?: string;
+  photoUrl?: string;
   teamId?: number;
+  preferredFormation?: string;
+  coachingStyle?: string;
+  role?: string;
+  yearsOfExperience?: number;
+  biography?: string;
 }
 
 export interface CreateCoachDto {
-  name: string;
+  firstName: string;
+  lastName: string;
   nationality?: string;
   dateOfBirth?: string;
   teamId?: number;
-  image?: File;
+  Photo?: File;
+  preferredFormation?: string;
+  coachingStyle?: string;
+  role?: string;
+  yearsOfExperience?: number;
+  biography?: string;
 }
 
 export interface UpdateCoachDto {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   nationality?: string;
   dateOfBirth?: string;
   teamId?: number;
-  image?: File;
+  Photo?: File;
+  preferredFormation?: string;
+  coachingStyle?: string;
+  role?: string;
+  yearsOfExperience?: number;
+  biography?: string;
 }
 
 export interface CoachFilter {
   nationality?: string;
   teamId?: number;
+  role?: string;
 }
 
 class CoachService {
@@ -36,7 +57,17 @@ class CoachService {
    */
   public async getCoaches(filter?: CoachFilter): Promise<Coach[]> {
     try {
-      return await apiService.get<Coach[]>('/coaches/filter', { params: filter });
+      const response: any = await apiService.get<{
+        succeeded: boolean;
+        coaches: Coach[];
+        error: string | null;
+      }>('/coaches/filter', { params: filter });
+
+      if (response && response.succeeded && Array.isArray(response.coaches)) {
+        return response.coaches;
+      }
+
+      return [];
     } catch (error) {
       console.error('Error fetching coaches:', error);
       throw error;
@@ -67,7 +98,7 @@ class CoachService {
       Object.entries(coachData).forEach(([key, value]) => {
         if (value !== undefined) {
           if (key === 'image' && value instanceof File) {
-            formData.append(key, value);
+            formData.append('Photo', value); // Changed to 'Photo' to match API
           } else if (key !== 'image') {
             formData.append(key, String(value));
           }
@@ -93,7 +124,7 @@ class CoachService {
       Object.entries(coachData).forEach(([key, value]) => {
         if (value !== undefined) {
           if (key === 'image' && value instanceof File) {
-            formData.append(key, value);
+            formData.append('Photo', value); // Changed to 'Photo' to match API
           } else if (key !== 'image') {
             formData.append(key, String(value));
           }

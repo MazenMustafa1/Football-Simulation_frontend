@@ -117,7 +117,7 @@ export default function SignIn() {
                         }}
                     >
                         <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                            <Image src="/models/football.glb" alt="Football" width={60} height={60} className="rounded-full" />
+                            <Image src="/images/football-pattern.png" alt="Football" width={60} height={60} className="rounded-full" />
                         </div>
                     </motion.div>
                 </div>

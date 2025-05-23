@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface StatBarProps {
     leftValue: number;
@@ -8,6 +9,26 @@ interface StatBarProps {
     label: string;
     leftColor: string;
     rightColor: string;
+}
+
+interface LiveMatchPanelProps {
+    matchId?: string;
+    homeTeam?: {
+        name: string;
+        logo: string;
+    };
+    awayTeam?: {
+        name: string;
+        logo: string;
+    };
+    homeScore?: number;
+    awayScore?: number;
+    stats?: Array<{
+        label: string;
+        homeValue: number;
+        awayValue: number;
+    }>;
+    matchTime?: string;
 }
 
 const StatBar = ({ leftValue, rightValue, label, leftColor, rightColor }: StatBarProps) => {
@@ -30,21 +51,75 @@ const StatBar = ({ leftValue, rightValue, label, leftColor, rightColor }: StatBa
     );
 };
 
-export default function LiveMatchPanel() {
+export default function LiveMatchPanel({
+    homeTeam = { name: 'Team A', logo: '/logos/barcelona.png' },
+    awayTeam = { name: 'Team B', logo: '/logos/real madrid.png' },
+    homeScore = 0,
+    awayScore = 0,
+    stats = [
+        { label: 'Possession', homeValue: 50, awayValue: 50 },
+        { label: 'Shots on Target', homeValue: 5, awayValue: 3 },
+        { label: 'Shots', homeValue: 10, awayValue: 7 }
+    ],
+    matchTime = '00:00'
+}: LiveMatchPanelProps) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    // This would be replaced with actual API call in a real implementation
+    useEffect(() => {
+        // Fetch live match data if matchId is provided
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="p-4 w-full max-w-sm mx-auto text-center">
+                <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#4CAF50]"></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-4 w-full max-w-sm mx-auto text-center">
-
-            <p className="text-green-500 text-sm mb-2">62 : 24</p>
+            <p className="text-green-500 text-sm mb-2">{matchTime}</p>
 
             <div className="flex justify-between items-center mb-3">
-                <Image src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVfk7_90kgqNqEZ-qSQ1VRBzLRCqVNTs0auQ&s" alt="Team A" width={40} height={40} />
-                <div className="text-lg font-bold bg-gray-100 px-4 py-1 rounded-full">2 - 2</div>
-                <Image src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG-h7cChu-bbPejKnHSQrNS0MEtzsrO4el2Q&s" alt="Team B" width={40} height={40} />
+                <div className="flex flex-col items-center">
+                    <Image
+                        src={homeTeam.logo}
+                        alt={homeTeam.name}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                    />
+                    <span className="text-xs mt-1">{homeTeam.name}</span>
+                </div>
+                <div className="text-lg font-bold bg-gray-100 px-4 py-1 rounded-full">
+                    {homeScore} - {awayScore}
+                </div>
+                <div className="flex flex-col items-center">
+                    <Image
+                        src={awayTeam.logo}
+                        alt={awayTeam.name}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                    />
+                    <span className="text-xs mt-1">{awayTeam.name}</span>
+                </div>
             </div>
 
-            <StatBar label="Shoot on Target" leftValue={7} rightValue={3} leftColor="#fbbf24" rightColor="#4ade80" />
-            <StatBar label="Shoot" leftValue={12} rightValue={1} leftColor="#fbbf24" rightColor="#4ade80" />
-            <StatBar label="Fouls" leftValue={7} rightValue={3} leftColor="#fbbf24" rightColor="#4ade80" />
+            {stats.map((stat, index) => (
+                <StatBar
+                    key={index}
+                    label={stat.label}
+                    leftValue={stat.homeValue}
+                    rightValue={stat.awayValue}
+                    leftColor="#fbbf24"
+                    rightColor="#4ade80"
+                />
+            ))}
         </div>
     );
 }

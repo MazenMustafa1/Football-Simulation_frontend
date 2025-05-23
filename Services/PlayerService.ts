@@ -2,42 +2,37 @@ import apiService from './ApiService';
 
 export interface Player {
   id: number;
-  name: string;
+  fullName: string;
+  knownName?: string;
   position: string;
-  number?: number;
+  shirtNumber?: number;
   nationality?: string;
-  dateOfBirth?: string;
   image?: string;
   preferredFoot?: 'Left' | 'Right' | 'Both';
-  height?: number;
-  weight?: number;
   teamId?: number;
+  photoUrl:string
 }
 
 export interface CreatePlayerDto {
-  name: string;
+  fullName: string;
+  knownName?: string;
   position: string;
-  number?: number;
+  shirtNumber?: number;
   nationality?: string;
-  dateOfBirth?: string;
   preferredFoot?: 'Left' | 'Right' | 'Both';
-  height?: number;
-  weight?: number;
-  teamId?: number;
-  image?: File;
+  teamId?: number | null;
+  photo?: File;
 }
 
 export interface UpdatePlayerDto {
-  name?: string;
+  fullName?: string;
+  knownName?: string;
   position?: string;
-  number?: number;
+  shirtNumber?: number;
   nationality?: string;
-  dateOfBirth?: string;
   preferredFoot?: 'Left' | 'Right' | 'Both';
-  height?: number;
-  weight?: number;
-  teamId?: number;
-  image?: File;
+  teamId?: number | null;
+  photo?: File;
 }
 
 export interface PlayerFilter {
@@ -46,13 +41,23 @@ export interface PlayerFilter {
   teamId?: number;
 }
 
+interface PlayerResponse {
+  succeeded: boolean;
+  players: Player[];
+  error: string | null;
+}
+
 class PlayerService {
   /**
    * Get all players with optional filtering
    */
   public async getPlayers(filter?: PlayerFilter): Promise<Player[]> {
     try {
-      return await apiService.get<Player[]>('/players', { params: filter });
+      const response = await apiService.get<PlayerResponse>('/players', { params: filter });
+      if (!response.succeeded) {
+        throw new Error(response.error || 'Failed to fetch players');
+      }
+      return response.players;
     } catch (error) {
       console.error('Error fetching players:', error);
       throw error;
@@ -64,7 +69,11 @@ class PlayerService {
    */
   public async getPlayerById(id: number): Promise<Player> {
     try {
-      return await apiService.get<Player>(`/players/${id}`);
+      const response = await apiService.get<{succeeded: boolean; player: Player; error: string | null}>(`/players/${id}`);
+      if (!response.succeeded) {
+        throw new Error(response.error || `Failed to fetch player with ID ${id}`);
+      }
+      return response.player;
     } catch (error) {
       console.error(`Error fetching player with ID ${id}:`, error);
       throw error;
@@ -82,15 +91,24 @@ class PlayerService {
       // Add all fields to form data
       Object.entries(playerData).forEach(([key, value]) => {
         if (value !== undefined) {
-          if (key === 'image' && value instanceof File) {
+          if (key === 'photo' && value instanceof File) {
             formData.append(key, value);
-          } else if (key !== 'image') {
-            formData.append(key, String(value));
+          } else if (key !== 'photo') {
+            // Handle null value for teamId explicitly
+            if (key === 'teamId' && value === null) {
+              formData.append(key, '');
+            } else {
+              formData.append(key, String(value));
+            }
           }
         }
       });
 
-      return await apiService.uploadForm<Player>('/players', formData);
+      const response = await apiService.uploadForm<{succeeded: boolean; player: Player; error: string | null}>('/players', formData);
+      if (!response.succeeded) {
+        throw new Error(response.error || 'Failed to create player');
+      }
+      return response.player;
     } catch (error) {
       console.error('Error creating player:', error);
       throw error;
@@ -108,15 +126,24 @@ class PlayerService {
       // Add all fields to form data
       Object.entries(playerData).forEach(([key, value]) => {
         if (value !== undefined) {
-          if (key === 'image' && value instanceof File) {
+          if (key === 'photo' && value instanceof File) {
             formData.append(key, value);
-          } else if (key !== 'image') {
-            formData.append(key, String(value));
+          } else if (key !== 'photo') {
+            // Handle null value for teamId explicitly
+            if (key === 'teamId' && value === null) {
+              formData.append(key, '');
+            } else {
+              formData.append(key, String(value));
+            }
           }
         }
       });
 
-      return await apiService.uploadForm<Player>(`/players/${id}`, formData, 'put');
+      const response = await apiService.uploadForm<{succeeded: boolean; player: Player; error: string | null}>(`/players/${id}`, formData, 'put');
+      if (!response.succeeded) {
+        throw new Error(response.error || `Failed to update player with ID ${id}`);
+      }
+      return response.player;
     } catch (error) {
       console.error(`Error updating player with ID ${id}:`, error);
       throw error;
@@ -128,7 +155,10 @@ class PlayerService {
    */
   public async deletePlayer(id: number): Promise<void> {
     try {
-      await apiService.delete(`/players/${id}`);
+      const response = await apiService.delete<{succeeded: boolean; error: string | null}>(`/players/${id}`);
+      if (!response.succeeded) {
+        throw new Error(response.error || `Failed to delete player with ID ${id}`);
+      }
     } catch (error) {
       console.error(`Error deleting player with ID ${id}:`, error);
       throw error;

@@ -8,6 +8,7 @@ interface SidebarItemProps {
     text: string;
     active?: boolean;
     alert?: boolean;
+    onClick?: () => void;
 }
 
 export function SidebarItem({ icon, text, active, alert }: SidebarItemProps) {

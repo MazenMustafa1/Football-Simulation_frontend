@@ -7,8 +7,14 @@ export interface Stadium {
   city?: string;
   country?: string;
   image?: string;
-  builtYear?: number;
-  pitchSize?: string;
+  imageUrl?: string;
+  surfaceType?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  description?: string;
+  facilities?: string;
+  builtDate?: string; // Changed to string format for date-time
 }
 
 export interface CreateStadiumDto {
@@ -17,8 +23,13 @@ export interface CreateStadiumDto {
   city?: string;
   country?: string;
   image?: File;
-  builtYear?: number;
-  pitchSize?: string;
+  surfaceType?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  description?: string;
+  facilities?: string;
+  builtDate?: string; // Changed to string format for date-time
 }
 
 export interface UpdateStadiumDto {
@@ -27,8 +38,13 @@ export interface UpdateStadiumDto {
   city?: string;
   country?: string;
   image?: File;
-  builtYear?: number;
-  pitchSize?: string;
+  surfaceType?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  description?: string;
+  facilities?: string;
+  builtDate?: string; // Changed to string format for date-time
 }
 
 export interface StadiumFilter {
@@ -42,7 +58,17 @@ class StadiumService {
    */
   public async getStadiums(filter?: StadiumFilter): Promise<Stadium[]> {
     try {
-      return await apiService.get<Stadium[]>('/stadiums', { params: filter });
+      const response: any = await apiService.get<{
+        succeeded: boolean;
+        stadiums: Stadium[];
+        error: string | null;
+      }>('/stadiums', { params: filter });
+
+      if (response && response.succeeded && Array.isArray(response.stadiums)) {
+        return response.stadiums;
+      }
+
+      return [];
     } catch (error) {
       console.error('Error fetching stadiums:', error);
       throw error;

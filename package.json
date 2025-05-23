@@ -11,7 +11,10 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.2",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
     "@react-three/drei": "^10.0.7",
     "@react-three/fiber": "^9.1.2",
     "@types/three": "^0.176.0",
@@ -22,6 +25,7 @@
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.509.0",
     "next": "15.3.2",
+    "radix-ui": "^1.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",

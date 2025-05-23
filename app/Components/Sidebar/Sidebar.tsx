@@ -32,7 +32,7 @@ export default function Sidebar({ children }: SidebarProps) {
             <nav className="h-full flex flex-col bg-white border-r shadow-md dark:bg-gray-800 dark:border-gray-700 transition-all duration-300">
                 {/* Sidebar Header */}
                 <div className="p-4 pb-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                    <Link href="/dashboard" className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <div className={`overflow-hidden transition-all ${expanded ? 'w-10' : 'w-0'}`}>
                             <div className="w-10 h-10 rounded-full bg-[#4CAF50]/10 flex items-center justify-center">
                                 <Link href={"/home"}>
@@ -49,7 +49,7 @@ export default function Sidebar({ children }: SidebarProps) {
                         <h1 className={`font-bold text-xl text-gray-800 dark:text-white transition-all duration-300 ${expanded ? 'opacity-100' : 'opacity-0 w-0'}`}>
                             Footex
                         </h1>
-                    </Link>
+                    </div>
 
                     <button
                         onClick={() => setExpanded((prev) => !prev)}

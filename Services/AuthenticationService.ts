@@ -12,6 +12,9 @@ export interface RegisterRequest {
   username: string;
   password: string;
   confirmPassword: string;
+  FavoriteTeamId?: number | null;
+  Image : File,
+  Age : number,
 }
 
 export interface ForgotPasswordRequest {
@@ -26,12 +29,16 @@ export interface ResetPasswordRequest {
 }
 
 export interface UpdateUserRequest {
+  Id: string;
   username?: string;
   email?: string;
   currentPassword?: string;
   newPassword?: string;
   confirmPassword?: string;
   favoriteTeamId?: number | null;
+  age?: number;
+  PhoneNumber?: number | null;
+  Image?: File
 }
 
 export interface AuthResponse {
@@ -61,12 +68,16 @@ export interface DecodedToken {
 }
 
 export interface UserProfile {
-  id: string;
+  userId: string;
   email: string;
   username: string;
   roles: string[];
-  favoriteTeamId?: number | null;
+  favoriteTeamName: string;
   emailConfirmed: boolean;
+  imageUrl: string;
+  age: number;
+  gender:string;
+  favoriteTeamId: number | null;
 }
 
 class AuthenticationService {
@@ -93,7 +104,21 @@ class AuthenticationService {
    */
   public async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await apiService.post<AuthResponse>('/auth/register', userData);
+      // Create a FormData object to handle file uploads
+      const formData = new FormData();
+      formData.append('email', userData.email);
+      formData.append('username', userData.username);
+      formData.append('password', userData.password);
+      formData.append('confirmPassword', userData.confirmPassword);
+      formData.append('favoriteTeamId', userData.FavoriteTeamId?.toString() || '');
+      formData.append('Image', userData.Image);
+      formData.append('Age', userData.Age.toString());
+
+      const response = await apiService.post<AuthResponse>('/auth/register', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
       this.storeToken(response.accessToken);
       this.storeUser(response);
       return response;
@@ -151,6 +176,9 @@ class AuthenticationService {
       const decoded = this.decodeToken(token);
 
       // Create a standardized user object with properly mapped claims
+      // @ts-ignore
+      // @ts-ignore
+      // @ts-ignore
       return {
         // Core standard claims
         sub: decoded.sub || '',
@@ -197,7 +225,12 @@ class AuthenticationService {
    */
   public async updateProfile(updateData: UpdateUserRequest): Promise<UserProfile> {
     try {
-      return await apiService.put<UserProfile>('/auth/update', updateData);
+        // Create a FormData object to handle file uploads
+      return await apiService.put<UserProfile>('/auth/update', updateData,  {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
     } catch (error) {
       console.error('Profile update failed:', error);
       throw error;
@@ -213,6 +246,7 @@ class AuthenticationService {
       if (!user) return false;
 
       // Get user roles from the token
+      // @ts-ignore
       const userRole = user.role || user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
       if (!userRole) return false;
