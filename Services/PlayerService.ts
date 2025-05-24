@@ -10,7 +10,7 @@ export interface Player {
   image?: string;
   preferredFoot?: 'Left' | 'Right' | 'Both';
   teamId?: number;
-  photoUrl:string
+  photoUrl: string;
 }
 
 export interface CreatePlayerDto {
@@ -49,11 +49,21 @@ interface PlayerResponse {
 
 class PlayerService {
   /**
-   * Get all players with optional filtering
+   * Get all players with optional filtering and caching
    */
   public async getPlayers(filter?: PlayerFilter): Promise<Player[]> {
     try {
-      const response = await apiService.get<PlayerResponse>('/players', { params: filter });
+      const cacheKey = filter
+        ? `players-filter-${JSON.stringify(filter)}`
+        : 'players-all';
+      const response = await apiService.getWithCache<PlayerResponse>(
+        '/players',
+        {
+          params: filter,
+          cacheKey,
+          cacheTtl: 5 * 60 * 1000, // 5 minutes cache
+        }
+      );
       if (!response.succeeded) {
         throw new Error(response.error || 'Failed to fetch players');
       }
@@ -65,13 +75,22 @@ class PlayerService {
   }
 
   /**
-   * Get player by ID
+   * Get player by ID with caching
    */
   public async getPlayerById(id: number): Promise<Player> {
     try {
-      const response = await apiService.get<{succeeded: boolean; player: Player; error: string | null}>(`/players/${id}`);
+      const response = await apiService.getWithCache<{
+        succeeded: boolean;
+        player: Player;
+        error: string | null;
+      }>(`/players/${id}`, {
+        cacheKey: `player-${id}`,
+        cacheTtl: 10 * 60 * 1000, // 10 minutes cache
+      });
       if (!response.succeeded) {
-        throw new Error(response.error || `Failed to fetch player with ID ${id}`);
+        throw new Error(
+          response.error || `Failed to fetch player with ID ${id}`
+        );
       }
       return response.player;
     } catch (error) {
@@ -82,7 +101,7 @@ class PlayerService {
 
   /**
    * Create a new player (admin only)
-   * Uses FormData for image upload
+   * Uses FormData for image upload with retry logic
    */
   public async createPlayer(playerData: CreatePlayerDto): Promise<Player> {
     try {
@@ -104,10 +123,19 @@ class PlayerService {
         }
       });
 
-      const response = await apiService.uploadForm<{succeeded: boolean; player: Player; error: string | null}>('/players', formData);
+      const response = await apiService.uploadForm<{
+        succeeded: boolean;
+        player: Player;
+        error: string | null;
+      }>('/players', formData);
+
       if (!response.succeeded) {
         throw new Error(response.error || 'Failed to create player');
       }
+
+      // Invalidate players cache after successful creation
+      apiService.clearCache('^players');
+
       return response.player;
     } catch (error) {
       console.error('Error creating player:', error);
@@ -117,9 +145,12 @@ class PlayerService {
 
   /**
    * Update a player (admin only)
-   * Uses FormData for image upload
+   * Uses FormData for image upload with retry logic
    */
-  public async updatePlayer(id: number, playerData: UpdatePlayerDto): Promise<Player> {
+  public async updatePlayer(
+    id: number,
+    playerData: UpdatePlayerDto
+  ): Promise<Player> {
     try {
       const formData = new FormData();
 
@@ -139,10 +170,22 @@ class PlayerService {
         }
       });
 
-      const response = await apiService.uploadForm<{succeeded: boolean; player: Player; error: string | null}>(`/players/${id}`, formData, 'put');
+      const response = await apiService.uploadForm<{
+        succeeded: boolean;
+        player: Player;
+        error: string | null;
+      }>(`/players/${id}`, formData, 'put');
+
       if (!response.succeeded) {
-        throw new Error(response.error || `Failed to update player with ID ${id}`);
+        throw new Error(
+          response.error || `Failed to update player with ID ${id}`
+        );
       }
+
+      // Invalidate players cache after successful update
+      apiService.clearCache('^players');
+      apiService.clearCache(`^player-${id}$`);
+
       return response.player;
     } catch (error) {
       console.error(`Error updating player with ID ${id}:`, error);
@@ -151,18 +194,36 @@ class PlayerService {
   }
 
   /**
-   * Delete a player (admin only)
+   * Delete a player (admin only) with retry logic
    */
   public async deletePlayer(id: number): Promise<void> {
     try {
-      const response = await apiService.delete<{succeeded: boolean; error: string | null}>(`/players/${id}`);
+      const response = await apiService.deleteWithRetry<{
+        succeeded: boolean;
+        error: string | null;
+      }>(`/players/${id}`);
+
       if (!response.succeeded) {
-        throw new Error(response.error || `Failed to delete player with ID ${id}`);
+        throw new Error(
+          response.error || `Failed to delete player with ID ${id}`
+        );
       }
+
+      // Invalidate players cache after successful deletion
+      apiService.clearCache('^players');
+      apiService.clearCache(`^player-${id}$`);
     } catch (error) {
       console.error(`Error deleting player with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Clear all players cache
+   */
+  public clearPlayersCache(): void {
+    apiService.clearCache('^players');
+    apiService.clearCache('^player-');
   }
 }
 

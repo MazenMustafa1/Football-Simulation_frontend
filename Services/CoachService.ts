@@ -54,14 +54,22 @@ export interface CoachFilter {
 class CoachService {
   /**
    * Get all coaches with optional filtering
+   * Utilizes caching for performance optimization
    */
   public async getCoaches(filter?: CoachFilter): Promise<Coach[]> {
     try {
-      const response: any = await apiService.get<{
+      const cacheKey = filter
+        ? `coaches-filter-${JSON.stringify(filter)}`
+        : 'coaches-all';
+      const response: any = await apiService.getWithCache<{
         succeeded: boolean;
         coaches: Coach[];
         error: string | null;
-      }>('/coaches/filter', { params: filter });
+      }>('/coaches/filter', {
+        params: filter,
+        cacheKey,
+        cacheTtl: 5 * 60 * 1000, // 5 minutes cache
+      });
 
       if (response && response.succeeded && Array.isArray(response.coaches)) {
         return response.coaches;
@@ -75,11 +83,14 @@ class CoachService {
   }
 
   /**
-   * Get coach by ID
+   * Get coach by ID with caching
    */
   public async getCoachById(id: number): Promise<Coach> {
     try {
-      return await apiService.get<Coach>(`/coaches/${id}`);
+      return await apiService.getWithCache<Coach>(`/coaches/${id}`, {
+        cacheKey: `coach-${id}`,
+        cacheTtl: 10 * 60 * 1000, // 10 minutes cache
+      });
     } catch (error) {
       console.error(`Error fetching coach with ID ${id}:`, error);
       throw error;
@@ -88,7 +99,7 @@ class CoachService {
 
   /**
    * Create a new coach (admin only)
-   * Uses FormData for image upload
+   * Uses FormData for image upload with retry logic
    */
   public async createCoach(coachData: CreateCoachDto): Promise<Coach> {
     try {
@@ -105,7 +116,12 @@ class CoachService {
         }
       });
 
-      return await apiService.uploadForm<Coach>('/coaches', formData);
+      const result = await apiService.uploadForm<Coach>('/coaches', formData);
+
+      // Invalidate coaches cache after successful creation
+      apiService.clearCache('^coaches');
+
+      return result;
     } catch (error) {
       console.error('Error creating coach:', error);
       throw error;
@@ -114,9 +130,12 @@ class CoachService {
 
   /**
    * Update a coach (admin only)
-   * Uses FormData for image upload
+   * Uses FormData for image upload with retry logic
    */
-  public async updateCoach(id: number, coachData: UpdateCoachDto): Promise<Coach> {
+  public async updateCoach(
+    id: number,
+    coachData: UpdateCoachDto
+  ): Promise<Coach> {
     try {
       const formData = new FormData();
 
@@ -131,7 +150,17 @@ class CoachService {
         }
       });
 
-      return await apiService.uploadForm<Coach>(`/coaches/${id}`, formData, 'put');
+      const result = await apiService.uploadForm<Coach>(
+        `/coaches/${id}`,
+        formData,
+        'put'
+      );
+
+      // Invalidate coaches cache after successful update
+      apiService.clearCache('^coaches');
+      apiService.clearCache(`^coach-${id}$`);
+
+      return result;
     } catch (error) {
       console.error(`Error updating coach with ID ${id}:`, error);
       throw error;
@@ -139,15 +168,27 @@ class CoachService {
   }
 
   /**
-   * Delete a coach (admin only)
+   * Delete a coach (admin only) with retry logic
    */
   public async deleteCoach(id: number): Promise<void> {
     try {
-      await apiService.delete(`/coaches/${id}`);
+      await apiService.deleteWithRetry(`/coaches/${id}`);
+
+      // Invalidate coaches cache after successful deletion
+      apiService.clearCache('^coaches');
+      apiService.clearCache(`^coach-${id}$`);
     } catch (error) {
       console.error(`Error deleting coach with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Clear all coaches cache
+   */
+  public clearCoachesCache(): void {
+    apiService.clearCache('^coaches');
+    apiService.clearCache('^coach-');
   }
 }
 

@@ -1,13 +1,21 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-/*---break---*/
+@import 'tailwindcss';
+
 @custom-variant dark (&:is(.dark *));
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark, cupcake;
+  themes:
+    light --default,
+    dark --prefersdark,
+    cupcake;
 }
 @keyframes dropdownFade {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .animate-dropdown {
@@ -15,13 +23,39 @@
 }
 
 @keyframes dropdownItem {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-dropdown > div > div > div {
   animation: dropdownItem 0.2s ease-out forwards;
 }
+/* Sidebar spacing utilities for space efficiency */
+.sidebar-offset {
+  margin-left: 4rem; /* 64px - collapsed sidebar width */
+  width: calc(100% - 4rem);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Responsive sidebar spacing */
+@media (max-width: 768px) {
+  .sidebar-offset {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Enhanced sidebar animations */
+.sidebar-hover-expand {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Profile Page Background */
 .profile-page-container {
   position: relative;
@@ -36,9 +70,21 @@
   right: 0;
   bottom: 0;
   background-image:
-          radial-gradient(circle at 10% 20%, rgba(253, 230, 138, 0.1) 0%, transparent 30%),
-          radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.07) 0%, transparent 40%),
-          radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 60%);
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(253, 230, 138, 0.1) 0%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(245, 158, 11, 0.07) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(251, 191, 36, 0.03) 0%,
+      transparent 60%
+    );
   z-index: -1;
 }
 
@@ -101,8 +147,13 @@
 
 /* Floating animation for avatar */
 @keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-5px) scale(1.02); }
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02);
+  }
 }
 
 .profile-card-container .rounded-full:hover {
@@ -110,8 +161,13 @@
 }
 
 @keyframes card-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Animated error icon */
@@ -121,27 +177,54 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-10px); }
-  40%, 80% { transform: translateX(10px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
 }
 
 /* Animation for dropdown elements */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Field highlight animation */
 @keyframes highlightField {
-  0% { background-color: rgba(251, 191, 36, 0); }
-  50% { background-color: rgba(251, 191, 36, 0.1); }
-  100% { background-color: rgba(251, 191, 36, 0); }
+  0% {
+    background-color: rgba(251, 191, 36, 0);
+  }
+  50% {
+    background-color: rgba(251, 191, 36, 0.1);
+  }
+  100% {
+    background-color: rgba(251, 191, 36, 0);
+  }
 }
 /* Background pattern for profile card header */
 .bg-pattern {
@@ -154,7 +237,8 @@
 }
 
 /* Smooth transitions for form elements */
-input, button {
+input,
+button {
   transition: all 0.2s ease-in-out;
 }
 
@@ -314,7 +398,6 @@ input, button {
   pointer-events: auto;
 }
 
-
 .rotating-background {
   pointer-events: none !important;
 }
@@ -323,11 +406,197 @@ input, button {
   pointer-events: none !important;
 }
 
-canvas, .rotating-logo {
+canvas,
+.rotating-logo {
   pointer-events: none !important;
 }
 
-relative{
+relative {
   pointer-events: none !important;
 }
 
+/* Custom Animations for Dashboard Loading and Background */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-delayed {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Custom spin animation */
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+/* Enhanced LiveMatchPanel Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes float-delayed {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Glass morphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-effect-strong {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced shadow utilities */
+.shadow-3xl {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.shadow-glow {
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.3),
+    0 10px 30px rgba(0, 0, 0, 0.1);
+}
