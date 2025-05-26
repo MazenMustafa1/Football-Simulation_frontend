@@ -20,11 +20,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import authService from '@/Services/AuthenticationService';
-import teamService, { Team } from '@/Services/TeamService';
 import Image from 'next/image';
+import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 
 export default function Dashboard() {
-  const [teams, setTeams] = useState<Team[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,33 +60,12 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      await fetchTeams();
       checkUserRole();
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchTeams = async () => {
-    try {
-      // Use TeamService instead of directly calling ApiService
-      const response = await teamService.getAllTeams();
-
-      // Ensure that teams is always an array, even if the API returns something unexpected
-      if (Array.isArray(response)) {
-        // @ts-ignore
-        setTeams(response);
-      } else {
-        // If response is not an array or doesn't have a data property that's an array, set to empty array
-        console.error('Unexpected API response format for teams:', response);
-        setTeams([]);
-      }
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-      setTeams([]); // Set empty array on error instead of throwing
     }
   };
 
@@ -174,116 +152,118 @@ export default function Dashboard() {
   }
 
   return (
-    <SidebarLayout
-      sidebar={
-        <>
-          {/* Main Navigation */}
-          <Link href="/dashboard">
-            <SidebarItem
-              icon={<LayoutDashboardIcon size={20} />}
-              text="Dashboard"
-              active
+    <ProtectedRoute allowedRoles={['User', 'Admin', 'Coach', 'Player']}>
+      <SidebarLayout
+        sidebar={
+          <>
+            {/* Main Navigation */}
+            <Link href="/dashboard">
+              <SidebarItem
+                icon={<LayoutDashboardIcon size={20} />}
+                text="Dashboard"
+                active
+              />
+            </Link>
+            <Link href="/teams">
+              <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
+            </Link>
+            <Link href="/schedule">
+              <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
+            </Link>
+            <Link href="/players">
+              <SidebarItem icon={<User size={20} />} text="Players" />
+            </Link>
+            <Link href="/coaches">
+              <SidebarItem icon={<Users size={20} />} text="Coaches" />
+            </Link>
+            <Link href="/stadiums">
+              <SidebarItem icon={<Home size={20} />} text="Stadiums" />
+            </Link>
+
+            {/* Admin Section - only show if user is admin */}
+            {isAdmin && (
+              <>
+                <SidebarSection title="Admin" color="text-amber-600" />
+                <Link href="/admin">
+                  <SidebarItem
+                    icon={<Settings size={20} />}
+                    text="Admin Dashboard"
+                  />
+                </Link>
+              </>
+            )}
+
+            {/* Shop & Notifications */}
+            <SidebarSection title="Shop & Updates" />
+            <Link href="/products">
+              <SidebarItem icon={<Package size={20} />} text="Shop" alert />
+            </Link>
+            <Link href="/notifications">
+              <SidebarItem icon={<Bell size={20} />} text="Notifications" />
+            </Link>
+
+            {/* Search & Settings */}
+            <SidebarSection title="Other" />
+            <Link href="/search">
+              <SidebarItem icon={<Search size={20} />} text="Search" />
+            </Link>
+            <Link href="/settings">
+              <SidebarItem icon={<Settings size={20} />} text="Settings" />
+            </Link>
+          </>
+        }
+      >
+        {/* Enhanced Creative Background */}
+        <div className="fixed inset-0 z-0">
+          {/* Base Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
+
+          {/* Stadium Silhouette Background */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <Image
+              src="/images/Stadium dark.png"
+              alt="Stadium Background"
+              fill
+              className="object-cover object-center"
             />
-          </Link>
-          <Link href="/teams">
-            <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-          </Link>
-          <Link href="/schedule">
-            <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-          </Link>
-          <Link href="/players">
-            <SidebarItem icon={<User size={20} />} text="Players" />
-          </Link>
-          <Link href="/coaches">
-            <SidebarItem icon={<Users size={20} />} text="Coaches" />
-          </Link>
-          <Link href="/stadiums">
-            <SidebarItem icon={<Home size={20} />} text="Stadiums" />
-          </Link>
+          </div>
 
-          {/* Admin Section - only show if user is admin */}
-          {isAdmin && (
-            <>
-              <SidebarSection title="Admin" color="text-amber-600" />
-              <Link href="/admin">
-                <SidebarItem
-                  icon={<Settings size={20} />}
-                  text="Admin Dashboard"
-                />
-              </Link>
-            </>
-          )}
-
-          {/* Shop & Notifications */}
-          <SidebarSection title="Shop & Updates" />
-          <Link href="/products">
-            <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-          </Link>
-          <Link href="/notifications">
-            <SidebarItem icon={<Bell size={20} />} text="Notifications" />
-          </Link>
-
-          {/* Search & Settings */}
-          <SidebarSection title="Other" />
-          <Link href="/search">
-            <SidebarItem icon={<Search size={20} />} text="Search" />
-          </Link>
-          <Link href="/settings">
-            <SidebarItem icon={<Settings size={20} />} text="Settings" />
-          </Link>
-        </>
-      }
-    >
-      {/* Enhanced Creative Background */}
-      <div className="fixed inset-0 z-0">
-        {/* Base Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
-
-        {/* Stadium Silhouette Background */}
-        <div className="absolute inset-0 opacity-[0.03]">
-          <Image
-            src="/images/Stadium dark.png"
-            alt="Stadium Background"
-            fill
-            className="object-cover object-center"
-          />
-        </div>
-
-        {/* Geometric Pattern Overlay */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundImage: `
+          {/* Geometric Pattern Overlay */}
+          <div className="absolute inset-0 opacity-[0.02]">
+            <div
+              className="h-full w-full"
+              style={{
+                backgroundImage: `
               radial-gradient(circle at 25% 25%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
               radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
               linear-gradient(45deg, transparent 40%, rgba(34, 197, 94, 0.05) 50%, transparent 60%)
             `,
-            }}
-          ></div>
+              }}
+            ></div>
+          </div>
+
+          {/* Subtle Football Pattern */}
+          <div className="absolute inset-0 opacity-[0.015]">
+            <Image
+              src="/images/football-pattern.png"
+              alt="Football Pattern"
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          {/* Animated Floating Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="animate-float absolute top-20 left-20 h-2 w-2 rounded-full bg-green-400/20"></div>
+            <div className="animate-float-delayed absolute top-40 right-32 h-3 w-3 rounded-full bg-emerald-400/15"></div>
+            <div className="animate-float-slow absolute bottom-32 left-40 h-1 w-1 rounded-full bg-teal-400/25"></div>
+            <div className="animate-float-delayed absolute right-20 bottom-20 h-2 w-2 rounded-full bg-green-300/20"></div>
+          </div>
         </div>
 
-        {/* Subtle Football Pattern */}
-        <div className="absolute inset-0 opacity-[0.015]">
-          <Image
-            src="/images/football-pattern.png"
-            alt="Football Pattern"
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        {/* Animated Floating Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="animate-float absolute top-20 left-20 h-2 w-2 rounded-full bg-green-400/20"></div>
-          <div className="animate-float-delayed absolute top-40 right-32 h-3 w-3 rounded-full bg-emerald-400/15"></div>
-          <div className="animate-float-slow absolute bottom-32 left-40 h-1 w-1 rounded-full bg-teal-400/25"></div>
-          <div className="animate-float-delayed absolute right-20 bottom-20 h-2 w-2 rounded-full bg-green-300/20"></div>
-        </div>
-      </div>
-
-      {/* Main content that can now access sidebar context */}
-      <DashboardContent teams={teams} />
-    </SidebarLayout>
+        {/* Main content that can now access sidebar context */}
+        <DashboardContent />
+      </SidebarLayout>
+    </ProtectedRoute>
   );
 }

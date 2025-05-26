@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import DataTable from '../DataTable';
+import { Pagination } from '@/components/ui/pagination';
 import playerService, {
   Player,
   CreatePlayerDto,
   UpdatePlayerDto,
   PlayerFilter,
+  PaginatedPlayerResponse,
 } from '@/Services/PlayerService';
 import teamService from '@/Services/TeamService';
 import { Button } from '@/components/ui/button';
@@ -32,8 +34,24 @@ const PlayerManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   // Filter state
   const [filter, setFilter] = useState<PlayerFilter>({});
+
+  // Debug state to show logs in UI
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}`;
+    setDebugLogs((prev) => [...prev.slice(-9), logMessage]); // Keep last 10 logs
+    console.log(logMessage);
+  };
 
   // Form state
   const [formData, setFormData] = useState<CreatePlayerDto | UpdatePlayerDto>({
@@ -50,23 +68,205 @@ const PlayerManagement = () => {
   // File input state
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    fetchPlayers().then();
-    fetchTeams().then();
-  }, []);
-
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     setIsLoading(true);
+    addDebugLog(
+      `🔄 Fetching players - Page: ${currentPage}, Size: ${pageSize}`
+    );
+
     try {
-      const data = await playerService.getPlayers(filter);
-      setPlayers(data);
-      setError(null);
+      const filterWithPagination: PlayerFilter = {
+        ...filter,
+        pageNumber: currentPage,
+        pageSize: pageSize,
+      };
+
+      addDebugLog(
+        `📤 API call params: ${JSON.stringify(filterWithPagination)}`
+      );
+
+      try {
+        const response: PaginatedPlayerResponse =
+          await playerService.getPaginatedPlayers(filterWithPagination);
+
+        addDebugLog(
+          `📥 Pagination API response: ${response.succeeded ? 'SUCCESS' : 'FAILED'}`
+        );
+        addDebugLog(
+          `📊 Response data: Players: ${response.players?.length || 0}, TotalCount: ${response.totalCount}, TotalPages: ${response.totalPages}`
+        );
+
+        if (response && response.players) {
+          setPlayers(response.players);
+          setTotalCount(response.totalCount || 0);
+          const calculatedTotalPages =
+            response.totalPages ||
+            Math.ceil((response.totalCount || 0) / pageSize);
+          setTotalPages(calculatedTotalPages);
+          setError(null);
+
+          addDebugLog(
+            `✅ Pagination API: ${response.players.length} players, ${calculatedTotalPages} pages`
+          );
+          addDebugLog(
+            `🔢 Final state: CurrentPage: ${currentPage}, TotalPages: ${calculatedTotalPages}, TotalCount: ${response.totalCount}`
+          );
+          return; // Exit early if pagination API worked
+        }
+      } catch (paginationError) {
+        addDebugLog(`❌ Pagination API failed: ${paginationError}`);
+      }
+
+      // Fallback mechanism
+      addDebugLog('🔄 Using fallback mechanism...');
+      const allPlayers = await playerService.getPlayers(filter);
+      addDebugLog(`📥 Fallback: fetched ${allPlayers.length} players`);
+
+      if (allPlayers && allPlayers.length > 0) {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedPlayers = allPlayers.slice(startIndex, endIndex);
+        const fallbackTotalPages = Math.ceil(allPlayers.length / pageSize);
+
+        setError(null);
+        setPlayers(paginatedPlayers);
+        setTotalCount(allPlayers.length);
+        setTotalPages(fallbackTotalPages);
+
+        addDebugLog(
+          `✅ Fallback success: ${paginatedPlayers.length}/${allPlayers.length} players, ${fallbackTotalPages} pages`
+        );
+      } else {
+        addDebugLog('❌ No players found');
+        setPlayers([]);
+        setTotalCount(0);
+        setTotalPages(0);
+      }
     } catch (err: any) {
+      addDebugLog(`❌ Error: ${err.message}`);
       setError(err.message || 'Failed to fetch players');
+      setPlayers([]);
+      setTotalCount(0);
+      setTotalPages(0);
     } finally {
       setIsLoading(false);
     }
+  }, [currentPage, pageSize, filter]);
+
+  // Initial data loading effect
+  useEffect(() => {
+    console.log('🚀 PlayerManagement mounted, fetching initial data...');
+    fetchTeams();
+    fetchPlayers();
+
+    // Test API endpoints
+    console.log('🧪 Testing API endpoints...');
+    testApiEndpoints();
+  }, [fetchPlayers]);
+
+  const testPaginationLogic = async () => {
+    addDebugLog('🧮 Testing pagination logic...');
+
+    try {
+      // Test different page scenarios
+      for (let page = 1; page <= 3; page++) {
+        addDebugLog(`🔄 Testing page ${page}...`);
+        const testFilter = { pageNumber: page, pageSize: 25 };
+        const result = await playerService.getPaginatedPlayers(testFilter);
+
+        addDebugLog(
+          `📊 Page ${page} - Players: ${result.players.length}, Total: ${result.totalCount}, TotalPages: ${result.totalPages}`
+        );
+
+        if (result.totalPages > 1) {
+          addDebugLog(
+            `✅ Pagination working! Found ${result.totalPages} pages`
+          );
+          break;
+        }
+      }
+
+      // Test page size changes
+      addDebugLog('🔄 Testing different page sizes...');
+      for (const pageSize of [10, 25, 50]) {
+        const testFilter = { pageNumber: 1, pageSize };
+        const result = await playerService.getPaginatedPlayers(testFilter);
+        addDebugLog(
+          `📏 PageSize ${pageSize} - Players: ${result.players.length}, Total: ${result.totalCount}, Pages: ${result.totalPages}`
+        );
+      }
+    } catch (error) {
+      addDebugLog(`❌ Pagination test failed: ${error}`);
+    }
   };
+
+  const testApiEndpoints = async () => {
+    try {
+      addDebugLog('🧪 Testing pagination endpoint...');
+      const testFilter = { pageNumber: 1, pageSize: 10 };
+      const paginatedResult =
+        await playerService.getPaginatedPlayers(testFilter);
+      addDebugLog(`🧪 Pagination result type: ${typeof paginatedResult}`);
+      addDebugLog(
+        `🧪 Pagination result keys: ${Object.keys(paginatedResult).join(', ')}`
+      );
+      addDebugLog(`🧪 Players count: ${paginatedResult.players?.length || 0}`);
+      addDebugLog(`🧪 TotalCount: ${paginatedResult.totalCount}`);
+      addDebugLog(`🧪 TotalPages: ${paginatedResult.totalPages}`);
+      addDebugLog(`🧪 Succeeded: ${paginatedResult.succeeded}`);
+      console.log('🧪 Full pagination endpoint result:', paginatedResult);
+    } catch (error) {
+      addDebugLog(`🧪 Pagination endpoint test failed: ${error}`);
+      console.error('🧪 Pagination endpoint test failed:', error);
+    }
+
+    try {
+      addDebugLog('🧪 Testing regular endpoint...');
+      const regularResult = await playerService.getPlayers({});
+      addDebugLog(`🧪 Regular endpoint result length: ${regularResult.length}`);
+      console.log('🧪 Regular endpoint result length:', regularResult.length);
+    } catch (error) {
+      addDebugLog(`🧪 Regular endpoint test failed: ${error}`);
+      console.error('🧪 Regular endpoint test failed:', error);
+    }
+  };
+
+  // Effect to track pagination state changes
+  useEffect(() => {
+    console.log('🔄 Pagination state changed:', { currentPage, pageSize });
+    fetchPlayers();
+  }, [currentPage, pageSize, fetchPlayers]);
+
+  // Effect to track filter changes
+  useEffect(() => {
+    console.log('🔍 Filter changed:', filter);
+    if (Object.keys(filter).length > 0) {
+      setCurrentPage(1); // Reset to first page when filtering
+      fetchPlayers();
+    }
+  }, [filter, fetchPlayers]);
+
+  // Comprehensive state monitoring effect
+  useEffect(() => {
+    console.log('📊 PAGINATION STATE UPDATE:', {
+      currentPage,
+      pageSize,
+      totalCount,
+      totalPages,
+      playersLength: players.length,
+      isLoading,
+      filterApplied: Object.keys(filter).length > 0,
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }, [
+    currentPage,
+    pageSize,
+    totalCount,
+    totalPages,
+    players.length,
+    isLoading,
+    filter,
+  ]);
 
   const fetchTeams = async () => {
     try {
@@ -127,12 +327,39 @@ const PlayerManagement = () => {
   };
 
   const handleFilterApply = () => {
+    setCurrentPage(1);
     fetchPlayers().then();
   };
 
   const handleFilterReset = () => {
     setFilter({});
-    fetchPlayers().then();
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    addDebugLog(
+      `🎯 PAGE CHANGE: Requested page ${page} (current: ${currentPage})`
+    );
+
+    // Validate that the page is different
+    if (page === currentPage) {
+      addDebugLog('🎯 Page is the same, no change needed');
+      return;
+    }
+
+    // Validate page bounds
+    if (page < 1 || page > totalPages) {
+      addDebugLog(`🎯 Page out of bounds: ${page} (max: ${totalPages})`);
+      return;
+    }
+
+    addDebugLog(`🎯 Setting current page to: ${page}`);
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
   };
 
   const handleEditClick = (player: Player) => {
@@ -445,6 +672,27 @@ const PlayerManagement = () => {
           </Button>
         </motion.div>
       </motion.div>
+
+      {/* Results Information */}
+      {!isLoading && totalCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-lg border border-gray-700 bg-gray-800/30 p-3"
+        >
+          <div className="flex items-center justify-between text-sm text-gray-400">
+            <span>
+              Showing {(currentPage - 1) * pageSize + 1} to{' '}
+              {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{' '}
+              players
+            </span>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+        </motion.div>
+      )}
 
       {showForm && (
         <motion.div
@@ -793,10 +1041,33 @@ const PlayerManagement = () => {
         columns={columns}
         data={players}
         isLoading={isLoading}
-        pagination
+        pagination={false}
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
       />
+
+      {/* Pagination Component */}
+      {!isLoading && players.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex justify-center"
+        >
+          <Pagination
+            currentPage={currentPage}
+            totalPages={
+              totalPages > 0 ? totalPages : Math.ceil(players.length / pageSize)
+            }
+            pageSize={pageSize}
+            totalCount={totalCount > 0 ? totalCount : players.length}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            showPageSizeSelector={true}
+            pageSizeOptions={[10, 25, 50, 100]}
+          />
+        </motion.div>
+      )}
     </div>
   );
 };

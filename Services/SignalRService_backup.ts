@@ -36,11 +36,15 @@ export interface SimulationProgressData {
 
 export interface NotificationData {
   id: string;
+  userId: string;
   message: string;
   title?: string;
-  type: string;
-  isread: boolean;
-  time : string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, any>;
 }
 
 class SignalRService {
@@ -185,7 +189,7 @@ class SignalRService {
   public async connect(): Promise<boolean> {
     const matchSimulationConnected = await this.connectMatchSimulation();
     const notificationConnected = await this.connectNotifications();
-
+    
     // Reset reconnect attempts if at least one connection succeeded
     if (matchSimulationConnected || notificationConnected) {
       this.reconnectAttempts = 0;
@@ -233,7 +237,7 @@ class SignalRService {
     this.reconnectAttempts = 0; // Reset reconnect attempts on manual disconnect
     await Promise.all([
       this.disconnectMatchSimulation(),
-      this.disconnectNotifications(),
+      this.disconnectNotifications()
     ]);
     console.log('All SignalR connections disconnected');
   }
@@ -252,16 +256,11 @@ class SignalRService {
    */
   public async joinSimulation(simulationId: string): Promise<boolean> {
     try {
-      // Ensure we have an active match simulation connection
-      if (!this.isMatchSimulationConnected || !this.matchSimulationConnection) {
-        const connected = await this.connectMatchSimulation();
-        if (!connected) return false;
-      }
+      // Ensure we have an active authenticated connection
+      const connected = await this.ensureConnection();
+      if (!connected) return false;
 
-      await this.matchSimulationConnection!.invoke(
-        'JoinSimulation',
-        simulationId
-      );
+      await this.connection!.invoke('JoinSimulation', simulationId);
       console.log(`Joined simulation: ${simulationId}`);
       return true;
     } catch (error) {
@@ -284,14 +283,11 @@ class SignalRService {
    */
   public async leaveSimulation(simulationId: string): Promise<boolean> {
     try {
-      if (!this.matchSimulationConnection || !this.isMatchSimulationConnected) {
+      if (!this.connection || !this.isConnected) {
         return false;
       }
 
-      await this.matchSimulationConnection.invoke(
-        'LeaveSimulation',
-        simulationId
-      );
+      await this.connection.invoke('LeaveSimulation', simulationId);
       console.log(`Left simulation: ${simulationId}`);
       return true;
     } catch (error) {
@@ -304,8 +300,8 @@ class SignalRService {
    * Subscribe to match events for a specific simulation
    */
   public onMatchEvent(callback: (data: MatchEventData) => void): void {
-    if (this.matchSimulationConnection) {
-      this.matchSimulationConnection.on('MatchEvent', callback);
+    if (this.connection) {
+      this.connection.on('MatchEvent', callback);
     }
   }
 
@@ -315,8 +311,8 @@ class SignalRService {
   public onSimulationProgress(
     callback: (data: SimulationProgressData) => void
   ): void {
-    if (this.matchSimulationConnection) {
-      this.matchSimulationConnection.on('SimulationProgress', callback);
+    if (this.connection) {
+      this.connection.on('SimulationProgress', callback);
     }
   }
 
@@ -329,8 +325,8 @@ class SignalRService {
       finalScore: { home: number; away: number }
     ) => void
   ): void {
-    if (this.matchSimulationConnection) {
-      this.matchSimulationConnection.on('SimulationComplete', callback);
+    if (this.connection) {
+      this.connection.on('SimulationComplete', callback);
     }
   }
 
@@ -340,8 +336,8 @@ class SignalRService {
   public onSimulationError(
     callback: (simulationId: string, error: string) => void
   ): void {
-    if (this.matchSimulationConnection) {
-      this.matchSimulationConnection.on('SimulationError', callback);
+    if (this.connection) {
+      this.connection.on('SimulationError', callback);
     }
   }
 
@@ -349,8 +345,8 @@ class SignalRService {
    * Subscribe to notification events
    */
   public onNotification(callback: (data: NotificationData) => void): void {
-    if (this.notificationConnection) {
-      this.notificationConnection.on('Notify', callback);
+    if (this.connection) {
+      this.connection.on('Notify', callback);
     }
   }
 
@@ -360,8 +356,8 @@ class SignalRService {
   public onNotificationUpdated(
     callback: (data: NotificationData) => void
   ): void {
-    if (this.notificationConnection) {
-      this.notificationConnection.on('NotificationUpdated', callback);
+    if (this.connection) {
+      this.connection.on('NotificationUpdated', callback);
     }
   }
 
@@ -371,8 +367,8 @@ class SignalRService {
   public onNotificationDeleted(
     callback: (notificationId: string) => void
   ): void {
-    if (this.notificationConnection) {
-      this.notificationConnection.on('NotificationDeleted', callback);
+    if (this.connection) {
+      this.connection.on('NotificationDeleted', callback);
     }
   }
 
@@ -381,16 +377,11 @@ class SignalRService {
    */
   public async joinUserNotificationGroup(userId: string): Promise<boolean> {
     try {
-      // Ensure we have an active notification connection
-      if (!this.isNotificationConnected || !this.notificationConnection) {
-        const connected = await this.connectNotifications();
-        if (!connected) return false;
-      }
+      // Ensure we have an active authenticated connection
+      const connected = await this.ensureConnection();
+      if (!connected) return false;
 
-      await this.notificationConnection!.invoke(
-        'JoinUserNotificationGroup',
-        userId
-      );
+      await this.connection!.invoke('JoinUserNotificationGroup', userId);
       console.log(`Joined user notification group: ${userId}`);
       return true;
     } catch (error) {
@@ -413,14 +404,11 @@ class SignalRService {
    */
   public async leaveUserNotificationGroup(userId: string): Promise<boolean> {
     try {
-      if (!this.notificationConnection || !this.isNotificationConnected) {
+      if (!this.connection || !this.isConnected) {
         return false;
       }
 
-      await this.notificationConnection.invoke(
-        'LeaveUserNotificationGroup',
-        userId
-      );
+      await this.connection.invoke('LeaveUserNotificationGroup', userId);
       console.log(`Left user notification group: ${userId}`);
       return true;
     } catch (error) {
@@ -433,59 +421,36 @@ class SignalRService {
    * Remove all event listeners
    */
   public removeAllListeners(): void {
-    // Remove match simulation event listeners
-    if (this.matchSimulationConnection) {
-      this.matchSimulationConnection.off('MatchEvent');
-      this.matchSimulationConnection.off('SimulationProgress');
-      this.matchSimulationConnection.off('SimulationComplete');
-      this.matchSimulationConnection.off('SimulationError');
-    }
-
-    // Remove notification event listeners
-    if (this.notificationConnection) {
-      this.notificationConnection.off('Notify');
-      this.notificationConnection.off('NotificationUpdated');
-      this.notificationConnection.off('NotificationDeleted');
+    if (this.connection) {
+      this.connection.off('MatchEvent');
+      this.connection.off('SimulationProgress');
+      this.connection.off('SimulationComplete');
+      this.connection.off('SimulationError');
+      // Add notification event cleanup
+      this.connection.off('Notify');
+      this.connection.off('NotificationUpdated');
+      this.connection.off('NotificationDeleted');
     }
   }
 
   /**
-   * Check if currently connected to both hubs
+   * Check if currently connected
    */
   public isConnectionActive(): boolean {
-    return this.isMatchSimulationConnected && this.isNotificationConnected;
-  }
-
-  /**
-   * Check if match simulation connection is active
-   */
-  public isMatchSimulationActive(): boolean {
     return (
-      this.isMatchSimulationConnected &&
-      this.matchSimulationConnection !== null &&
-      this.matchSimulationConnection.state ===
-        signalR.HubConnectionState.Connected
+      this.isConnected &&
+      this.connection !== null &&
+      this.connection.state === signalR.HubConnectionState.Connected
     );
   }
 
   /**
-   * Check if notification connection is active
+   * Get connection state
    */
-  public isNotificationActive(): boolean {
-    return (
-      this.isNotificationConnected &&
-      this.notificationConnection !== null &&
-      this.notificationConnection.state === signalR.HubConnectionState.Connected
-    );
-  }
+  public getConnectionState(): string {
+    if (!this.connection) return 'Disconnected';
 
-  /**
-   * Get connection state for match simulation
-   */
-  public getMatchSimulationConnectionState(): string {
-    if (!this.matchSimulationConnection) return 'Disconnected';
-
-    switch (this.matchSimulationConnection.state) {
+    switch (this.connection.state) {
       case signalR.HubConnectionState.Connected:
         return 'Connected';
       case signalR.HubConnectionState.Connecting:
@@ -502,58 +467,33 @@ class SignalRService {
   }
 
   /**
-   * Get connection state for notifications
+   * Set up SignalR event handlers with enhanced authentication handling
    */
-  public getNotificationConnectionState(): string {
-    if (!this.notificationConnection) return 'Disconnected';
+  private setupEventHandlers(): void {
+    if (!this.connection) return;
 
-    switch (this.notificationConnection.state) {
-      case signalR.HubConnectionState.Connected:
-        return 'Connected';
-      case signalR.HubConnectionState.Connecting:
-        return 'Connecting';
-      case signalR.HubConnectionState.Disconnected:
-        return 'Disconnected';
-      case signalR.HubConnectionState.Disconnecting:
-        return 'Disconnecting';
-      case signalR.HubConnectionState.Reconnecting:
-        return 'Reconnecting';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  /**
-   * Set up match simulation SignalR event handlers
-   */
-  private setupMatchSimulationEventHandlers(): void {
-    if (!this.matchSimulationConnection) return;
-
-    this.matchSimulationConnection.onreconnecting((error: any) => {
-      console.log('Match simulation SignalR attempting to reconnect:', error);
-      this.isMatchSimulationConnected = false;
+    this.connection.onreconnecting((error) => {
+      console.log('SignalR attempting to reconnect:', error);
+      this.isConnected = false;
     });
 
-    this.matchSimulationConnection.onreconnected(async (connectionId: any) => {
-      console.log(
-        'Match simulation SignalR reconnected with ID:',
-        connectionId
-      );
-      this.isMatchSimulationConnected = true;
+    this.connection.onreconnected(async (connectionId) => {
+      console.log('SignalR reconnected with ID:', connectionId);
+      this.isConnected = true;
       this.reconnectAttempts = 0;
 
       // Verify authentication after reconnection
       if (!authService.isAuthenticated()) {
         console.warn(
-          'User not authenticated after match simulation reconnection, disconnecting'
+          'User not authenticated after reconnection, disconnecting'
         );
-        await this.disconnectMatchSimulation();
+        await this.disconnect();
       }
     });
 
-    this.matchSimulationConnection.onclose(async (error: any) => {
-      console.log('Match simulation SignalR connection closed:', error);
-      this.isMatchSimulationConnected = false;
+    this.connection.onclose(async (error) => {
+      console.log('SignalR connection closed:', error);
+      this.isConnected = false;
 
       // Check if the connection was closed due to authentication issues
       const errorMessage =
@@ -562,9 +502,7 @@ class SignalRService {
         errorMessage.includes('401') ||
         errorMessage.includes('Unauthorized')
       ) {
-        console.log(
-          'Match simulation connection closed due to authentication failure'
-        );
+        console.log('Connection closed due to authentication failure');
         return; // Don't attempt reconnection for auth failures
       }
 
@@ -575,7 +513,7 @@ class SignalRService {
       ) {
         setTimeout(
           () => {
-            this.attemptMatchSimulationReconnection();
+            this.attemptReconnection();
           },
           this.reconnectDelay * Math.pow(2, this.reconnectAttempts)
         );
@@ -584,119 +522,30 @@ class SignalRService {
   }
 
   /**
-   * Set up notification SignalR event handlers
+   * Attempt manual reconnection with authentication check
    */
-  private setupNotificationEventHandlers(): void {
-    if (!this.notificationConnection) return;
-
-    this.notificationConnection.onreconnecting((error: any) => {
-      console.log('Notification SignalR attempting to reconnect:', error);
-      this.isNotificationConnected = false;
-    });
-
-    this.notificationConnection.onreconnected(async (connectionId: any) => {
-      console.log('Notification SignalR reconnected with ID:', connectionId);
-      this.isNotificationConnected = true;
-      this.reconnectAttempts = 0;
-
-      // Verify authentication after reconnection
-      if (!authService.isAuthenticated()) {
-        console.warn(
-          'User not authenticated after notification reconnection, disconnecting'
-        );
-        await this.disconnectNotifications();
-      }
-    });
-
-    this.notificationConnection.onclose(async (error: any) => {
-      console.log('Notification SignalR connection closed:', error);
-      this.isNotificationConnected = false;
-
-      // Check if the connection was closed due to authentication issues
-      const errorMessage =
-        error instanceof Error ? error.message : String(error || '');
-      if (
-        errorMessage.includes('401') ||
-        errorMessage.includes('Unauthorized')
-      ) {
-        console.log(
-          'Notification connection closed due to authentication failure'
-        );
-        return; // Don't attempt reconnection for auth failures
-      }
-
-      // Only attempt reconnection if user is still authenticated
-      if (
-        authService.isAuthenticated() &&
-        this.reconnectAttempts < this.maxReconnectAttempts
-      ) {
-        setTimeout(
-          () => {
-            this.attemptNotificationReconnection();
-          },
-          this.reconnectDelay * Math.pow(2, this.reconnectAttempts)
-        );
-      }
-    });
-  }
-
-  /**
-   * Attempt manual reconnection for match simulation with authentication check
-   */
-  private async attemptMatchSimulationReconnection(): Promise<void> {
+  private async attemptReconnection(): Promise<void> {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('Max match simulation reconnection attempts reached');
+      console.log('Max reconnection attempts reached');
       return;
     }
 
     // Check if user is still authenticated before attempting reconnection
     if (!authService.isAuthenticated()) {
-      console.log(
-        'User not authenticated, skipping match simulation reconnection'
-      );
+      console.log('User not authenticated, skipping reconnection');
       return;
     }
 
     this.reconnectAttempts++;
     console.log(
-      `Attempting match simulation reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`
+      `Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`
     );
 
     try {
-      await this.connectMatchSimulation();
+      await this.connect();
     } catch (error) {
       console.error(
-        `Match simulation reconnection attempt ${this.reconnectAttempts} failed:`,
-        error
-      );
-    }
-  }
-
-  /**
-   * Attempt manual reconnection for notifications with authentication check
-   */
-  private async attemptNotificationReconnection(): Promise<void> {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('Max notification reconnection attempts reached');
-      return;
-    }
-
-    // Check if user is still authenticated before attempting reconnection
-    if (!authService.isAuthenticated()) {
-      console.log('User not authenticated, skipping notification reconnection');
-      return;
-    }
-
-    this.reconnectAttempts++;
-    console.log(
-      `Attempting notification reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`
-    );
-
-    try {
-      await this.connectNotifications();
-    } catch (error) {
-      console.error(
-        `Notification reconnection attempt ${this.reconnectAttempts} failed:`,
+        `Reconnection attempt ${this.reconnectAttempts} failed:`,
         error
       );
     }
@@ -716,39 +565,17 @@ class SignalRService {
   }
 
   /**
-   * Send a message to the match simulation hub (for testing purposes)
+   * Send a message to the hub (for testing purposes)
    */
-  public async sendMatchSimulationMessage(
-    method: string,
-    ...args: any[]
-  ): Promise<any> {
+  public async sendMessage(method: string, ...args: any[]): Promise<any> {
     try {
-      if (!this.matchSimulationConnection || !this.isMatchSimulationConnected) {
-        throw new Error('Match simulation SignalR not connected');
+      if (!this.connection || !this.isConnected) {
+        throw new Error('SignalR not connected');
       }
 
-      return await this.matchSimulationConnection.invoke(method, ...args);
+      return await this.connection.invoke(method, ...args);
     } catch (error) {
-      console.error('Error sending match simulation SignalR message:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Send a message to the notification hub (for testing purposes)
-   */
-  public async sendNotificationMessage(
-    method: string,
-    ...args: any[]
-  ): Promise<any> {
-    try {
-      if (!this.notificationConnection || !this.isNotificationConnected) {
-        throw new Error('Notification SignalR not connected');
-      }
-
-      return await this.notificationConnection.invoke(method, ...args);
-    } catch (error) {
-      console.error('Error sending notification SignalR message:', error);
+      console.error('Error sending SignalR message:', error);
       throw error;
     }
   }
@@ -758,40 +585,30 @@ class SignalRService {
    */
   public getConnectionStats(): any {
     return {
-      matchSimulation: {
-        isConnected: this.isMatchSimulationConnected,
-        connectionState: this.getMatchSimulationConnectionState(),
-        hasConnection: this.matchSimulationConnection !== null,
-      },
-      notification: {
-        isConnected: this.isNotificationConnected,
-        connectionState: this.getNotificationConnectionState(),
-        hasConnection: this.notificationConnection !== null,
-      },
+      isConnected: this.isConnected,
+      connectionState: this.getConnectionState(),
       reconnectAttempts: this.reconnectAttempts,
       maxReconnectAttempts: this.maxReconnectAttempts,
+      hasConnection: this.connection !== null,
       isAuthenticated: authService.isAuthenticated(),
     };
   }
 
   /**
-   * Ensure both connections are active and authenticated
+   * Ensure connection is active and authenticated
    */
   public async ensureConnection(): Promise<boolean> {
     // Check if user is authenticated
     if (!authService.isAuthenticated()) {
       console.warn(
-        'User not authenticated, cannot establish SignalR connections'
+        'User not authenticated, cannot establish SignalR connection'
       );
       await this.disconnectDueToAuth();
       return false;
     }
 
-    // Check if connections are active
-    const matchSimulationActive = this.isMatchSimulationActive();
-    const notificationActive = this.isNotificationActive();
-
-    if (matchSimulationActive && notificationActive) {
+    // Check if connection is active
+    if (this.isConnectionActive()) {
       return true;
     }
 
@@ -803,7 +620,7 @@ class SignalRService {
    * Reset connection state and force reconnection
    */
   public async resetConnection(): Promise<boolean> {
-    console.log('Resetting SignalR connections');
+    console.log('Resetting SignalR connection');
     this.reconnectAttempts = 0;
     await this.disconnect();
     return await this.connect();

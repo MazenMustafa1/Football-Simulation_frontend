@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/app/Components/Navbar/Navbar';
 import authService from '@/Services/AuthenticationService';
+import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 import matchSimulationService, {
   MatchEvent,
   SimulationResultResponse,
@@ -692,253 +693,255 @@ export default function SimulationView() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar>
-        <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
-        <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
-        <SidebarItem icon={<Users />} text="Players" href="/players" />
-        <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
-        <SidebarItem
-          icon={<Bell />}
-          text="Notifications"
-          href="/notifications"
-        />
-        <SidebarItem icon={<Search />} text="Search" href="/search" />
-        <SidebarItem icon={<Settings />} text="Settings" href="/settings" />
-        <SidebarItem icon={<User />} text="Profile" href="/profile" />
-      </Sidebar>
+    <ProtectedRoute allowedRoles={['User', 'Admin', 'Coach', 'Player']}>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar>
+          <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
+          <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
+          <SidebarItem icon={<Users />} text="Players" href="/players" />
+          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
+          <SidebarItem
+            icon={<Bell />}
+            text="Notifications"
+            href="/notifications"
+          />
+          <SidebarItem icon={<Search />} text="Search" href="/search" />
+          <SidebarItem icon={<Settings />} text="Settings" href="/settings" />
+          <SidebarItem icon={<User />} text="Profile" href="/profile" />
+        </Sidebar>
 
-      <div className="flex flex-1 flex-col">
-        <Navbar />
+        <div className="flex flex-1 flex-col">
+          <Navbar />
 
-        <div className="flex-1 p-6">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-gray-800"
-              >
-                <ArrowLeft className="h-5 w-5" />
-                <span>Back to Dashboard</span>
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Match Simulation
-                </h1>
-                <p className="text-gray-600">
-                  {simulation.homeTeam} vs {simulation.awayTeam}
-                </p>
-              </div>
-            </div>
-
-            {/* Status indicator */}
-            <div className="flex items-center space-x-2">
-              {simulation.status === 'completed' && (
-                <div className="flex items-center space-x-2 text-green-600">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Completed</span>
+          <div className="flex-1 p-6">
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-gray-800"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Back to Dashboard</span>
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    Match Simulation
+                  </h1>
+                  <p className="text-gray-600">
+                    {simulation.homeTeam} vs {simulation.awayTeam}
+                  </p>
                 </div>
-              )}
-              {simulation.status === 'playing' && (
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <Zap className="h-5 w-5" />
-                  <span className="font-medium">Playing</span>
-                </div>
-              )}
-              {simulation.status === 'paused' && (
-                <div className="flex items-center space-x-2 text-yellow-600">
-                  <Pause className="h-5 w-5" />
-                  <span className="font-medium">Paused</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Main content */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            {/* Football Pitch - Main view */}
-            <div className="lg:col-span-3">
-              <div className="h-[600px] rounded-lg bg-white p-4 shadow-md">
-                <FootballPitch
-                  events={simulation.events}
-                  currentEventIndex={currentEventIndex}
-                  homeTeam={simulation.homeTeam}
-                  awayTeam={simulation.awayTeam}
-                  homeScore={simulation.homeScore}
-                  awayScore={simulation.awayScore}
-                  currentMinute={simulation.currentMinute}
-                />
               </div>
 
-              {/* Controls */}
-              <div className="mt-4 rounded-lg bg-white p-4 shadow-md">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {' '}
-                    <button
-                      onClick={isPlaying ? handlePause : handlePlay}
-                      disabled={isRealTime}
-                      className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isPlaying ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                      <span>{isPlaying ? 'Pause' : 'Play'}</span>
-                    </button>
-                    <button
-                      onClick={handleStop}
-                      disabled={isRealTime}
-                      className="flex items-center space-x-2 rounded-lg bg-gray-500 px-4 py-2 text-white transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Square className="h-4 w-4" />
-                      <span>Stop</span>
-                    </button>
+              {/* Status indicator */}
+              <div className="flex items-center space-x-2">
+                {simulation.status === 'completed' && (
+                  <div className="flex items-center space-x-2 text-green-600">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-medium">Completed</span>
                   </div>
-                  <div className="flex items-center space-x-6">
-                    {/* Real-time toggle */}
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="realtime-toggle"
-                        checked={isRealTime}
-                        onChange={(e) => setIsRealTime(e.target.checked)}
-                        className="rounded"
-                      />
-                      <label
-                        htmlFor="realtime-toggle"
-                        className="text-sm text-gray-600"
-                      >
-                        Real-time
-                      </label>
-                      {signalRConnected ? (
-                        <div
-                          className="h-2 w-2 rounded-full bg-green-500"
-                          title="Connected"
-                        />
-                      ) : (
-                        <div
-                          className="h-2 w-2 rounded-full bg-red-500"
-                          title="Disconnected"
-                        />
-                      )}
-                    </div>
+                )}
+                {simulation.status === 'playing' && (
+                  <div className="flex items-center space-x-2 text-blue-600">
+                    <Zap className="h-5 w-5" />
+                    <span className="font-medium">Playing</span>
+                  </div>
+                )}
+                {simulation.status === 'paused' && (
+                  <div className="flex items-center space-x-2 text-yellow-600">
+                    <Pause className="h-5 w-5" />
+                    <span className="font-medium">Paused</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                    {/* Speed control - disabled in real-time mode */}
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">Speed:</span>
-                      <select
-                        value={playbackSpeed}
-                        onChange={(e) =>
-                          handleSpeedChange(Number(e.target.value))
-                        }
+            {/* Main content */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+              {/* Football Pitch - Main view */}
+              <div className="lg:col-span-3">
+                <div className="h-[600px] rounded-lg bg-white p-4 shadow-md">
+                  <FootballPitch
+                    events={simulation.events}
+                    currentEventIndex={currentEventIndex}
+                    homeTeam={simulation.homeTeam}
+                    awayTeam={simulation.awayTeam}
+                    homeScore={simulation.homeScore}
+                    awayScore={simulation.awayScore}
+                    currentMinute={simulation.currentMinute}
+                  />
+                </div>
+
+                {/* Controls */}
+                <div className="mt-4 rounded-lg bg-white p-4 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      {' '}
+                      <button
+                        onClick={isPlaying ? handlePause : handlePlay}
                         disabled={isRealTime}
-                        className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+                        className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <option value={2000}>0.5x</option>
-                        <option value={1000}>1x</option>
-                        <option value={500}>2x</option>
-                        <option value={250}>4x</option>
-                      </select>
+                        {isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                        <span>{isPlaying ? 'Pause' : 'Play'}</span>
+                      </button>
+                      <button
+                        onClick={handleStop}
+                        disabled={isRealTime}
+                        className="flex items-center space-x-2 rounded-lg bg-gray-500 px-4 py-2 text-white transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Square className="h-4 w-4" />
+                        <span>Stop</span>
+                      </button>
                     </div>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center justify-between text-sm text-gray-600">
-                    <span>
-                      Event {currentEventIndex + 1} of{' '}
-                      {simulation.events.length}
-                    </span>
-                    <span>
-                      {Math.round(
-                        (currentEventIndex / simulation.events.length) * 100
-                      )}
-                      %
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-gray-200">
-                    <div
-                      className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                      style={{
-                        width: `${(currentEventIndex / simulation.events.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Side panel - Events and stats */}
-            <div className="space-y-4">
-              {/* Match info */}
-              <div className="rounded-lg bg-white p-4 shadow-md">
-                <h3 className="mb-3 flex items-center font-bold text-gray-800">
-                  <Trophy className="mr-2 h-5 w-5" />
-                  Match Info
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Duration:</span>
-                    <span>{simulation.currentMinute}'</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Events:</span>
-                    <span>{simulation.events.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Current Event:</span>
-                    <span>{currentEventIndex + 1}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent events */}
-              <div className="rounded-lg bg-white p-4 shadow-md">
-                <h3 className="mb-3 flex items-center font-bold text-gray-800">
-                  <Clock className="mr-2 h-5 w-5" />
-                  Recent Events
-                </h3>
-                <div className="max-h-96 space-y-2 overflow-y-auto">
-                  {simulation.events
-                    .slice(
-                      Math.max(0, currentEventIndex - 5),
-                      currentEventIndex + 1
-                    )
-                    .reverse()
-                    .map((event, index) => (
-                      <div
-                        key={event.event_index}
-                        className={`rounded p-2 text-xs ${index === 0 ? 'border border-green-200 bg-green-50' : 'bg-gray-50'}`}
-                      >
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="font-medium">{event.minute}'</span>
-                          <span className="text-gray-600 capitalize">
-                            {event.event_type}
-                          </span>
-                        </div>
-                        <div className="text-gray-700">
-                          <strong>{event.player}</strong> ({event.team})
-                        </div>
-                        <div className="text-gray-600 capitalize">
-                          {event.action}
-                        </div>
-                        {event.outcome && (
-                          <div className="text-green-600 capitalize">
-                            {event.outcome}
-                          </div>
+                    <div className="flex items-center space-x-6">
+                      {/* Real-time toggle */}
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="realtime-toggle"
+                          checked={isRealTime}
+                          onChange={(e) => setIsRealTime(e.target.checked)}
+                          className="rounded"
+                        />
+                        <label
+                          htmlFor="realtime-toggle"
+                          className="text-sm text-gray-600"
+                        >
+                          Real-time
+                        </label>
+                        {signalRConnected ? (
+                          <div
+                            className="h-2 w-2 rounded-full bg-green-500"
+                            title="Connected"
+                          />
+                        ) : (
+                          <div
+                            className="h-2 w-2 rounded-full bg-red-500"
+                            title="Disconnected"
+                          />
                         )}
                       </div>
-                    ))}
+
+                      {/* Speed control - disabled in real-time mode */}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">Speed:</span>
+                        <select
+                          value={playbackSpeed}
+                          onChange={(e) =>
+                            handleSpeedChange(Number(e.target.value))
+                          }
+                          disabled={isRealTime}
+                          className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+                        >
+                          <option value={2000}>0.5x</option>
+                          <option value={1000}>1x</option>
+                          <option value={500}>2x</option>
+                          <option value={250}>4x</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-sm text-gray-600">
+                      <span>
+                        Event {currentEventIndex + 1} of{' '}
+                        {simulation.events.length}
+                      </span>
+                      <span>
+                        {Math.round(
+                          (currentEventIndex / simulation.events.length) * 100
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-gray-200">
+                      <div
+                        className="h-2 rounded-full bg-green-500 transition-all duration-300"
+                        style={{
+                          width: `${(currentEventIndex / simulation.events.length) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side panel - Events and stats */}
+              <div className="space-y-4">
+                {/* Match info */}
+                <div className="rounded-lg bg-white p-4 shadow-md">
+                  <h3 className="mb-3 flex items-center font-bold text-gray-800">
+                    <Trophy className="mr-2 h-5 w-5" />
+                    Match Info
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration:</span>
+                      <span>{simulation.currentMinute}'</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Events:</span>
+                      <span>{simulation.events.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Current Event:</span>
+                      <span>{currentEventIndex + 1}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent events */}
+                <div className="rounded-lg bg-white p-4 shadow-md">
+                  <h3 className="mb-3 flex items-center font-bold text-gray-800">
+                    <Clock className="mr-2 h-5 w-5" />
+                    Recent Events
+                  </h3>
+                  <div className="max-h-96 space-y-2 overflow-y-auto">
+                    {simulation.events
+                      .slice(
+                        Math.max(0, currentEventIndex - 5),
+                        currentEventIndex + 1
+                      )
+                      .reverse()
+                      .map((event, index) => (
+                        <div
+                          key={event.event_index}
+                          className={`rounded p-2 text-xs ${index === 0 ? 'border border-green-200 bg-green-50' : 'bg-gray-50'}`}
+                        >
+                          <div className="mb-1 flex items-center justify-between">
+                            <span className="font-medium">{event.minute}'</span>
+                            <span className="text-gray-600 capitalize">
+                              {event.event_type}
+                            </span>
+                          </div>
+                          <div className="text-gray-700">
+                            <strong>{event.player}</strong> ({event.team})
+                          </div>
+                          <div className="text-gray-600 capitalize">
+                            {event.action}
+                          </div>
+                          {event.outcome && (
+                            <div className="text-green-600 capitalize">
+                              {event.outcome}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

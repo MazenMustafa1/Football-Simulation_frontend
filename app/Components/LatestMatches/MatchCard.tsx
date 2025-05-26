@@ -8,6 +8,8 @@ type MatchCardProps = {
   scoreA: number;
   scoreB: number;
   status?: string;
+  HomeImage?: string;
+  AwayImage?: string;
   date?: Date;
   matchId?: number;
 };
@@ -20,6 +22,8 @@ export default function MatchCard({
   status = 'completed',
   date,
   matchId,
+  HomeImage = '', // Default to empty string if no image URL is provided
+  AwayImage = '', // Default to empty string if no image URL is provided
 }: MatchCardProps) {
   // Format date if available
   const formattedDate = date
@@ -50,7 +54,7 @@ export default function MatchCard({
 
   return (
     <Link
-      href={matchId ? `/matchdetails/${matchId}` : '/matchdetails'}
+      href={matchId ? `/matchdetails?matchId=${matchId}` : '/matchdetails'}
       className="block"
     >
       <div className="list bg-base-100 rounded-box shadow-md transition-shadow hover:shadow-lg">
@@ -59,7 +63,7 @@ export default function MatchCard({
           <div className="flex items-center gap-2 px-8">
             <img
               className="rounded-box size-10"
-              src="/logos/barcelona.png"
+              src={HomeImage || '/logos/barcelona.png'}
               alt={teamA}
             />
             <div>
@@ -85,7 +89,7 @@ export default function MatchCard({
             </div>
             <img
               className="rounded-box size-10"
-              src="/logos/real madrid.png"
+              src={AwayImage || '/logos/real madrid.png'}
               alt={teamB}
             />
           </div>

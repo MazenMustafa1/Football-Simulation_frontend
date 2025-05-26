@@ -193,6 +193,42 @@ class AuthenticationService {
 
     // Clear all API cache related to user data
     apiService.clearCache('user|auth|profile');
+
+    // Notify any listeners that the user has logged out
+    this.notifyLogout();
+  }
+
+  // Logout event listeners
+  private logoutListeners: (() => void)[] = [];
+
+  /**
+   * Add a listener for logout events
+   */
+  public onLogout(callback: () => void): void {
+    this.logoutListeners.push(callback);
+  }
+
+  /**
+   * Remove a logout event listener
+   */
+  public removeLogoutListener(callback: () => void): void {
+    const index = this.logoutListeners.indexOf(callback);
+    if (index > -1) {
+      this.logoutListeners.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify all logout listeners
+   */
+  private notifyLogout(): void {
+    this.logoutListeners.forEach((callback) => {
+      try {
+        callback();
+      } catch (error) {
+        console.error('Error in logout listener:', error);
+      }
+    });
   }
 
   /**
@@ -698,6 +734,69 @@ class AuthenticationService {
    */
   public getApiCacheStats() {
     return apiService.getCacheStats();
+  }
+
+  /**
+   * Get the current access token (public method for external services)
+   * @returns The access token if available and valid, null otherwise
+   */
+  public getAccessToken(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    // Validate token expiration
+    try {
+      const decoded = this.decodeToken(token);
+      const currentTime = Date.now() / 1000;
+
+      // Return null if token is expired
+      if (decoded.exp <= currentTime) {
+        this.clearTokens();
+        return null;
+      }
+
+      return token;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      this.clearTokens();
+      return null;
+    }
+  }
+
+  /**
+   * Get access token with automatic refresh if needed
+   * @returns Promise that resolves to the access token or null if refresh fails
+   */
+  public async getValidAccessToken(): Promise<string | null> {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const decoded = this.decodeToken(token);
+      const currentTime = Date.now() / 1000;
+
+      // If token is expired, clear it and return null
+      if (decoded.exp <= currentTime) {
+        this.clearTokens();
+        return null;
+      }
+
+      // If token will expire in less than 5 minutes, try to refresh it
+      if (decoded.exp - currentTime < 300) {
+        const refreshSuccess = await this.refreshToken();
+        if (refreshSuccess) {
+          return this.getToken();
+        } else {
+          return null;
+        }
+      }
+
+      return token;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      this.clearTokens();
+      return null;
+    }
   }
 
   /**

@@ -79,6 +79,8 @@ export default function LatestMatches() {
           scoreA={match.homeTeamScore || 0}
           scoreB={match.awayTeamScore || 0}
           status={match.status}
+          HomeImage={match.homeTeamLogo || ''}
+          AwayImage={match.awayTeamLogo || ''}
           date={match.date ? new Date(match.date) : new Date()}
           matchId={match.id}
         />

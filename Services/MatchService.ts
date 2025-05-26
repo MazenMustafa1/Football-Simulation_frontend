@@ -147,6 +147,7 @@ export interface MatchDetail {
   homeTeamFreeKicks: number;
   awayTeamFreeKicks: number;
   creatorId: string;
+  isLive: boolean;
 }
 
 export interface MatchDetailResponse {

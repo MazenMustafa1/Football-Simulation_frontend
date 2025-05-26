@@ -9,15 +9,9 @@ import RightPanel from '@/app/Components/RightPanel/RightPanel';
 import LiveMatchPanel from '@/app/Components/RightPanel/LiveMatchPanel';
 import { Settings, Play } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
-import { Team } from '@/Services/TeamService';
 
-interface DashboardContentProps {
-  teams: Team[];
-}
-
-export default function DashboardContent({ teams }: DashboardContentProps) {
+export default function DashboardContent() {
   const [showSpacePanel, setShowSpacePanel] = useState(false);
   const { expanded, isCompactMode } = useSidebarContext();
 
@@ -77,11 +71,6 @@ export default function DashboardContent({ teams }: DashboardContentProps) {
                             Start Simulation
                           </span>
                           <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-emerald-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                        </button>
-                      </Link>
-                      <Link href="/matchdetails">
-                        <button className="rounded-xl border-2 border-white/30 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/50 hover:bg-white/10">
-                          View Match Details
                         </button>
                       </Link>
                     </div>

@@ -36,11 +36,15 @@ export interface SimulationProgressData {
 
 export interface NotificationData {
   id: string;
+  userId: string;
   message: string;
   title?: string;
-  type: string;
-  isread: boolean;
-  time : string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, any>;
 }
 
 class SignalRService {

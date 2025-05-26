@@ -29,6 +29,7 @@ import {
 import Navbar from '@/app/Components/Navbar/Navbar';
 import authService from '@/Services/AuthenticationService';
 import teamService, { Team } from '@/Services/TeamService';
+import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 import matchSimulationService, {
   TeamSeason,
   SimulateMatchRequest,
@@ -183,411 +184,426 @@ export default function MatchSimulation() {
   }
 
   return (
-    <SidebarLayout
-      sidebar={
-        <>
-          {/* Main Navigation */}
-          <Link href="/dashboard">
-            <SidebarItem
-              icon={<LayoutDashboardIcon size={20} />}
-              text="Dashboard"
-              active
-            />
-          </Link>
-          <Link href="/teams">
-            <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-          </Link>
-          <Link href="/schedule">
-            <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-          </Link>
-          <Link href="/players">
-            <SidebarItem icon={<User size={20} />} text="Players" />
-          </Link>
-          <Link href="/coaches">
-            <SidebarItem icon={<Users size={20} />} text="Coaches" />
-          </Link>
-          <Link href="/stadiums">
-            <SidebarItem icon={<Home size={20} />} text="Stadiums" />
-          </Link>
+    <ProtectedRoute allowedRoles={['User', 'Admin', 'Coach', 'Player']}>
+      <SidebarLayout
+        sidebar={
+          <>
+            {/* Main Navigation */}
+            <Link href="/dashboard">
+              <SidebarItem
+                icon={<LayoutDashboardIcon size={20} />}
+                text="Dashboard"
+                active
+              />
+            </Link>
+            <Link href="/teams">
+              <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
+            </Link>
+            <Link href="/schedule">
+              <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
+            </Link>
+            <Link href="/players">
+              <SidebarItem icon={<User size={20} />} text="Players" />
+            </Link>
+            <Link href="/coaches">
+              <SidebarItem icon={<Users size={20} />} text="Coaches" />
+            </Link>
+            <Link href="/stadiums">
+              <SidebarItem icon={<Home size={20} />} text="Stadiums" />
+            </Link>
 
-          {/* Admin Section - only show if user is admin */}
-          {isAdmin && (
-            <>
-              <SidebarSection title="Admin" color="text-amber-600" />
-              <Link href="/admin">
-                <SidebarItem
-                  icon={<Settings size={20} />}
-                  text="Admin Dashboard"
-                />
-              </Link>
-            </>
-          )}
+            {/* Admin Section - only show if user is admin */}
+            {isAdmin && (
+              <>
+                <SidebarSection title="Admin" color="text-amber-600" />
+                <Link href="/admin">
+                  <SidebarItem
+                    icon={<Settings size={20} />}
+                    text="Admin Dashboard"
+                  />
+                </Link>
+              </>
+            )}
 
-          {/* Shop & Notifications */}
-          <SidebarSection title="Shop & Updates" />
-          <Link href="/products">
-            <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-          </Link>
-          <Link href="/notifications">
-            <SidebarItem icon={<Bell size={20} />} text="Notifications" />
-          </Link>
+            {/* Shop & Notifications */}
+            <SidebarSection title="Shop & Updates" />
+            <Link href="/products">
+              <SidebarItem icon={<Package size={20} />} text="Shop" alert />
+            </Link>
+            <Link href="/notifications">
+              <SidebarItem icon={<Bell size={20} />} text="Notifications" />
+            </Link>
 
-          {/* Search & Settings */}
-          <SidebarSection title="Other" />
-          <Link href="/search">
-            <SidebarItem icon={<Search size={20} />} text="Search" />
-          </Link>
-          <Link href="/settings">
-            <SidebarItem icon={<Settings size={20} />} text="Settings" />
-          </Link>
-        </>
-      }
-    >
-      <div className="relative min-h-screen flex-1">
-        {/* Enhanced Background */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
-          <div className="absolute inset-0 opacity-[0.03]">
-            <Image
-              src="/images/Stadium dark.png"
-              alt="Stadium Background"
-              fill
-              className="object-cover object-center"
-            />
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <Navbar />
-
-          <div className="p-6">
-            {/* Header */}
-            <div className="mb-6 flex items-center gap-4">
-              <Link href="/dashboard">
-                <button className="rounded-full bg-white/90 p-2 shadow-lg transition-all hover:shadow-xl">
-                  <ArrowLeft size={24} className="text-green-700" />
-                </button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-green-800">
-                  Match Simulation
-                </h1>
-                <p className="text-gray-600">
-                  Create and simulate custom matches between teams
-                </p>
-              </div>
+            {/* Search & Settings */}
+            <SidebarSection title="Other" />
+            <Link href="/search">
+              <SidebarItem icon={<Search size={20} />} text="Search" />
+            </Link>
+            <Link href="/settings">
+              <SidebarItem icon={<Settings size={20} />} text="Settings" />
+            </Link>
+          </>
+        }
+      >
+        <div className="relative min-h-screen flex-1">
+          {/* Enhanced Background */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
+            <div className="absolute inset-0 opacity-[0.03]">
+              <Image
+                src="/images/Stadium dark.png"
+                alt="Stadium Background"
+                fill
+                className="object-cover object-center"
+              />
             </div>
+          </div>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Team Selection */}
-              <div className="space-y-6 lg:col-span-2">
-                {/* Home Team Selection */}
-                <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
-                  <div className="mb-4 flex items-center gap-2">
-                    <Users className="text-green-600" size={20} />
-                    <h2 className="text-xl font-semibold text-green-800">
-                      Home Team
-                    </h2>
-                  </div>
+          <div className="relative z-10">
+            <Navbar />
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Select Team
-                      </label>
-                      <select
-                        value={homeTeam?.id || ''}
-                        onChange={(e) => {
-                          const team = teams.find(
-                            (t) => t.id === parseInt(e.target.value)
-                          );
-                          if (team) handleTeamSelection(team, 'home');
-                        }}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500"
-                      >
-                        <option value="">Choose home team...</option>
-                        {teams.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Select Season
-                      </label>
-                      <select
-                        value={homeSelectedSeason}
-                        onChange={(e) => setHomeSelectedSeason(e.target.value)}
-                        disabled={!homeTeam || isLoadingSeasons}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100"
-                      >
-                        <option value="">Choose season...</option>
-                        {homeSeasons.map((season) => (
-                          <option
-                            key={season.seasonId}
-                            value={season.seasonName}
-                          >
-                            {season.seasonName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {homeTeam && (
-                    <div className="mt-4 flex items-center gap-4 rounded-lg bg-green-50 p-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                        <ClubIcon className="text-green-600" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-green-800">
-                          {homeTeam.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {homeSelectedSeason
-                            ? `Season: ${homeSelectedSeason}`
-                            : 'Select a season'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+            <div className="p-6">
+              {/* Header */}
+              <div className="mb-6 flex items-center gap-4">
+                <Link href="/dashboard">
+                  <button className="rounded-full bg-white/90 p-2 shadow-lg transition-all hover:shadow-xl">
+                    <ArrowLeft size={24} className="text-green-700" />
+                  </button>
+                </Link>
+                <div>
+                  <h1 className="text-3xl font-bold text-green-800">
+                    Match Simulation
+                  </h1>
+                  <p className="text-gray-600">
+                    Create and simulate custom matches between teams
+                  </p>
                 </div>
+              </div>
 
-                {/* Away Team Selection */}
-                <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
-                  <div className="mb-4 flex items-center gap-2">
-                    <Users className="text-blue-600" size={20} />
-                    <h2 className="text-xl font-semibold text-blue-800">
-                      Away Team
-                    </h2>
-                  </div>
+              {/* Main Content */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* Team Selection */}
+                <div className="space-y-6 lg:col-span-2">
+                  {/* Home Team Selection */}
+                  <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
+                    <div className="mb-4 flex items-center gap-2">
+                      <Users className="text-green-600" size={20} />
+                      <h2 className="text-xl font-semibold text-green-800">
+                        Home Team
+                      </h2>
+                    </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Select Team
-                      </label>
-                      <select
-                        value={awayTeam?.id || ''}
-                        onChange={(e) => {
-                          const team = teams.find(
-                            (t) => t.id === parseInt(e.target.value)
-                          );
-                          if (team) handleTeamSelection(team, 'away');
-                        }}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="">Choose away team...</option>
-                        {teams
-                          .filter((team) => team.id !== homeTeam?.id)
-                          .map((team) => (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Select Team
+                        </label>
+                        <select
+                          value={homeTeam?.id || ''}
+                          onChange={(e) => {
+                            const team = teams.find(
+                              (t) => t.id === parseInt(e.target.value)
+                            );
+                            if (team) handleTeamSelection(team, 'home');
+                          }}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500"
+                        >
+                          <option value="">Choose home team...</option>
+                          {teams.map((team) => (
                             <option key={team.id} value={team.id}>
                               {team.name}
                             </option>
                           ))}
-                      </select>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Select Season
+                        </label>
+                        <select
+                          value={homeSelectedSeason}
+                          onChange={(e) =>
+                            setHomeSelectedSeason(e.target.value)
+                          }
+                          disabled={!homeTeam || isLoadingSeasons}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100"
+                        >
+                          <option value="">Choose season...</option>
+                          {homeSeasons.map((season) => (
+                            <option
+                              key={season.seasonId}
+                              value={season.seasonName}
+                            >
+                              {season.seasonName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Select Season
-                      </label>
-                      <select
-                        value={awaySelectedSeason}
-                        onChange={(e) => setAwaySelectedSeason(e.target.value)}
-                        disabled={!awayTeam || isLoadingSeasons}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
-                      >
-                        <option value="">Choose season...</option>
-                        {awaySeasons.map((season) => (
-                          <option
-                            key={season.seasonId}
-                            value={season.seasonName}
-                          >
-                            {season.seasonName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {homeTeam && (
+                      <div className="mt-4 flex items-center gap-4 rounded-lg bg-green-50 p-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                          <ClubIcon className="text-green-600" size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-green-800">
+                            {homeTeam.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {homeSelectedSeason
+                              ? `Season: ${homeSelectedSeason}`
+                              : 'Select a season'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {awayTeam && (
-                    <div className="mt-4 flex items-center gap-4 rounded-lg bg-blue-50 p-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                        <ClubIcon className="text-blue-600" size={24} />
-                      </div>
+                  {/* Away Team Selection */}
+                  <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
+                    <div className="mb-4 flex items-center gap-2">
+                      <Users className="text-blue-600" size={20} />
+                      <h2 className="text-xl font-semibold text-blue-800">
+                        Away Team
+                      </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <h3 className="font-semibold text-blue-800">
-                          {awayTeam.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {awaySelectedSeason
-                            ? `Season: ${awaySelectedSeason}`
-                            : 'Select a season'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Simulation Panel */}
-              <div className="space-y-6">
-                {/* Match Preview */}
-                <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                    Match Preview
-                  </h3>
-
-                  {homeTeam && awayTeam ? (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <div className="mb-4 text-2xl font-bold text-gray-800">
-                          {homeTeam.name}
-                          <span className="mx-2 text-gray-400">VS</span>
-                          {awayTeam.name}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {homeSelectedSeason && awaySelectedSeason ? (
-                            <div className="space-y-1">
-                              <div>Home: {homeSelectedSeason}</div>
-                              <div>Away: {awaySelectedSeason}</div>
-                            </div>
-                          ) : (
-                            'Select seasons for both teams'
-                          )}
-                        </div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Select Team
+                        </label>
+                        <select
+                          value={awayTeam?.id || ''}
+                          onChange={(e) => {
+                            const team = teams.find(
+                              (t) => t.id === parseInt(e.target.value)
+                            );
+                            if (team) handleTeamSelection(team, 'away');
+                          }}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">Choose away team...</option>
+                          {teams
+                            .filter((team) => team.id !== homeTeam?.id)
+                            .map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            ))}
+                        </select>
                       </div>
 
-                      {/* Start Simulation Button */}
-                      <button
-                        onClick={startSimulation}
-                        disabled={
-                          !canStartSimulation() ||
-                          simulation.status === 'loading'
-                        }
-                        className={`w-full rounded-xl px-6 py-4 font-semibold text-white transition-all duration-300 ${
-                          canStartSimulation() &&
-                          simulation.status !== 'loading'
-                            ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:scale-105 hover:from-green-700 hover:to-blue-700 hover:shadow-xl'
-                            : 'cursor-not-allowed bg-gray-400'
-                        }`}
-                      >
-                        {simulation.status === 'loading' ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <Loader2 size={20} className="animate-spin" />
-                            Starting Simulation...
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2">
-                            <Play size={20} />
-                            Start Simulation
-                          </div>
-                        )}
-                      </button>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Select Season
+                        </label>
+                        <select
+                          value={awaySelectedSeason}
+                          onChange={(e) =>
+                            setAwaySelectedSeason(e.target.value)
+                          }
+                          disabled={!awayTeam || isLoadingSeasons}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
+                        >
+                          <option value="">Choose season...</option>
+                          {awaySeasons.map((season) => (
+                            <option
+                              key={season.seasonId}
+                              value={season.seasonName}
+                            >
+                              {season.seasonName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="py-8 text-center text-gray-500">
-                      <Play size={48} className="mx-auto mb-4 text-gray-300" />
-                      <p>Select both teams to preview the match</p>
-                    </div>
-                  )}
+
+                    {awayTeam && (
+                      <div className="mt-4 flex items-center gap-4 rounded-lg bg-blue-50 p-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                          <ClubIcon className="text-blue-600" size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-blue-800">
+                            {awayTeam.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {awaySelectedSeason
+                              ? `Season: ${awaySelectedSeason}`
+                              : 'Select a season'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Simulation Status */}
-                {simulation.status !== 'idle' && (
+                {/* Simulation Panel */}
+                <div className="space-y-6">
+                  {/* Match Preview */}
                   <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
                     <h3 className="mb-4 text-lg font-semibold text-gray-800">
-                      Simulation Status
+                      Match Preview
                     </h3>
 
-                    {simulation.status === 'loading' && (
-                      <div className="py-4 text-center">
-                        <Loader2
-                          size={32}
-                          className="mx-auto mb-3 animate-spin text-blue-600"
-                        />
-                        <p className="font-medium text-blue-600">
-                          Initializing match simulation...
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                          This may take a few moments
-                        </p>
-                      </div>
-                    )}
-
-                    {simulation.status === 'success' && simulation.data && (
-                      <div className="py-4 text-center">
-                        <CheckCircle
-                          size={32}
-                          className="mx-auto mb-3 text-green-600"
-                        />
-                        <p className="mb-2 font-medium text-green-600">
-                          Simulation Started Successfully!
-                        </p>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p>Match ID: {simulation.data.apiResponse.matchId}</p>
-                          <p>
-                            Simulation ID:{' '}
-                            {simulation.data.apiResponse.simulationId}
-                          </p>
-                          <p>Status: {simulation.data.apiResponse.status}</p>
+                    {homeTeam && awayTeam ? (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <div className="mb-4 text-2xl font-bold text-gray-800">
+                            {homeTeam.name}
+                            <span className="mx-2 text-gray-400">VS</span>
+                            {awayTeam.name}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {homeSelectedSeason && awaySelectedSeason ? (
+                              <div className="space-y-1">
+                                <div>Home: {homeSelectedSeason}</div>
+                                <div>Away: {awaySelectedSeason}</div>
+                              </div>
+                            ) : (
+                              'Select seasons for both teams'
+                            )}
+                          </div>
                         </div>
-                        <div className="mt-4 rounded-lg bg-blue-50 p-3">
-                          <p className="text-sm text-blue-800">
-                            Redirecting to simulation view in 3 seconds...
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
-                    {simulation.status === 'error' && (
-                      <div className="py-4 text-center">
-                        <AlertCircle
-                          size={32}
-                          className="mx-auto mb-3 text-red-600"
-                        />
-                        <p className="mb-2 font-medium text-red-600">
-                          Simulation Failed
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {simulation.error}
-                        </p>
+                        {/* Start Simulation Button */}
                         <button
-                          onClick={() => setSimulation({ status: 'idle' })}
-                          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                          onClick={startSimulation}
+                          disabled={
+                            !canStartSimulation() ||
+                            simulation.status === 'loading'
+                          }
+                          className={`w-full rounded-xl px-6 py-4 font-semibold text-white transition-all duration-300 ${
+                            canStartSimulation() &&
+                            simulation.status !== 'loading'
+                              ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:scale-105 hover:from-green-700 hover:to-blue-700 hover:shadow-xl'
+                              : 'cursor-not-allowed bg-gray-400'
+                          }`}
                         >
-                          Try Again
+                          {simulation.status === 'loading' ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 size={20} className="animate-spin" />
+                              Starting Simulation...
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2">
+                              <Play size={20} />
+                              Start Simulation
+                            </div>
+                          )}
                         </button>
                       </div>
+                    ) : (
+                      <div className="py-8 text-center text-gray-500">
+                        <Play
+                          size={48}
+                          className="mx-auto mb-4 text-gray-300"
+                        />
+                        <p>Select both teams to preview the match</p>
+                      </div>
                     )}
                   </div>
-                )}
 
-                {/* Tips */}
-                <div className="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-6 shadow-xl">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Zap className="text-yellow-600" size={20} />
-                    <h3 className="text-lg font-semibold text-yellow-800">
-                      Tips
-                    </h3>
+                  {/* Simulation Status */}
+                  {simulation.status !== 'idle' && (
+                    <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
+                      <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                        Simulation Status
+                      </h3>
+
+                      {simulation.status === 'loading' && (
+                        <div className="py-4 text-center">
+                          <Loader2
+                            size={32}
+                            className="mx-auto mb-3 animate-spin text-blue-600"
+                          />
+                          <p className="font-medium text-blue-600">
+                            Initializing match simulation...
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500">
+                            This may take a few moments
+                          </p>
+                        </div>
+                      )}
+
+                      {simulation.status === 'success' && simulation.data && (
+                        <div className="py-4 text-center">
+                          <CheckCircle
+                            size={32}
+                            className="mx-auto mb-3 text-green-600"
+                          />
+                          <p className="mb-2 font-medium text-green-600">
+                            Simulation Started Successfully!
+                          </p>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>
+                              Match ID: {simulation.data.apiResponse.matchId}
+                            </p>
+                            <p>
+                              Simulation ID:{' '}
+                              {simulation.data.apiResponse.simulationId}
+                            </p>
+                            <p>Status: {simulation.data.apiResponse.status}</p>
+                          </div>
+                          <div className="mt-4 rounded-lg bg-blue-50 p-3">
+                            <p className="text-sm text-blue-800">
+                              Redirecting to simulation view in 3 seconds...
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {simulation.status === 'error' && (
+                        <div className="py-4 text-center">
+                          <AlertCircle
+                            size={32}
+                            className="mx-auto mb-3 text-red-600"
+                          />
+                          <p className="mb-2 font-medium text-red-600">
+                            Simulation Failed
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {simulation.error}
+                          </p>
+                          <button
+                            onClick={() => setSimulation({ status: 'idle' })}
+                            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                          >
+                            Try Again
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tips */}
+                  <div className="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-6 shadow-xl">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Zap className="text-yellow-600" size={20} />
+                      <h3 className="text-lg font-semibold text-yellow-800">
+                        Tips
+                      </h3>
+                    </div>
+                    <ul className="space-y-2 text-sm text-yellow-700">
+                      <li>• Different seasons can create unique matchups</li>
+                      <li>• Teams cannot play against themselves</li>
+                      <li>
+                        • Simulations may take a few moments to initialize
+                      </li>
+                      <li>
+                        • You'll be redirected to watch the live simulation
+                      </li>
+                    </ul>
                   </div>
-                  <ul className="space-y-2 text-sm text-yellow-700">
-                    <li>• Different seasons can create unique matchups</li>
-                    <li>• Teams cannot play against themselves</li>
-                    <li>• Simulations may take a few moments to initialize</li>
-                    <li>• You'll be redirected to watch the live simulation</li>
-                  </ul>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </SidebarLayout>
+      </SidebarLayout>
+    </ProtectedRoute>
   );
 }
