@@ -189,7 +189,7 @@ class SignalRService {
   public async connect(): Promise<boolean> {
     const matchSimulationConnected = await this.connectMatchSimulation();
     const notificationConnected = await this.connectNotifications();
-    
+
     // Reset reconnect attempts if at least one connection succeeded
     if (matchSimulationConnected || notificationConnected) {
       this.reconnectAttempts = 0;
@@ -237,7 +237,7 @@ class SignalRService {
     this.reconnectAttempts = 0; // Reset reconnect attempts on manual disconnect
     await Promise.all([
       this.disconnectMatchSimulation(),
-      this.disconnectNotifications()
+      this.disconnectNotifications(),
     ]);
     console.log('All SignalR connections disconnected');
   }

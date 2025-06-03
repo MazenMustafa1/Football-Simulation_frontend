@@ -71,20 +71,22 @@ export default function LatestMatches() {
 
   return (
     <div className="flex flex-col gap-4">
-      {matches.map((match) => (
-        <MatchCard
-          key={match.id}
-          teamA={match.homeTeamName || 'Unknown Team'}
-          teamB={match.awayTeamName || 'Unknown Team'}
-          scoreA={match.homeTeamScore || 0}
-          scoreB={match.awayTeamScore || 0}
-          status={match.status}
-          HomeImage={match.homeTeamLogo || ''}
-          AwayImage={match.awayTeamLogo || ''}
-          date={match.date ? new Date(match.date) : new Date()}
-          matchId={match.id}
-        />
-      ))}
+      {matches
+        .filter((match: Match) => match.isLive === false)
+        .map((match: Match) => (
+          <MatchCard
+            key={match.id}
+            teamA={match.homeTeamName || 'Unknown Team'}
+            teamB={match.awayTeamName || 'Unknown Team'}
+            scoreA={match.homeTeamScore || 0}
+            scoreB={match.awayTeamScore || 0}
+            status={match.status}
+            HomeImage={match.homeTeamLogo || ''}
+            AwayImage={match.awayTeamLogo || ''}
+            date={match.date ? new Date(match.date) : new Date()}
+            matchId={match.id}
+          />
+        ))}
     </div>
   );
 }

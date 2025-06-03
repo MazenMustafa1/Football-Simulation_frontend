@@ -19,7 +19,7 @@ export default function MatchCard({
   teamB,
   scoreA,
   scoreB,
-  status = 'completed',
+  status,
   date,
   matchId,
   HomeImage = '', // Default to empty string if no image URL is provided
@@ -37,7 +37,7 @@ export default function MatchCard({
 
   // Determine status badge style
   const getStatusBadge = () => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'live':
         return (
           <span className="badge badge-sm badge-error animate-pulse">LIVE</span>

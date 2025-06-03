@@ -7,6 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import authService from '@/Services/AuthenticationService';
 import notificationService, {
   Notification,
+  NotificationType,
 } from '@/Services/NotificationService';
 
 interface UserStorage {
@@ -169,7 +170,7 @@ export default function Navbar() {
       const success = await notificationService.markAllAsRead();
       if (success) {
         setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, read: true }))
+          prev.map((notification) => ({ ...notification, isread: true }))
         );
         setUnreadCount(0);
         toast.success('All notifications marked as read');
@@ -189,7 +190,9 @@ export default function Navbar() {
       const success = await notificationService.markAsRead(notificationId);
       if (success) {
         setNotifications((prev) =>
-          prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+          prev.map((n) =>
+            n.id === notificationId ? { ...n, isread: true } : n
+          )
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
@@ -392,11 +395,14 @@ export default function Navbar() {
                                     </p>
                                     <span
                                       className={`rounded-full px-2 py-1 text-xs ${
-                                        notification.type === 'error'
+                                        notification.type ===
+                                        NotificationType.Error
                                           ? 'bg-red-100 text-red-800'
-                                          : notification.type === 'warning'
+                                          : notification.type ===
+                                              NotificationType.Warning
                                             ? 'bg-yellow-100 text-yellow-800'
-                                            : notification.type === 'success'
+                                            : notification.type ===
+                                                NotificationType.Success
                                               ? 'bg-green-100 text-green-800'
                                               : 'bg-blue-100 text-blue-800'
                                       }`}

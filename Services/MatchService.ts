@@ -17,6 +17,7 @@ export interface Match {
   stadiumId?: number;
   stadiumName?: string;
   matchWeek?: number;
+  isLive?: boolean;
 }
 
 export interface TeamSeason {

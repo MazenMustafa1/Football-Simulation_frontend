@@ -305,7 +305,7 @@ class AuthenticationService {
   public getCurrentUserId(): string | null {
     try {
       const currentUser = this.getCurrentUser();
-      return currentUser?.sub || null;
+      return currentUser?.claimNameId || null;
     } catch (error) {
       console.error('Error getting current user ID:', error);
       return null;

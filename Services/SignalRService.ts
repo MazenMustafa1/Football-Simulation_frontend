@@ -40,7 +40,7 @@ export interface NotificationData {
   title?: string;
   type: string;
   isread: boolean;
-  time : string;
+  time: string;
 }
 
 class SignalRService {

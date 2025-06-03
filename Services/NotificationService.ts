@@ -1,3 +1,5 @@
+// NotificationService - Handles real-time notifications from SignalR and API
+// Note: matchId from notifications is used as simulationId for redirection to /simulationview/{simulationId}
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import signalRService from './SignalRService';
@@ -7,9 +9,26 @@ export interface Notification {
   id: string;
   message: string;
   title?: string;
-  type: string; // 'info' | 'success' | 'error' | 'warning'
+  type: NotificationType;
   isread: boolean;
-  time : string; // ISO 8601 format
+  time: string; // ISO 8601 format
+  matchId?: number; // For match-related notifications
+  simulationId?: string; // For simulation-related notifications (from backend SimulationId)
+}
+
+export enum NotificationType {
+  MatchStart = 'MatchStart',
+  MatchEnd = 'MatchEnd',
+  SimulationStart = 'SimulationStart',
+  SimulationEnd = 'SimulationEnd',
+  MatchUpdate = 'MatchUpdate',
+  SimulationUpdate = 'SimulationUpdate',
+  SystemAlert = 'SystemAlert',
+  UserMessage = 'UserMessage',
+  Info = 'Info',
+  Warning = 'Warning',
+  Error = 'Error',
+  Success = 'Success',
 }
 
 export interface NotificationServiceConfig {
@@ -69,11 +88,11 @@ class NotificationService {
    */
   private async connectToSignalR(): Promise<boolean> {
     try {
-      const connected = await signalRService.connect();
+      // Connect to both SignalR hubs (match simulation and notifications)
+      const connected = await signalRService.connectNotifications();
       if (connected) {
         this.isSignalRConnected = true;
         await this.setupSignalRListeners();
-        await this.joinUserNotificationGroup();
         console.log('SignalR notification service connected');
         return true;
       }
@@ -88,15 +107,20 @@ class NotificationService {
    * Setup SignalR event listeners for notifications
    */
   private async setupSignalRListeners(): Promise<void> {
-    if (!signalRService.isConnectionActive()) return;
+    if (!signalRService.isNotificationActive()) return;
 
     // Listen for new notifications
-    signalRService.onNotification((notification: Notification) => {
+    signalRService.onNotification((notificationData: any) => {
+      // Convert NotificationData to Notification format
+      const notification: Notification =
+        this.convertNotificationData(notificationData);
       this.handleNewNotification(notification);
     });
 
     // Listen for notification updates (mark as read, etc.)
-    signalRService.onNotificationUpdated((notification: Notification) => {
+    signalRService.onNotificationUpdated((notificationData: any) => {
+      const notification: Notification =
+        this.convertNotificationData(notificationData);
       this.handleNotificationUpdate(notification);
     });
 
@@ -107,24 +131,32 @@ class NotificationService {
   }
 
   /**
-   * Join user-specific notification group
+   * Convert SignalR NotificationData to our Notification format
    */
-  private async joinUserNotificationGroup(): Promise<void> {
-    try {
-      const userId = authService.getCurrentUserId();
-      if (userId && signalRService.isConnectionActive()) {
-        await signalRService.sendNotificationMessage('JoinUserNotificationGroup', userId);
-        console.log(`Joined notification group for user: ${userId}`);
-      }
-    } catch (error) {
-      console.error('Error joining user notification group:', error);
-    }
+  private convertNotificationData(data: any): Notification {
+    return {
+      id: data.id,
+      message: data.message,
+      title: data.title,
+      type: data.type as NotificationType,
+      isread: data.read || data.isread || false,
+      time: data.createdAt || data.time || new Date().toISOString(),
+      matchId: data.metadata?.matchId || data.matchId,
+      simulationId:
+        data.metadata?.simulationId ||
+        data.simulationId ||
+        data.metadata?.SimulationId ||
+        data.SimulationId,
+    };
   }
 
   /**
    * Handle new notification received via SignalR
    */
   private handleNewNotification(notification: Notification): void {
+    // Handle special notification types that require navigation
+    this.handleSpecialNotifications(notification);
+
     // Show toast notification if enabled
     if (this.enableToasts) {
       this.showToast(notification);
@@ -132,6 +164,92 @@ class NotificationService {
 
     // Emit event to listeners
     this.emit('notificationReceived', notification);
+  }
+
+  /**
+   * Handle special notification types that require specific actions
+   */
+  private handleSpecialNotifications(notification: Notification): void {
+    switch (notification.type) {
+      case NotificationType.MatchStart:
+        this.handleMatchStartNotification(notification);
+        break;
+      case NotificationType.SimulationStart:
+        this.handleSimulationStartNotification(notification);
+        break;
+      case NotificationType.MatchEnd:
+      case NotificationType.SimulationEnd:
+        // Could add special handling for match/simulation end if needed
+        break;
+      default:
+        // No special handling required for other types
+        break;
+    }
+  }
+
+  /**
+   * Handle match start notification - redirect to simulation page
+   */
+  private handleMatchStartNotification(notification: Notification): void {
+    if (notification.simulationId) {
+      // Emit specific event for match start with navigation data
+      this.emit('matchStartNotification', {
+        notification,
+        redirectTo: `/simulationview/${notification.simulationId}`,
+        simulationId: notification.simulationId,
+      });
+
+      // Auto-redirect if in browser environment and user wants immediate navigation
+      if (typeof window !== 'undefined') {
+        // Optional: Show confirmation before redirect
+        const shouldRedirect = this.shouldAutoRedirectToMatch();
+        if (shouldRedirect) {
+          this.redirectToSimulation(notification.simulationId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle simulation start notification
+   */
+  private handleSimulationStartNotification(notification: Notification): void {
+    // Similar to match start but maybe different behavior
+    this.emit('simulationStartNotification', {
+      notification,
+      simulationId: notification.simulationId,
+    });
+  }
+
+  /**
+   * Check if user prefers auto-redirect to match simulation
+   */
+  private shouldAutoRedirectToMatch(): boolean {
+    // Check user preferences or settings
+    const autoRedirect = localStorage.getItem('autoRedirectToMatch');
+    return autoRedirect === 'true';
+  }
+
+  /**
+   * Redirect user to simulation page
+   */
+  private redirectToSimulation(simulationId: string): void {
+    try {
+      const redirectUrl = `/simulationview/${simulationId}`;
+
+      // Use Next.js router if available, otherwise fallback to window.location
+      if (typeof window !== 'undefined') {
+        // Emit event for components to handle navigation
+        this.emit('requestNavigation', redirectUrl);
+
+        // Fallback to direct navigation after short delay
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error redirecting to simulation:', error);
+    }
   }
 
   /**
@@ -162,13 +280,14 @@ class NotificationService {
     };
 
     switch (notification.type) {
-      case 'success':
+      case NotificationType.Success:
         toast.success(message, toastOptions);
         break;
-      case 'error':
+      case NotificationType.Error:
         toast.error(message, toastOptions);
         break;
-      case 'warning':
+      case NotificationType.Warning:
+      case NotificationType.SystemAlert:
         toast(message, {
           ...toastOptions,
           icon: '⚠️',
@@ -179,6 +298,44 @@ class NotificationService {
           },
         });
         break;
+      case NotificationType.MatchStart:
+        toast(message, {
+          ...toastOptions,
+          icon: '⚽',
+          style: {
+            background: '#DBEAFE',
+            color: '#1E40AF',
+            border: '1px solid #3B82F6',
+          },
+        });
+        break;
+      case NotificationType.SimulationStart:
+      case NotificationType.MatchUpdate:
+      case NotificationType.SimulationUpdate:
+        toast(message, {
+          ...toastOptions,
+          icon: '🎮',
+          style: {
+            background: '#F0F9FF',
+            color: '#0C4A6E',
+            border: '1px solid #0284C7',
+          },
+        });
+        break;
+      case NotificationType.MatchEnd:
+      case NotificationType.SimulationEnd:
+        toast(message, {
+          ...toastOptions,
+          icon: '🏁',
+          style: {
+            background: '#F3F4F6',
+            color: '#374151',
+            border: '1px solid #6B7280',
+          },
+        });
+        break;
+      case NotificationType.Info:
+      case NotificationType.UserMessage:
       default:
         toast(message, toastOptions);
         break;
@@ -225,7 +382,7 @@ class NotificationService {
     try {
       const userId = authService.getCurrentUserId();
       if (!userId) {
-        return 0;
+        return 0; // No user authenticated
       }
 
       const response = await axios.get(
@@ -248,7 +405,7 @@ class NotificationService {
   public async markAsRead(notificationId: string): Promise<boolean> {
     try {
       await axios.patch(
-        `${this.baseUrl}/api/notifications/${notificationId}/read`,
+        `${this.baseUrl}/api/notifications/mark-as-read/${notificationId}`,
         {},
         {
           headers: this.getAuthHeaders(),
@@ -334,7 +491,7 @@ class NotificationService {
    * Send a test notification (for development/testing)
    */
   public async sendTestNotification(
-    type: Notification['type'] = 'info'
+    type: NotificationType = NotificationType.Info
   ): Promise<boolean> {
     try {
       const userId = authService.getCurrentUserId();
@@ -360,6 +517,47 @@ class NotificationService {
       console.error('Error sending test notification:', error);
       return false;
     }
+  }
+
+  /**
+   * Set user preference for auto-redirect to match simulation
+   */
+  public setAutoRedirectPreference(enabled: boolean): void {
+    localStorage.setItem('autoRedirectToMatch', enabled.toString());
+  }
+
+  /**
+   * Get user preference for auto-redirect to match simulation
+   */
+  public getAutoRedirectPreference(): boolean {
+    return localStorage.getItem('autoRedirectToMatch') === 'true';
+  }
+
+  /**
+   * Manually trigger navigation to simulation page
+   */
+  public navigateToSimulation(simulationId: string): void {
+    this.redirectToSimulation(simulationId);
+  }
+
+  /**
+   * Subscribe to match start notifications specifically
+   */
+  public onMatchStart(
+    callback: (data: {
+      notification: Notification;
+      redirectTo: string;
+      simulationId: string;
+    }) => void
+  ): void {
+    this.on('matchStartNotification', callback);
+  }
+
+  /**
+   * Subscribe to navigation requests
+   */
+  public onNavigationRequest(callback: (url: string) => void): void {
+    this.on('requestNavigation', callback);
   }
 
   /**
