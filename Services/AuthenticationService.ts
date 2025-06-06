@@ -259,13 +259,27 @@ class AuthenticationService {
 
       const decoded = this.decodeToken(token);
 
+      // Extract user ID from various possible claim locations
+      const nameIdentifierClaim =
+        decoded[
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+        ];
+      const emailClaim =
+        decoded[
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+        ];
+      const nameClaim =
+        decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+      const roleClaim =
+        decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
       // Create a standardized user object with properly mapped claims
       return {
         // Core standard claims
-        sub: decoded.sub || '',
-        email: decoded.email || '',
-        name: decoded.name,
-        role: decoded.role,
+        sub: decoded.sub || nameIdentifierClaim || '',
+        email: decoded.email || emailClaim || '',
+        name: decoded.name || nameClaim,
+        role: decoded.role || roleClaim,
         exp: decoded.exp,
         iat: decoded.iat || Math.floor(Date.now() / 1000),
 
@@ -278,20 +292,10 @@ class AuthenticationService {
         jti: decoded.jti,
 
         // Add direct accessors for the original long-form claim names
-        claimNameId:
-          decoded[
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
-          ],
-        claimEmail:
-          decoded[
-            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-          ],
-        claimName:
-          decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
-        claimRole:
-          decoded[
-            'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
-          ],
+        claimNameId: nameIdentifierClaim,
+        claimEmail: emailClaim,
+        claimName: nameClaim,
+        claimRole: roleClaim,
       };
     } catch (error) {
       console.error('Error getting current user:', error);
@@ -305,7 +309,28 @@ class AuthenticationService {
   public getCurrentUserId(): string | null {
     try {
       const currentUser = this.getCurrentUser();
-      return currentUser?.claimNameId || null;
+      if (!currentUser) {
+        console.error('No current user found');
+        return null;
+      }
+
+      // Try multiple possible fields for user ID
+      const userId =
+        currentUser.claimNameId ||
+        currentUser.sub ||
+        currentUser[
+          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+        ] ||
+        null;
+
+      if (!userId) {
+        console.error(
+          'User ID not found in token. Available fields:',
+          Object.keys(currentUser)
+        );
+      }
+
+      return userId;
     } catch (error) {
       console.error('Error getting current user ID:', error);
       return null;
