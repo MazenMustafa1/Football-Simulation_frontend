@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { MatchStats } from '@/app/Components/MatchStats/MatchStats';
 import Sidebar, { SidebarLayout } from '@/app/Components/Sidebar/Sidebar';
 import { SidebarItem } from '@/app/Components/Sidebar/SidebarItem';
@@ -18,6 +18,7 @@ import Link from 'next/link';
 import matchService, { MatchDetail } from '@/Services/MatchService';
 import authService from '@/Services/AuthenticationService';
 import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
+import liveMatchStorageService from '@/Services/LiveMatchStorageService';
 import { match } from 'assert';
 
 function MatchDetailsContent() {
@@ -32,6 +33,7 @@ function MatchDetailsContent() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const matchId = searchParams.get('matchId');
 
   // Enhanced tab change handler with animation
@@ -277,6 +279,46 @@ function MatchDetailsContent() {
                           </span>
                         </label>
                       </div>
+
+                      {/* Simulation View Button */}
+                      <button
+                        onClick={() => {
+                          const simulationUrl =
+                            liveMatchStorageService.getSimulationViewUrl();
+                          if (simulationUrl) {
+                            router.push(simulationUrl);
+                          } else if (
+                            matchId &&
+                            liveMatchStorageService.isCurrentLiveMatch(
+                              parseInt(matchId)
+                            )
+                          ) {
+                            // This is the current live match, attempt to navigate using matchId
+                            router.push(`/simulationview/${matchId}`);
+                          }
+                        }}
+                        className="group relative overflow-hidden rounded-lg border border-purple-400/30 bg-purple-500/20 px-4 py-2 text-sm font-semibold text-purple-400 backdrop-blur-sm transition-all duration-300 hover:bg-purple-500/30 hover:text-purple-300"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="h-4 w-4 transition-transform duration-300 group-hover:scale-110"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                          Live Simulation
+                        </div>
+
+                        {/* Hover effect background */}
+                        <div className="absolute inset-0 -translate-x-full transform bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
+                      </button>
                     </div>
 
                     {/* Auto-refresh Status Indicator */}

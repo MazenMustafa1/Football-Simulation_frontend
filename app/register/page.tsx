@@ -272,13 +272,13 @@ export default function Register() {
           <div className="mx-auto flex justify-center">
             <div className="flex items-center text-center">
               <img
-                src="/logos/Footex.png"
-                alt="Footex Logo"
-                className="mr-2 h-10 w-10 object-contain"
+                src="/logos/PixelPitch.png"
+                alt="PixelPitch Logo"
+                className="mr-2 h-30 w-30 object-contain"
               />
               <div>
                 <h1 className="text-2xl font-bold text-green-600 dark:text-green-500">
-                  FOOTEX
+                  PIXELPITCHAI
                 </h1>
                 <div className="mx-auto mt-1 h-1 w-16 rounded-full bg-gradient-to-r from-blue-600 to-green-500"></div>
               </div>

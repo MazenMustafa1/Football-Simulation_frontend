@@ -21,7 +21,8 @@ export function SidebarItem({
   onClick,
   href,
 }: SidebarItemProps) {
-  const { expanded, isCompactMode, isHovered } = useSidebarContext();
+  const { expanded, isCompactMode, isHovered, isDarkMode } =
+    useSidebarContext();
 
   // Determine if content should be shown (expanded or hovered)
   const showContent = expanded || isHovered;
@@ -43,8 +44,12 @@ export function SidebarItem({
 
     // Active/inactive styling
     const styleClasses = active
-      ? 'bg-gradient-to-tr from-green-500/20 to-green-600/10 text-green-700 shadow-sm border border-green-200/50'
-      : 'hover:bg-green-50 text-gray-600 hover:text-green-700 hover:scale-[1.02] hover:shadow-sm';
+      ? isDarkMode
+        ? 'bg-gradient-to-tr from-green-500/30 to-green-600/20 text-green-300 shadow-sm border border-green-400/30'
+        : 'bg-gradient-to-tr from-green-500/20 to-green-600/10 text-green-700 shadow-sm border border-green-200/50'
+      : isDarkMode
+        ? 'hover:bg-green-800/20 text-gray-300 hover:text-green-300 hover:scale-[1.02] hover:shadow-sm'
+        : 'hover:bg-green-50 text-gray-600 hover:text-green-700 hover:scale-[1.02] hover:shadow-sm';
 
     return `${baseClasses} ${spacingClasses} ${styleClasses}`;
   };
@@ -88,10 +93,20 @@ export function SidebarItem({
 
       {/* Tooltip for collapsed state */}
       {!showContent && (
-        <div className="invisible absolute left-full z-50 ml-2 rounded-lg bg-gray-900/95 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:visible group-hover:ml-3 group-hover:opacity-100">
+        <div
+          className={`invisible absolute left-full z-50 ml-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap shadow-lg backdrop-blur-sm transition-all duration-200 group-hover:visible group-hover:ml-3 group-hover:opacity-100 ${
+            isDarkMode
+              ? 'bg-gray-800/95 text-gray-200'
+              : 'bg-gray-900/95 text-white'
+          } opacity-0`}
+        >
           {text}
           {/* Tooltip arrow */}
-          <div className="absolute top-1/2 left-0 h-2 w-2 -translate-x-1 -translate-y-1/2 rotate-45 bg-gray-900/95"></div>
+          <div
+            className={`absolute top-1/2 left-0 h-2 w-2 -translate-x-1 -translate-y-1/2 rotate-45 ${
+              isDarkMode ? 'bg-gray-800/95' : 'bg-gray-900/95'
+            }`}
+          ></div>
         </div>
       )}
     </>

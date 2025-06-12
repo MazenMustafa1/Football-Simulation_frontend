@@ -1,6 +1,7 @@
 'use client';
 
 import { useSidebarContext } from '../Sidebar/Sidebar';
+import { useSettings } from '../../contexts/EnhancedSettingsContext';
 import SpaceEfficiencyPanel from '../SpaceEfficiencyPanel/SpaceEfficiencyPanel';
 import Navbar from '@/app/Components/Navbar/Navbar';
 import DashboardImage from '@/app/Components/DashboardImage/DashboardImage';
@@ -9,24 +10,39 @@ import RightPanel from '@/app/Components/RightPanel/RightPanel';
 import LiveMatchPanel from '@/app/Components/RightPanel/LiveMatchPanel';
 import { Settings, Play } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DashboardContent() {
   const [showSpacePanel, setShowSpacePanel] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { expanded, isCompactMode } = useSidebarContext();
+  const { isDarkMode } = useSettings();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <>
-      {' '}
       {/* Content container - Remove redundant margins since SidebarLayout already handles them */}
-      <div className="relative z-10 w-full">
+      <div
+        className={`relative z-10 w-full transition-colors duration-300 ${
+          isMounted && isDarkMode ? 'bg-gray-900' : 'bg-white'
+        }`}
+        suppressHydrationWarning
+      >
         <Navbar />
 
         {/* Space Efficiency Toggle */}
         <div className="px-4 py-2">
           <button
             onClick={() => setShowSpacePanel(!showSpacePanel)}
-            className="flex items-center gap-2 rounded-lg bg-green-600/10 px-3 py-1 text-sm text-green-600 transition-all hover:bg-green-600/20"
+            className={`flex items-center gap-2 rounded-lg px-3 py-1 text-sm transition-all ${
+              isMounted && isDarkMode
+                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                : 'bg-green-600/10 text-green-600 hover:bg-green-600/20'
+            }`}
+            suppressHydrationWarning
           >
             <Settings size={14} />
             {showSpacePanel ? 'Hide' : 'Show'} Space Metrics

@@ -12,8 +12,15 @@ export interface SignalREvent {
   timestamp: string;
 }
 
+
+export interface Score {
+  home: number;
+  away: number;
+}
+
 export interface MatchEventData {
-  eventIndex: number;
+  timestamp: string;
+  time_seconds: number;
   minute: number;
   second: number;
   team: string;
@@ -21,13 +28,27 @@ export interface MatchEventData {
   action: string;
   position: [number, number];
   outcome: string;
-  eventType: string;
-  homeScore: number;
-  awayScore: number;
+  height: string;
+  card: string;
+  pass_target: [number, number];
+  shot_target: [number, number];
+  body_part: string;
+  event_type: string;
+  type: string;
+  event_index: number;
+  match_id: string;
+  home_team?: string;
+  away_team?: string;
+  long_pass?: boolean;
+  pass_length?: number;
+  Score?: {
+    home: number;
+    away: number;
+  };
 }
-
 export interface SimulationProgressData {
   simulationId: string;
+  matchId: number;
   progress: number;
   status: 'running' | 'completed' | 'failed';
   currentEvent?: number;
@@ -36,11 +57,69 @@ export interface SimulationProgressData {
 
 export interface NotificationData {
   id: string;
-  message: string;
-  title?: string;
-  type: string;
-  isread: boolean;
+  title: string;
+  content: string;
+  type: NotificationType;
   time: string;
+  isRead: boolean;
+  userId: string;
+}
+
+export enum NotificationType {
+  MatchStart = 'MatchStart',
+  MatchEnd = 'MatchEnd',
+  SimulationStart = 'SimulationStart',
+  SimulationEnd = 'SimulationEnd',
+  MatchUpdate = 'MatchUpdate',
+  SimulationUpdate = 'SimulationUpdate',
+  SystemAlert = 'SystemAlert',
+  UserMessage = 'UserMessage',
+  Info = 'Info',
+  Warning = 'Warning',
+  Error = 'Error',
+  Success = 'Success',
+}
+
+export interface MatchStatistics {
+  matchId: number;
+  timeStamp: string;
+  homeTeam: {
+    name: string;
+    score: number;
+    shots: number;
+    shotsOnTarget: number;
+    possession: number;
+    passes: number;
+    passAccuracy: number;
+    corners: number;
+    fouls: number;
+    yellowCards: number;
+    redCards: number;
+    offsides: number;
+  };
+  awayTeam: {
+    name: string;
+    score: number;
+    shots: number;
+    shotsOnTarget: number;
+    possession: number;
+    passes: number;
+    passAccuracy: number;
+    corners: number;
+    fouls: number;
+    yellowCards: number;
+    redCards: number;
+    offsides: number;
+  };
+  matchInfo: {
+    status: string;
+    isLive: boolean;
+    currentMinute: number;
+    lastEventTime: number;
+    eventType: string;
+    eventTeam: string;
+  };
+  lastUpdated: string;
 }
 
 class SignalRService {
@@ -250,7 +329,7 @@ class SignalRService {
   /**
    * Join a simulation room to receive real-time updates
    */
-  public async joinSimulation(simulationId: string): Promise<boolean> {
+  public async joinSimulation(matchId: number): Promise<boolean> {
     try {
       // Ensure we have an active match simulation connection
       if (!this.isMatchSimulationConnected || !this.matchSimulationConnection) {
@@ -258,11 +337,8 @@ class SignalRService {
         if (!connected) return false;
       }
 
-      await this.matchSimulationConnection!.invoke(
-        'JoinSimulation',
-        simulationId
-      );
-      console.log(`Joined simulation: ${simulationId}`);
+      await this.matchSimulationConnection!.invoke('JoinSimulation', matchId);
+      console.log(`Joined simulation: ${matchId.toString()}`);
       return true;
     } catch (error) {
       console.error('Error joining simulation:', error);
@@ -282,17 +358,14 @@ class SignalRService {
   /**
    * Leave a simulation room
    */
-  public async leaveSimulation(simulationId: string): Promise<boolean> {
+  public async leaveSimulation(matchId: number): Promise<boolean> {
     try {
       if (!this.matchSimulationConnection || !this.isMatchSimulationConnected) {
         return false;
       }
 
-      await this.matchSimulationConnection.invoke(
-        'LeaveSimulation',
-        simulationId
-      );
-      console.log(`Left simulation: ${simulationId}`);
+      await this.matchSimulationConnection.invoke('LeaveMatchGroup', matchId);
+      console.log(`Left simulation: ${matchId.toString()}`);
       return true;
     } catch (error) {
       console.error('Error leaving simulation:', error);
@@ -305,6 +378,8 @@ class SignalRService {
    */
   public onMatchEvent(callback: (data: MatchEventData) => void): void {
     if (this.matchSimulationConnection) {
+      // Remove existing listener to prevent duplicates
+      this.matchSimulationConnection.off('MatchEvent');
       this.matchSimulationConnection.on('MatchEvent', callback);
     }
   }
@@ -316,6 +391,8 @@ class SignalRService {
     callback: (data: SimulationProgressData) => void
   ): void {
     if (this.matchSimulationConnection) {
+      // Remove existing listener to prevent duplicates
+      this.matchSimulationConnection.off('SimulationProgress');
       this.matchSimulationConnection.on('SimulationProgress', callback);
     }
   }
@@ -330,6 +407,8 @@ class SignalRService {
     ) => void
   ): void {
     if (this.matchSimulationConnection) {
+      // Remove existing listener to prevent duplicates
+      this.matchSimulationConnection.off('SimulationComplete');
       this.matchSimulationConnection.on('SimulationComplete', callback);
     }
   }
@@ -338,9 +417,11 @@ class SignalRService {
    * Subscribe to simulation errors
    */
   public onSimulationError(
-    callback: (simulationId: string, error: string) => void
+    callback: (matchId: number, error: string) => void
   ): void {
     if (this.matchSimulationConnection) {
+      // Remove existing listener to prevent duplicates
+      this.matchSimulationConnection.off('SimulationError');
       this.matchSimulationConnection.on('SimulationError', callback);
     }
   }
@@ -350,82 +431,156 @@ class SignalRService {
    */
   public onNotification(callback: (data: NotificationData) => void): void {
     if (this.notificationConnection) {
-      this.notificationConnection.on('Notify', callback);
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendNotificationAsync');
+      this.notificationConnection.on('SendNotificationAsync', callback);
     }
   }
 
-  /**
-   * Subscribe to notification update events
-   */
-  public onNotificationUpdated(
-    callback: (data: NotificationData) => void
+  public onSimulationStartNotification(
+    callback: (notification: NotificationData, simulationId: string) => void
   ): void {
     if (this.notificationConnection) {
-      this.notificationConnection.on('NotificationUpdated', callback);
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendSimulationUpdateNotificationAsync');
+      this.notificationConnection.on(
+        'SendSimulationUpdateNotificationAsync',
+        (notification: NotificationData, simulationId: string) => {
+          callback(notification, simulationId);
+        }
+      );
     }
   }
 
-  /**
-   * Subscribe to notification deletion events
-   */
-  public onNotificationDeleted(
-    callback: (notificationId: string) => void
+  public onMatchStartNotificationAsync(
+    callback: (notification: NotificationData, simulationId: string) => void
   ): void {
     if (this.notificationConnection) {
-      this.notificationConnection.on('NotificationDeleted', callback);
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendMatchStartNotificationAsync');
+      this.notificationConnection.on(
+        'SendMatchStartNotificationAsync',
+        (notification: NotificationData, simulationId: string) => {
+          callback(notification, simulationId);
+        }
+      );
+    }
+  }
+
+  public onMatchEndNotificationAsync(
+    callback: (notification: NotificationData, simulationId: string) => void
+  ): void {
+    if (this.notificationConnection) {
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendMatchEndNotificationAsync');
+      this.notificationConnection.on(
+        'SendMatchEndNotificationAsync',
+        (notification: NotificationData, simulationId: string) => {
+          callback(notification, simulationId);
+        }
+      );
+    }
+  }
+
+  public onMatchUpdateNotificationAsync(
+    callback: (notification: NotificationData, simulationId: string) => void
+  ): void {
+    if (this.notificationConnection) {
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendMatchUpdateNotificationAsync');
+      this.notificationConnection.on(
+        'SendMatchUpdateNotificationAsync',
+        (notification: NotificationData, simulationId: string) => {
+          callback(notification, simulationId);
+        }
+      );
+    }
+  }
+
+  public onMessageAsync(callback: (message: string) => void): void {
+    if (this.notificationConnection) {
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off('SendMessageAsync');
+      this.notificationConnection.on('SendMessageAsync', callback);
     }
   }
 
   /**
-   * Join user notification group for real-time notifications
+   * Subscribe to generic send events (for custom method names)
    */
-  public async joinUserNotificationGroup(userId: string): Promise<boolean> {
+  public onSendAsync(method: string, callback: (...args: any[]) => void): void {
+    if (this.notificationConnection) {
+      // Remove any existing listeners before adding new one to prevent duplicates
+      this.notificationConnection.off(method);
+      this.notificationConnection.on(method, callback);
+    }
+  }
+
+  /**
+   * Subscribe to real-time match statistics updates
+   */
+  public onMatchStatisticsUpdate(
+    callback: (matchId: number, matchStatistics: MatchStatistics) => void
+  ): void {
+    if (this.matchSimulationConnection) {
+      // Remove existing listener to prevent duplicates
+      this.matchSimulationConnection.off('match_statistics_update');
+      this.matchSimulationConnection.on('match_statistics_update', callback);
+    }
+  }
+
+  /**
+   * Join match statistics group to receive real-time updates
+   */
+  public async joinMatchStatistics(matchId: number): Promise<boolean> {
     try {
-      // Ensure we have an active notification connection
-      if (!this.isNotificationConnected || !this.notificationConnection) {
-        const connected = await this.connectNotifications();
+      if (!this.isMatchSimulationConnected || !this.matchSimulationConnection) {
+        const connected = await this.connectMatchSimulation();
         if (!connected) return false;
       }
 
-      await this.notificationConnection!.invoke(
-        'JoinUserNotificationGroup',
-        userId
+      await this.matchSimulationConnection!.invoke(
+        'JoinMatchStatistics',
+        matchId
       );
-      console.log(`Joined user notification group: ${userId}`);
+      console.log(`Joined match statistics for match: ${matchId}`);
       return true;
     } catch (error) {
-      console.error('Error joining user notification group:', error);
-      // If it's an auth error, handle it appropriately
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (
-        errorMessage.includes('401') ||
-        errorMessage.includes('Unauthorized')
-      ) {
-        await this.disconnectDueToAuth();
-      }
+      console.error('Error joining match statistics:', error);
       return false;
     }
   }
 
   /**
-   * Leave user notification group
+   * Leave match statistics group
    */
-  public async leaveUserNotificationGroup(userId: string): Promise<boolean> {
+  public async leaveMatchStatistics(matchId: number): Promise<boolean> {
     try {
-      if (!this.notificationConnection || !this.isNotificationConnected) {
-        return false;
+      if (this.isMatchSimulationConnected && this.matchSimulationConnection) {
+        await this.matchSimulationConnection.invoke(
+          'LeaveMatchStatistics',
+          matchId
+        );
+        console.log(`Left match statistics for match: ${matchId}`);
       }
-
-      await this.notificationConnection.invoke(
-        'LeaveUserNotificationGroup',
-        userId
-      );
-      console.log(`Left user notification group: ${userId}`);
       return true;
     } catch (error) {
-      console.error('Error leaving user notification group:', error);
+      console.error('Error leaving match statistics:', error);
       return false;
+    }
+  }
+
+  /**
+   * Remove notification event listeners
+   */
+  public removeNotificationListener(): void {
+    if (this.notificationConnection) {
+      this.notificationConnection.off('SendNotificationAsync');
+      this.notificationConnection.off('SendSimulationUpdateNotificationAsync');
+      this.notificationConnection.off('SendMatchStartNotificationAsync');
+      this.notificationConnection.off('SendMatchEndNotificationAsync');
+      this.notificationConnection.off('SendMatchUpdateNotificationAsync');
+      this.notificationConnection.off('SendMessageAsync');
     }
   }
 
@@ -439,13 +594,17 @@ class SignalRService {
       this.matchSimulationConnection.off('SimulationProgress');
       this.matchSimulationConnection.off('SimulationComplete');
       this.matchSimulationConnection.off('SimulationError');
+      this.matchSimulationConnection.off('match_statistics_update');
     }
 
     // Remove notification event listeners
     if (this.notificationConnection) {
-      this.notificationConnection.off('Notify');
-      this.notificationConnection.off('NotificationUpdated');
-      this.notificationConnection.off('NotificationDeleted');
+      this.notificationConnection.off('SendNotificationAsync');
+      this.notificationConnection.off('SendSimulationUpdateNotificationAsync');
+      this.notificationConnection.off('SendMatchStartNotificationAsync');
+      this.notificationConnection.off('SendMatchEndNotificationAsync');
+      this.notificationConnection.off('SendMatchUpdateNotificationAsync');
+      this.notificationConnection.off('SendMessageAsync');
     }
   }
 

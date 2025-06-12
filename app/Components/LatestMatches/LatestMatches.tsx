@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSettings } from '../../contexts/EnhancedSettingsContext';
 import MatchCard from './MatchCard';
 import matchService, { Match } from '@/Services/MatchService';
 
@@ -12,9 +13,14 @@ interface StorageUser {
 export default function LatestMatches() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get dark mode from settings
+  const { isDarkMode } = useSettings();
+
   useEffect(() => {
+    setIsMounted(true);
     fetchLatestMatches().then();
   }, []);
 
@@ -47,7 +53,14 @@ export default function LatestMatches() {
 
   if (error) {
     return (
-      <div className="rounded border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+      <div
+        className={`rounded border-l-4 border-red-500 p-4 ${
+          isMounted && isDarkMode
+            ? 'bg-red-900/20 text-red-300'
+            : 'bg-red-50 text-red-700'
+        }`}
+        suppressHydrationWarning
+      >
         <p className="font-medium">Unable to load matches</p>
         <p className="text-sm">{error}</p>
         <button

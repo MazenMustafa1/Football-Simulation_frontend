@@ -1,947 +1,488 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import {
-  ArrowLeft,
-  Play,
-  Pause,
-  Square,
-  Clock,
-  Trophy,
-  Users,
-  Target,
-  Zap,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-} from 'lucide-react';
-import Sidebar from '../../Components/Sidebar/Sidebar';
-import { SidebarItem } from '../../Components/Sidebar/SidebarItem';
-import {
-  Settings,
-  Package,
-  LayoutDashboardIcon,
-  ClubIcon,
-  Bell,
-  User,
-  Search,
-  Home,
-} from 'lucide-react';
-import Navbar from '@/app/Components/Navbar/Navbar';
-import authService from '@/Services/AuthenticationService';
-import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
-import matchSimulationService, {
-  MatchEvent,
-  SimulationResultResponse,
-} from '@/Services/MatchSimulationService';
-import signalRService, {
-  MatchEventData,
-  SimulationProgressData,
-} from '@/Services/SignalRService';
 
-interface SimulationState {
-  status: 'loading' | 'playing' | 'paused' | 'completed' | 'error';
-  progress: number;
-  currentMinute: number;
-  events: MatchEvent[];
-  homeScore: number;
-  awayScore: number;
-  homeTeam: string;
-  awayTeam: string;
-}
-
-interface FootballPitchProps {
-  events: MatchEvent[];
-  currentEventIndex: number;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number;
-  awayScore: number;
-  currentMinute: number;
-}
-
-const FootballPitch: React.FC<FootballPitchProps> = ({
-  events,
-  currentEventIndex,
-  homeTeam,
-  awayTeam,
-  homeScore,
-  awayScore,
-  currentMinute,
-}) => {
-  const currentEvent = events[currentEventIndex];
-
-  const getEventColor = (eventType: string) => {
-    switch (eventType.toLowerCase()) {
-      case 'goal':
-        return '#10B981'; // Green
-      case 'shot':
-        return '#F59E0B'; // Yellow
-      case 'pass':
-        return '#3B82F6'; // Blue
-      case 'tackle':
-        return '#EF4444'; // Red
-      case 'card':
-        return '#DC2626'; // Dark red
-      case 'substitution':
-        return '#8B5CF6'; // Purple
-      default:
-        return '#6B7280'; // Gray
-    }
-  };
-
-  return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg bg-gradient-to-b from-green-500 to-green-600">
-      {/* Football Pitch SVG */}
-      <svg
-        viewBox="0 0 800 520"
-        className="h-full w-full"
-        style={{
-          background: 'linear-gradient(90deg, #16A34A 0%, #15803D 100%)',
-        }}
-      >
-        {/* Pitch outline */}
-        <rect
-          x="50"
-          y="50"
-          width="700"
-          height="420"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Center circle */}
-        <circle
-          cx="400"
-          cy="260"
-          r="60"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-        <circle cx="400" cy="260" r="2" fill="white" />
-
-        {/* Center line */}
-        <line
-          x1="400"
-          y1="50"
-          x2="400"
-          y2="470"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Left penalty area */}
-        <rect
-          x="50"
-          y="160"
-          width="120"
-          height="200"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Left goal area */}
-        <rect
-          x="50"
-          y="210"
-          width="40"
-          height="100"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Left goal */}
-        <rect
-          x="30"
-          y="235"
-          width="20"
-          height="50"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Right penalty area */}
-        <rect
-          x="630"
-          y="160"
-          width="120"
-          height="200"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Right goal area */}
-        <rect
-          x="710"
-          y="210"
-          width="40"
-          height="100"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Right goal */}
-        <rect
-          x="750"
-          y="235"
-          width="20"
-          height="50"
-          fill="none"
-          stroke="white"
-          strokeWidth="3"
-        />
-
-        {/* Penalty spots */}
-        <circle cx="130" cy="260" r="2" fill="white" />
-        <circle cx="670" cy="260" r="2" fill="white" />
-
-        {/* Current event marker */}
-        {currentEvent && currentEvent.position && (
-          <g>
-            <circle
-              cx={50 + (currentEvent.position[0] / 100) * 700}
-              cy={50 + (currentEvent.position[1] / 100) * 420}
-              r="8"
-              fill={getEventColor(currentEvent.event_type)}
-              className="animate-pulse"
-            />
-            <circle
-              cx={50 + (currentEvent.position[0] / 100) * 700}
-              cy={50 + (currentEvent.position[1] / 100) * 420}
-              r="15"
-              fill="none"
-              stroke={getEventColor(currentEvent.event_type)}
-              strokeWidth="2"
-              className="animate-ping"
-            />
-          </g>
-        )}
-
-        {/* Pass line */}
-        {currentEvent && currentEvent.pass_target && currentEvent.position && (
-          <line
-            x1={50 + (currentEvent.position[0] / 100) * 700}
-            y1={50 + (currentEvent.position[1] / 100) * 420}
-            x2={50 + (currentEvent.pass_target[0] / 100) * 700}
-            y2={50 + (currentEvent.pass_target[1] / 100) * 420}
-            stroke={getEventColor(currentEvent.event_type)}
-            strokeWidth="3"
-            strokeDasharray="5,5"
-            className="animate-pulse"
-          />
-        )}
-
-        {/* Shot line */}
-        {currentEvent && currentEvent.shot_target && currentEvent.position && (
-          <line
-            x1={50 + (currentEvent.position[0] / 100) * 700}
-            y1={50 + (currentEvent.position[1] / 100) * 420}
-            x2={50 + (currentEvent.shot_target[0] / 100) * 700}
-            y2={50 + (currentEvent.shot_target[1] / 100) * 420}
-            stroke={getEventColor(currentEvent.event_type)}
-            strokeWidth="4"
-            className="animate-pulse"
-          />
-        )}
-      </svg>
-
-      {/* Score overlay */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 transform rounded-lg bg-black/70 px-6 py-3 text-white backdrop-blur-sm">
-        <div className="flex items-center space-x-4 text-lg font-bold">
-          <span>{homeTeam}</span>
-          <span className="text-2xl text-green-400">{homeScore}</span>
-          <span className="text-gray-400">-</span>
-          <span className="text-2xl text-green-400">{awayScore}</span>
-          <span>{awayTeam}</span>
-        </div>
-        <div className="mt-1 text-center text-sm text-gray-300">
-          {currentMinute}'
-        </div>
-      </div>
-
-      {/* Current event info */}
-      {currentEvent && (
-        <div className="absolute bottom-4 left-4 max-w-xs rounded-lg bg-black/70 p-3 text-white backdrop-blur-sm">
-          <div className="mb-1 flex items-center space-x-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{
-                backgroundColor: getEventColor(currentEvent.event_type),
-              }}
-            />
-            <span className="text-sm font-semibold">
-              {currentEvent.minute}'
-            </span>
-            <span className="text-sm capitalize">
-              {currentEvent.event_type}
-            </span>
-          </div>
-          <div className="text-sm text-gray-300">
-            <div>
-              <strong>{currentEvent.player}</strong> ({currentEvent.team})
-            </div>
-            <div className="capitalize">{currentEvent.action}</div>
-            {currentEvent.outcome && (
-              <div className="text-xs text-green-400 capitalize">
-                {currentEvent.outcome}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+import { useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import Field from '@/components/Field';
+import useSignalREventStream from '@/hooks/useSignalREventStream';
+import EventPlotter from '@/components/EventPlotter';
+import signalRService from '@/Services/SignalRService';
+import './simulationView.css'; // Ensure this file exists for styling
 
 export default function SimulationView() {
-  const router = useRouter();
-  const params = useParams();
-  const simulationId = params.simulationId as string;
+  const [timer, setTimer] = useState(0);
+  const [matchId, setMatchId] = useState<number>(0);
 
-  const [simulation, setSimulation] = useState<SimulationState>({
-    status: 'loading',
-    progress: 0,
-    currentMinute: 0,
-    events: [],
-    homeScore: 0,
-    awayScore: 0,
-    homeTeam: '',
-    awayTeam: '',
-  });
-  const [currentEventIndex, setCurrentEventIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1000); // milliseconds between events
-  const [isRealTime, setIsRealTime] = useState(false); // Toggle between real-time and replay mode
-  const [signalRConnected, setSignalRConnected] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Get matchId from localStorage (set when simulation is started) - CLIENT SIDE ONLY
   useEffect(() => {
-    if (!authService.isAuthenticated()) {
-      router.push('/login');
-      return;
+    if (typeof window !== 'undefined') {
+      const matchIdStr = localStorage.getItem('matchId') || '';
+      const parsedMatchId = matchIdStr ? parseInt(matchIdStr, 10) : 0;
+      setMatchId(parsedMatchId);
+      console.log(
+        `[SimulationView] Retrieved matchId from localStorage: "${matchIdStr}" -> ${parsedMatchId}`
+      );
+      console.log(`[SimulationView] matchId is valid: ${parsedMatchId > 0}`);
     }
+  }, []);
 
-    if (!simulationId) {
-      router.push('/dashboard');
-      return;
-    }
+  const { events, isConnected, retryCount } = useSignalREventStream(matchId);
 
-    // Initialize SignalR connection
-    const initializeSignalR = async () => {
-      try {
-        const connected = await signalRService.connect();
-        setSignalRConnected(connected);
+  console.log(
+    `[SimulationView] Current state - events: ${events.length}, isConnected: ${isConnected}, retries: ${retryCount}`
+  );
 
-        if (connected) {
-          // Join simulation room
-          await signalRService.joinSimulation(simulationId);
-
-          // Set up real-time event handlers
-          signalRService.onMatchEvent((eventData: MatchEventData) => {
-            if (isRealTime) {
-              // Add new event to the simulation in real-time
-              setSimulation((prev) => ({
-                ...prev,
-                events: [...prev.events, convertToMatchEvent(eventData)],
-                currentMinute: eventData.minute,
-                homeScore: eventData.homeScore,
-                awayScore: eventData.awayScore,
-              }));
-
-              // Auto-advance to new event
-              setCurrentEventIndex((prev) => prev + 1);
-            }
-          });
-
-          signalRService.onSimulationProgress(
-            (progressData: SimulationProgressData) => {
-              setSimulation((prev) => ({
-                ...prev,
-                progress: progressData.progress,
-              }));
-            }
-          );
-
-          signalRService.onSimulationComplete((simId, finalScore) => {
-            if (simId === simulationId) {
-              setSimulation((prev) => ({
-                ...prev,
-                status: 'completed',
-                homeScore: finalScore.home,
-                awayScore: finalScore.away,
-              }));
-              setIsPlaying(false);
-            }
-          });
-
-          signalRService.onSimulationError((simId, error) => {
-            if (simId === simulationId) {
-              console.error('Simulation error:', error);
-              setSimulation((prev) => ({ ...prev, status: 'error' }));
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Failed to initialize SignalR:', error);
-      }
-    };
-
-    initializeSignalR();
-    loadSimulationData();
-
-    // Cleanup on unmount
-    return () => {
-      if (signalRConnected) {
-        signalRService.leaveSimulation(simulationId);
-        signalRService.removeAllListeners();
-      }
-    };
-  }, [simulationId, router, isRealTime]);
-
-  // Helper function to convert SignalR event data to MatchEvent
-  const convertToMatchEvent = (eventData: MatchEventData): MatchEvent => {
-    return {
-      timestamp: new Date().toISOString(),
-      time_seconds: eventData.minute * 60 + eventData.second,
-      minute: eventData.minute,
-      second: eventData.second,
-      team: eventData.team,
-      player: eventData.player,
-      action: eventData.action,
-      position: eventData.position,
-      outcome: eventData.outcome,
-      height: '',
-      card: null,
-      pass_target: [0, 0],
-      shot_target: [0, 0],
-      body_part: '',
-      event_type: eventData.eventType,
-      type: eventData.eventType,
-      event_index: eventData.eventIndex,
-      match_id: simulationId,
-      home_team: simulation.homeTeam,
-      away_team: simulation.awayTeam,
-      long_pass: false,
-      pass_length: 0,
-      Score: {
-        Home: eventData.homeScore,
-        Away: eventData.awayScore,
-      },
-    };
-  };
-
+  // Debug effect to track events changes in SimulationView
   useEffect(() => {
-    if (
-      isPlaying &&
-      simulation.events.length > 0 &&
-      currentEventIndex < simulation.events.length - 1
-    ) {
-      intervalRef.current = setInterval(() => {
-        setCurrentEventIndex((prev) => {
-          const next = prev + 1;
-          if (next >= simulation.events.length) {
-            setIsPlaying(false);
-            setSimulation((prev) => ({ ...prev, status: 'completed' }));
-            return prev;
-          }
-
-          // Update current minute and score
-          const event = simulation.events[next];
-          setSimulation((prev) => ({
-            ...prev,
-            currentMinute: event.minute,
-            homeScore: event.Score.Home,
-            awayScore: event.Score.Away,
-          }));
-
-          return next;
-        });
-      }, playbackSpeed);
+    console.log(
+      `🎪🎪🎪 [SimulationView] EVENTS ARRAY CHANGED - Count: ${events.length}`
+    );
+    if (events.length > 0) {
+      console.log(
+        `🎪 [SimulationView] Latest event in view:`,
+        events[events.length - 1]
+      );
+      console.log(`🎪 [SimulationView] All events in view:`, events);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      console.log(`🎪 [SimulationView] No events yet in view`);
     }
+  }, [events]);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Log all localStorage items for debugging
+      console.log('[SimulationView] All localStorage items:');
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const value = localStorage.getItem(key);
+          console.log(`  ${key}: ${value}`);
+        }
       }
-    };
-  }, [isPlaying, simulation.events.length, currentEventIndex, playbackSpeed]);
-  const loadSimulationData = async () => {
-    try {
-      setSimulation((prev) => ({ ...prev, status: 'loading' }));
 
-      // First check if simulation is ready
-      const trackResponse =
-        await matchSimulationService.trackSimulation(simulationId);
-
-      if (!trackResponse.succeeded || trackResponse.status !== 'completed') {
-        // Poll for completion
-        const completed = await pollSimulationCompletion(
-          simulationId,
-          (progress: number) => {
-            setSimulation((prev) => ({ ...prev, progress }));
-          }
+      // Check if we have a valid matchId
+      if (!matchId || matchId <= 0) {
+        console.warn(
+          '[SimulationView] No valid matchId found in localStorage. Please start a simulation first.'
         );
-
-        if (!completed) {
-          throw new Error('Simulation failed or timed out');
-        }
+      } else {
+        console.log(`[SimulationView] Using matchId: ${matchId}`);
       }
+    }
+  }, [matchId]);
 
-      // Load simulation results
-      const result =
-        await matchSimulationService.getSimulationResult(simulationId);
+  const testConnection = async () => {
+    console.log('[SimulationView] Testing SignalR connection...');
+    const stats = signalRService.getConnectionStats();
+    console.log('[SimulationView] Connection stats:', stats);
 
-      if (!result.succeeded) {
-        throw new Error(result.error || 'Failed to load simulation');
-      }
-
-      setSimulation({
-        status: 'paused',
-        progress: 100,
-        currentMinute: 0,
-        events: result.events,
-        homeScore: 0,
-        awayScore: 0,
-        homeTeam: result.events[0]?.home_team || 'Home',
-        awayTeam: result.events[0]?.away_team || 'Away',
-      });
-    } catch (error) {
-      console.error('Error loading simulation:', error);
-      setSimulation((prev) => ({
-        ...prev,
-        status: 'error',
-      }));
+    if (!isConnected) {
+      console.log('[SimulationView] Not connected, attempting to connect...');
+      const connected = await signalRService.connectMatchSimulation();
+      console.log(`[SimulationView] Connection attempt result: ${connected}`);
     }
   };
-
-  // Helper function to poll simulation completion
-  const pollSimulationCompletion = async (
-    simulationId: string,
-    onProgress?: (progress: number) => void,
-    pollingInterval: number = 2000
-  ): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const poll = async () => {
-        try {
-          const trackResponse =
-            await matchSimulationService.trackSimulation(simulationId);
-
-          if (trackResponse.succeeded) {
-            if (onProgress) {
-              onProgress(trackResponse.progress || 0);
-            }
-
-            if (trackResponse.status === 'completed') {
-              resolve(true);
-              return;
-            }
-
-            if (trackResponse.status === 'failed') {
-              resolve(false);
-              return;
-            }
-          }
-
-          // Continue polling
-          setTimeout(poll, pollingInterval);
-        } catch (error) {
-          console.error('Error during simulation polling:', error);
-          resolve(false);
-        }
-      };
-
-      poll();
-    });
+  const forceReconnect = async () => {
+    console.log('[SimulationView] Forcing reconnect...');
+    await signalRService.resetConnection();
   };
 
-  const handlePlay = () => {
-    if (simulation.status === 'completed') {
-      // Restart from beginning
-      setCurrentEventIndex(0);
-      setSimulation((prev) => ({
-        ...prev,
-        status: 'playing',
-        currentMinute: 0,
-        homeScore: 0,
-        awayScore: 0,
-      }));
-    } else {
-      setSimulation((prev) => ({ ...prev, status: 'playing' }));
-    }
-    setIsPlaying(true);
-  };
-
-  const handlePause = () => {
-    setIsPlaying(false);
-    setSimulation((prev) => ({ ...prev, status: 'paused' }));
-  };
-
-  const handleStop = () => {
-    setIsPlaying(false);
-    setCurrentEventIndex(0);
-    setSimulation((prev) => ({
-      ...prev,
-      status: 'paused',
-      currentMinute: 0,
-      homeScore: 0,
-      awayScore: 0,
-    }));
-  };
-
-  const handleSpeedChange = (speed: number) => {
-    setPlaybackSpeed(speed);
-  };
-
-  if (simulation.status === 'loading') {
-    return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar>
-          <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
-          <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
-          <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
-          <SidebarItem
-            icon={<Bell />}
-            text="Notifications"
-            href="/notifications"
-          />
-          <SidebarItem icon={<Search />} text="Search" href="/search" />
-          <SidebarItem icon={<Settings />} text="Settings" href="/settings" />
-          <SidebarItem icon={<User />} text="Profile" href="/profile" />
-        </Sidebar>
-
-        <div className="flex flex-1 flex-col">
-          <Navbar />
-
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <Loader2 className="mx-auto mb-4 h-16 w-16 animate-spin text-green-500" />
-              <h2 className="mb-2 text-2xl font-bold text-gray-800">
-                Loading Simulation
-              </h2>
-              <p className="mb-4 text-gray-600">
-                Preparing your match simulation...
-              </p>
-              <div className="mx-auto h-2 w-64 rounded-full bg-gray-200">
-                <div
-                  className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                  style={{ width: `${simulation.progress}%` }}
-                />
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                {simulation.progress}% complete
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+  const debugSignalR = () => {
+    console.log('🔍🔍🔍 [SimulationView] === SIGNALR DEBUG INFO ===');
+    console.log('Match ID:', matchId);
+    console.log('Is Connected:', isConnected);
+    console.log('Retry Count:', retryCount);
+    console.log('Events Count:', events.length);
+    console.log('Events Array:', events);
+    console.log('Connection Stats:', signalRService.getConnectionStats());
+    console.log(
+      'Connection State:',
+      signalRService.getMatchSimulationConnectionState()
     );
-  }
 
-  if (simulation.status === 'error') {
-    return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar>
-          <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
-          <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
-          <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
-          <SidebarItem
-            icon={<Bell />}
-            text="Notifications"
-            href="/notifications"
-          />
-          <SidebarItem icon={<Search />} text="Search" href="/search" />
-          <SidebarItem icon={<Settings />} text="Settings" href="/settings" />
-          <SidebarItem icon={<User />} text="Profile" href="/profile" />
-        </Sidebar>
+    // Test if we can manually trigger event logging
+    console.log('🧪 Testing event logging...');
 
-        <div className="flex flex-1 flex-col">
-          <Navbar />
-
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-              <h2 className="mb-2 text-2xl font-bold text-gray-800">
-                Simulation Error
-              </h2>
-              <p className="mb-4 text-gray-600">
-                Failed to load the simulation data.
-              </p>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    // Log all SignalR connection details
+    const connectionStats = signalRService.getConnectionStats();
+    console.log(
+      'Full connection stats:',
+      JSON.stringify(connectionStats, null, 2)
     );
-  }
+  }; // Timer logic - synchronized across the app
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
   return (
-    <ProtectedRoute allowedRoles={['User', 'Admin', 'Coach', 'Player']}>
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar>
-          <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
-          <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
-          <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
-          <SidebarItem
-            icon={<Bell />}
-            text="Notifications"
-            href="/notifications"
-          />
-          <SidebarItem icon={<Search />} text="Search" href="/search" />
-          <SidebarItem icon={<Settings />} text="Settings" href="/settings" />
-          <SidebarItem icon={<User />} text="Profile" href="/profile" />
-        </Sidebar>
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'relative',
+        // Beautiful black to darker blue gradient - lighter version
+        background: `
+                    radial-gradient(ellipse at top, 
+                        rgba(12, 20, 50, 0.5) 0%, 
+                        rgba(8, 12, 30, 0.9) 40%, 
+                        rgba(2, 2, 8, 1) 80%
+                    ),
+                    linear-gradient(135deg, 
+                        #0a0a0a 0%, 
+                        #0f1420 20%, 
+                        #141b2a 40%, 
+                        #1a2238 60%, 
+                        #0a0a0a 100%
+                    ),
+                    linear-gradient(to bottom, 
+                        rgba(5, 5, 5, 0.3) 0%, 
+                        rgba(2, 2, 8, 0.7) 60%, 
+                        rgba(0, 0, 0, 1) 100%
+                    )
+                `,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Subtle atmospheric glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+                        radial-gradient(ellipse 60% 40% at 50% 20%, 
+                            rgba(20, 45, 85, 0.08) 0%, 
+                            transparent 70%
+                        ),
+                        radial-gradient(ellipse 80% 60% at 30% 80%, 
+                            rgba(12, 25, 55, 0.06) 0%, 
+                            transparent 60%
+                        ),
+                        radial-gradient(ellipse 80% 60% at 70% 80%, 
+                            rgba(12, 25, 55, 0.06) 0%, 
+                            transparent 60%
+                        )
+                    `,
+          animation: 'gentle-glow 12s ease-in-out infinite alternate',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
 
-        <div className="flex flex-1 flex-col">
-          <Navbar />
+      {/* VERY SUBTLE scoreboard area lighting */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '10%',
+          left: '35%',
+          width: '30%',
+          height: '25%',
+          background: `
+                        radial-gradient(ellipse 90% 80% at 50% 70%, 
+                            rgba(255, 255, 255, 0.012) 0%, 
+                            rgba(255, 255, 255, 0.005) 60%, 
+                            transparent 100%
+                        )
+                    `,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
 
-          <div className="flex-1 p-6">
-            {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-gray-800"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span>Back to Dashboard</span>
-                </button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    Match Simulation
-                  </h1>
-                  <p className="text-gray-600">
-                    {simulation.homeTeam} vs {simulation.awayTeam}
-                  </p>
-                </div>
+      {/* Background dot pattern */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+                        radial-gradient(1px 1px at 8% 15%, rgba(255, 255, 255, 0.3), transparent),
+                        radial-gradient(2px 2px at 22% 25%, rgba(255, 255, 255, 0.2), transparent),
+                        radial-gradient(1px 1px at 45% 12%, rgba(255, 255, 255, 0.25), transparent),
+                        radial-gradient(1px 1px at 65% 28%, rgba(255, 255, 255, 0.2), transparent),
+                        radial-gradient(2px 2px at 78% 18%, rgba(255, 255, 255, 0.15), transparent),
+                        radial-gradient(1px 1px at 92% 35%, rgba(255, 255, 255, 0.3), transparent),
+                        radial-gradient(1px 1px at 15% 45%, rgba(255, 255, 255, 0.2), transparent),
+                        radial-gradient(2px 2px at 38% 55%, rgba(255, 255, 255, 0.25), transparent),
+                        radial-gradient(1px 1px at 58% 42%, rgba(255, 255, 255, 0.2), transparent),
+                        radial-gradient(1px 1px at 82% 58%, rgba(255, 255, 255, 0.15), transparent),
+                        radial-gradient(2px 2px at 5% 72%, rgba(255, 255, 255, 0.3), transparent),
+                        radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.2), transparent),
+                        radial-gradient(1px 1px at 52% 68%, rgba(255, 255, 255, 0.25), transparent),
+                        radial-gradient(2px 2px at 75% 82%, rgba(255, 255, 255, 0.15), transparent),
+                        radial-gradient(1px 1px at 88% 75%, rgba(255, 255, 255, 0.2), transparent)
+                    `,
+          backgroundSize: '150px 150px',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Elegant light beams */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+                        linear-gradient(45deg, 
+                            transparent 40%, 
+                            rgba(20, 45, 85, 0.04) 50%, 
+                            transparent 60%
+                        ),
+                        linear-gradient(-45deg, 
+                            transparent 40%, 
+                            rgba(12, 25, 55, 0.04) 50%, 
+                            transparent 60%
+                        )
+                    `,
+          animation: 'subtle-rays 15s ease-in-out infinite alternate',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Static starfield effect */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+                        radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.6), transparent),
+                        radial-gradient(1px 1px at 40% 60%, rgba(255, 255, 255, 0.4), transparent),
+                        radial-gradient(2px 2px at 60% 20%, rgba(20, 45, 85, 0.3), transparent),
+                        radial-gradient(1px 1px at 80% 70%, rgba(255, 255, 255, 0.5), transparent),
+                        radial-gradient(1px 1px at 10% 80%, rgba(255, 255, 255, 0.3), transparent),
+                        radial-gradient(2px 2px at 90% 40%, rgba(12, 25, 55, 0.2), transparent),
+                        radial-gradient(1px 1px at 70% 10%, rgba(255, 255, 255, 0.4), transparent)
+                    `,
+          backgroundSize:
+            '300px 300px, 400px 400px, 200px 200px, 350px 350px, 450px 450px, 250px 250px, 500px 500px',
+          animation: 'twinkle-stars 8s ease-in-out infinite alternate',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Stronger vignette for darker edges */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+                        radial-gradient(ellipse 80% 60% at 50% 40%, 
+                            transparent 0%, 
+                            transparent 40%, 
+                            rgba(0, 0, 0, 0.3) 70%, 
+                            rgba(0, 0, 0, 0.7) 100%
+                        )
+                    `,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Extra dark bottom overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '40%',
+          background: `
+                        linear-gradient(to top, 
+                            rgba(0, 0, 0, 0.7) 0%, 
+                            rgba(0, 0, 0, 0.3) 50%, 
+                            transparent 100%
+                        )
+                    `,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Dark side borders */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '15%',
+          height: '100%',
+          background: `
+                        linear-gradient(to right, 
+                            rgba(0, 0, 0, 0.5) 0%, 
+                            rgba(0, 0, 0, 0.2) 70%, 
+                            transparent 100%
+                        )
+                    `,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '15%',
+          height: '100%',
+          background: `
+                        linear-gradient(to left, 
+                            rgba(0, 0, 0, 0.5) 0%, 
+                            rgba(0, 0, 0, 0.2) 70%, 
+                            transparent 100%
+                        )
+                    `,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
+
+      <Canvas
+        shadows
+        camera={{ position: [0, 45, 115], fov: 50, near: 0.1, far: 1000 }}
+        style={{ zIndex: 2 }}
+      >
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
+        <OrbitControls />
+        <Field />
+        <EventPlotter events={events} timer={timer} />{' '}
+        {/* ✅ Pass the SignalR events */}
+      </Canvas>
+
+      {/* Debug Panel */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: 'white',
+          background: 'rgba(0, 0, 0, 0.8)',
+          padding: '15px',
+          borderRadius: '8px',
+          zIndex: 10,
+          fontFamily: 'monospace',
+          lineHeight: '1.4',
+        }}
+      >
+        <div
+          style={{ marginBottom: '10px', fontSize: '16px', color: '#00ff00' }}
+        >
+          🔥 SignalR Debug Panel
+        </div>{' '}
+        <div>Match ID: {matchId || 'Not set'}</div>
+        <div>
+          Connection Status: {isConnected ? '✅ Connected' : '❌ Disconnected'}
+        </div>
+        <div>Retry Count: {retryCount || 0}/5</div>
+        <div style={{ color: events.length > 0 ? '#00ff00' : '#ff6b6b' }}>
+          Events Received: {events.length} {events.length > 0 ? '🎉' : '⏳'}
+        </div>
+        <div style={{ marginTop: '5px', fontSize: '11px', opacity: 0.8 }}>
+          {events.length > 0 ? (
+            <>
+              <div>Latest: {events[events.length - 1]?.action || 'N/A'}</div>
+              <div>Player: {events[events.length - 1]?.player || 'N/A'}</div>
+              <div>
+                Time: {events[events.length - 1]?.minute || 0}:
+                {events[events.length - 1]?.second || 0}
               </div>
-
-              {/* Status indicator */}
-              <div className="flex items-center space-x-2">
-                {simulation.status === 'completed' && (
-                  <div className="flex items-center space-x-2 text-green-600">
-                    <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">Completed</span>
-                  </div>
-                )}
-                {simulation.status === 'playing' && (
-                  <div className="flex items-center space-x-2 text-blue-600">
-                    <Zap className="h-5 w-5" />
-                    <span className="font-medium">Playing</span>
-                  </div>
-                )}
-                {simulation.status === 'paused' && (
-                  <div className="flex items-center space-x-2 text-yellow-600">
-                    <Pause className="h-5 w-5" />
-                    <span className="font-medium">Paused</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Main content */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-              {/* Football Pitch - Main view */}
-              <div className="lg:col-span-3">
-                <div className="h-[600px] rounded-lg bg-white p-4 shadow-md">
-                  <FootballPitch
-                    events={simulation.events}
-                    currentEventIndex={currentEventIndex}
-                    homeTeam={simulation.homeTeam}
-                    awayTeam={simulation.awayTeam}
-                    homeScore={simulation.homeScore}
-                    awayScore={simulation.awayScore}
-                    currentMinute={simulation.currentMinute}
-                  />
-                </div>
-
-                {/* Controls */}
-                <div className="mt-4 rounded-lg bg-white p-4 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {' '}
-                      <button
-                        onClick={isPlaying ? handlePause : handlePlay}
-                        disabled={isRealTime}
-                        className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                        <span>{isPlaying ? 'Pause' : 'Play'}</span>
-                      </button>
-                      <button
-                        onClick={handleStop}
-                        disabled={isRealTime}
-                        className="flex items-center space-x-2 rounded-lg bg-gray-500 px-4 py-2 text-white transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <Square className="h-4 w-4" />
-                        <span>Stop</span>
-                      </button>
-                    </div>
-                    <div className="flex items-center space-x-6">
-                      {/* Real-time toggle */}
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="realtime-toggle"
-                          checked={isRealTime}
-                          onChange={(e) => setIsRealTime(e.target.checked)}
-                          className="rounded"
-                        />
-                        <label
-                          htmlFor="realtime-toggle"
-                          className="text-sm text-gray-600"
-                        >
-                          Real-time
-                        </label>
-                        {signalRConnected ? (
-                          <div
-                            className="h-2 w-2 rounded-full bg-green-500"
-                            title="Connected"
-                          />
-                        ) : (
-                          <div
-                            className="h-2 w-2 rounded-full bg-red-500"
-                            title="Disconnected"
-                          />
-                        )}
-                      </div>
-
-                      {/* Speed control - disabled in real-time mode */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Speed:</span>
-                        <select
-                          value={playbackSpeed}
-                          onChange={(e) =>
-                            handleSpeedChange(Number(e.target.value))
-                          }
-                          disabled={isRealTime}
-                          className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
-                        >
-                          <option value={2000}>0.5x</option>
-                          <option value={1000}>1x</option>
-                          <option value={500}>2x</option>
-                          <option value={250}>4x</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between text-sm text-gray-600">
-                      <span>
-                        Event {currentEventIndex + 1} of{' '}
-                        {simulation.events.length}
-                      </span>
-                      <span>
-                        {Math.round(
-                          (currentEventIndex / simulation.events.length) * 100
-                        )}
-                        %
-                      </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-gray-200">
-                      <div
-                        className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                        style={{
-                          width: `${(currentEventIndex / simulation.events.length) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Side panel - Events and stats */}
-              <div className="space-y-4">
-                {/* Match info */}
-                <div className="rounded-lg bg-white p-4 shadow-md">
-                  <h3 className="mb-3 flex items-center font-bold text-gray-800">
-                    <Trophy className="mr-2 h-5 w-5" />
-                    Match Info
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Duration:</span>
-                      <span>{simulation.currentMinute}'</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Events:</span>
-                      <span>{simulation.events.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Current Event:</span>
-                      <span>{currentEventIndex + 1}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent events */}
-                <div className="rounded-lg bg-white p-4 shadow-md">
-                  <h3 className="mb-3 flex items-center font-bold text-gray-800">
-                    <Clock className="mr-2 h-5 w-5" />
-                    Recent Events
-                  </h3>
-                  <div className="max-h-96 space-y-2 overflow-y-auto">
-                    {simulation.events
-                      .slice(
-                        Math.max(0, currentEventIndex - 5),
-                        currentEventIndex + 1
-                      )
-                      .reverse()
-                      .map((event, index) => (
-                        <div
-                          key={event.event_index}
-                          className={`rounded p-2 text-xs ${index === 0 ? 'border border-green-200 bg-green-50' : 'bg-gray-50'}`}
-                        >
-                          <div className="mb-1 flex items-center justify-between">
-                            <span className="font-medium">{event.minute}'</span>
-                            <span className="text-gray-600 capitalize">
-                              {event.event_type}
-                            </span>
-                          </div>
-                          <div className="text-gray-700">
-                            <strong>{event.player}</strong> ({event.team})
-                          </div>
-                          <div className="text-gray-600 capitalize">
-                            {event.action}
-                          </div>
-                          {event.outcome && (
-                            <div className="text-green-600 capitalize">
-                              {event.outcome}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </>
+          ) : (
+            <div>Waiting for events...</div>
+          )}
+        </div>
+        <div style={{ marginTop: '10px' }}>
+          <button
+            onClick={testConnection}
+            style={{
+              marginRight: '10px',
+              padding: '5px 10px',
+              fontSize: '12px',
+              backgroundColor: '#007acc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+          >
+            Test Connection
+          </button>
+          <button
+            onClick={forceReconnect}
+            style={{
+              marginRight: '10px',
+              padding: '5px 10px',
+              fontSize: '12px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+          >
+            Force Reconnect
+          </button>
+          <button
+            onClick={debugSignalR}
+            style={{
+              padding: '5px 10px',
+              fontSize: '12px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+          >
+            Debug Info
+          </button>
         </div>
       </div>
-    </ProtectedRoute>
+
+      {/* Timer display */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '32px',
+          fontWeight: 'bold',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '10px',
+          zIndex: 10,
+        }}
+      >
+        {/* ⏱ {formatTime(timer)} */}
+      </div>
+    </div>
   );
 }

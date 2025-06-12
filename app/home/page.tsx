@@ -385,12 +385,86 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Data Partnership Section */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="mb-8 text-3xl font-bold text-gray-900">
+              Powered by Premium Football Data
+            </h2>
+            <p className="mx-auto mb-12 max-w-3xl text-lg text-gray-600">
+              Our simulations are built using high-quality, professional
+              football data to ensure the most accurate and realistic match
+              experiences possible.
+            </p>
+
+            <div className="flex flex-col items-center justify-center space-y-6 md:flex-row md:space-y-0 md:space-x-12">
+              <div className="flex flex-col items-center">
+                <img
+                  src="/logos/SB - Icon Lockup - Colour positive.png"
+                  alt="StatsBomb Logo"
+                  className="mb-4 h-16 w-auto object-contain"
+                />
+                <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                  StatsBomb Open Data
+                </h3>
+                <p className="max-w-md text-center text-gray-600">
+                  Utilizing StatsBomb's comprehensive open dataset for authentic
+                  player statistics, match events, and tactical analysis.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                  Professional Quality
+                </h3>
+                <p className="max-w-md text-center text-gray-600">
+                  Access to the same level of data used by professional football
+                  clubs and analysts worldwide.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 text-sm text-gray-500">
+              <p>
+                Special thanks to StatsBomb for providing open access to their
+                premium football data. Learn more about StatsBomb's data
+                solutions at{' '}
+                <a
+                  href="https://statsbomb.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 underline hover:text-green-700"
+                >
+                  statsbomb.com
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 py-12 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div>
-              <h3 className="mb-4 text-xl font-bold">Football Simulator</h3>
+              <h3 className="mb-4 text-xl font-bold">Pixel Pitch AI</h3>
               <p className="leading-relaxed text-gray-400">
                 The most advanced AI-powered football simulation platform for
                 enthusiasts and professionals.

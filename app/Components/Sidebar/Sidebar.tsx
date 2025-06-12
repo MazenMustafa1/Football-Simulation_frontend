@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import authService from '@/Services/AuthenticationService';
+import { useSettings } from '../../contexts/EnhancedSettingsContext';
 
 interface SidebarProps {
   children: ReactNode;
@@ -26,6 +27,8 @@ interface SidebarContextType {
   expanded: boolean;
   isHovered: boolean;
   isCompactMode: boolean;
+  isDarkMode: boolean;
+  isMounted: boolean;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -35,6 +38,15 @@ export function SidebarLayout({ sidebar, children }: SidebarLayoutProps) {
   const [expanded, setExpanded] = useState(false); // Start collapsed
   const [isHovered, setIsHovered] = useState(false);
   const [isCompactMode, setIsCompactMode] = useState(true); // New compact mode state
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Get dark mode from settings context
+  const { isDarkMode } = useSettings();
+
+  // Handle client-side mounting to prevent hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Keyboard shortcuts for sidebar
   useEffect(() => {
@@ -57,7 +69,13 @@ export function SidebarLayout({ sidebar, children }: SidebarLayoutProps) {
 
   return (
     <SidebarContext.Provider
-      value={{ expanded: expanded || isHovered, isHovered, isCompactMode }}
+      value={{
+        expanded: expanded || isHovered,
+        isHovered,
+        isCompactMode,
+        isDarkMode: isMounted && isDarkMode,
+        isMounted,
+      }}
     >
       <div className="relative flex min-h-screen">
         <SidebarComponent
@@ -67,6 +85,8 @@ export function SidebarLayout({ sidebar, children }: SidebarLayoutProps) {
           setIsHovered={setIsHovered}
           isCompactMode={isCompactMode}
           setIsCompactMode={setIsCompactMode}
+          isDarkMode={isMounted && isDarkMode}
+          isMounted={isMounted}
         >
           {sidebar}
         </SidebarComponent>
@@ -93,6 +113,8 @@ interface SidebarComponentProps {
   setIsHovered: (value: boolean) => void;
   isCompactMode: boolean;
   setIsCompactMode: (value: boolean | ((prev: boolean) => boolean)) => void;
+  isDarkMode: boolean;
+  isMounted: boolean;
 }
 
 function SidebarComponent({
@@ -103,6 +125,8 @@ function SidebarComponent({
   setIsHovered,
   isCompactMode,
   setIsCompactMode,
+  isDarkMode,
+  isMounted,
 }: SidebarComponentProps) {
   const router = useRouter();
 
@@ -121,15 +145,29 @@ function SidebarComponent({
       onMouseLeave={() => setIsHovered(false)}
     >
       <nav
-        className={`flex h-full flex-col border-r border-gray-200/50 bg-white/95 backdrop-blur-sm transition-all duration-300 ease-in-out ${
+        className={`flex h-full flex-col transition-all duration-300 ease-in-out ${
           showContent ? 'w-64 shadow-2xl' : sidebarWidth + ' shadow-xl'
+        } ${
+          isDarkMode
+            ? 'border-gray-700/50 bg-gray-900/95 backdrop-blur-sm'
+            : 'border-gray-200/50 bg-white/95 backdrop-blur-sm'
         }`}
+        suppressHydrationWarning
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between border-b border-gray-200/50 p-3">
+        <div
+          className={`flex items-center justify-between p-3 ${
+            isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'
+          } border-b`}
+          suppressHydrationWarning
+        >
           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
             <div
-              className={`flex flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${
+              className={`flex flex-shrink-0 items-center justify-center rounded-xl border bg-white/10 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/20 hover:shadow-md ${
+                isDarkMode
+                  ? 'border-gray-600/30 hover:border-gray-500/50'
+                  : 'border-gray-300/30 hover:border-gray-400/50'
+              } ${
                 showContent
                   ? 'h-10 w-10'
                   : isCompactMode
@@ -139,22 +177,27 @@ function SidebarComponent({
             >
               <Link href={'/home'}>
                 <Image
-                  src="https://t4.ftcdn.net/jpg/02/11/51/53/240_F_211515361_bnIbyKadClzn3hJT0zCPPuPApcG7k3lC.jpg"
-                  width={showContent ? 24 : isCompactMode ? 20 : 22}
-                  height={showContent ? 24 : isCompactMode ? 20 : 22}
+                  src="/logos/PixelPitch.png"
+                  width={showContent ? 40 : isCompactMode ? 30 : 35}
+                  height={showContent ? 40 : isCompactMode ? 30 : 35}
                   className="rounded-lg transition-transform duration-300 hover:rotate-12"
                   alt="Logo"
                 />
               </Link>
             </div>
             <h1
-              className={`bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-lg font-bold whitespace-nowrap text-transparent transition-all duration-300 ${
+              className={`bg-gradient-to-r bg-clip-text text-lg font-bold whitespace-nowrap text-transparent transition-all duration-300 ${
+                isDarkMode
+                  ? 'from-green-400 to-emerald-400'
+                  : 'from-green-600 to-emerald-600'
+              } ${
                 showContent
                   ? 'w-auto translate-x-0 opacity-100'
                   : 'w-0 -translate-x-4 overflow-hidden opacity-0'
               }`}
+              suppressHydrationWarning
             >
-              Footex
+              PixelPitchAI
             </h1>
           </div>
 
@@ -163,12 +206,17 @@ function SidebarComponent({
               {/* Compact Mode Toggle */}
               <button
                 onClick={() => setIsCompactMode(!isCompactMode)}
-                className="rounded-lg bg-gray-100/50 p-1.5 transition-all duration-200 hover:scale-110 hover:bg-gray-200/70"
+                className={`rounded-lg p-1.5 transition-all duration-200 hover:scale-110 ${
+                  isDarkMode
+                    ? 'bg-gray-800/50 hover:bg-gray-700/70'
+                    : 'bg-gray-100/50 hover:bg-gray-200/70'
+                }`}
                 title={
                   isCompactMode
                     ? 'Switch to Normal Mode'
                     : 'Switch to Compact Mode'
                 }
+                suppressHydrationWarning
               >
                 <div
                   className={`h-3 w-3 rounded-sm transition-all duration-200 ${
@@ -179,12 +227,21 @@ function SidebarComponent({
 
               <button
                 onClick={() => setExpanded((prev) => !prev)}
-                className="rounded-lg bg-gray-100/50 p-1.5 transition-all duration-200 hover:scale-110 hover:bg-gray-200/70"
+                className={`rounded-lg p-1.5 transition-all duration-200 hover:scale-110 ${
+                  isDarkMode
+                    ? 'bg-gray-800/50 hover:bg-gray-700/70'
+                    : 'bg-gray-100/50 hover:bg-gray-200/70'
+                }`}
+                suppressHydrationWarning
               >
                 {expanded ? (
-                  <ChevronFirst className="h-4 w-4 text-gray-600" />
+                  <ChevronFirst
+                    className={`h-4 w-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                  />
                 ) : (
-                  <ChevronLast className="h-4 w-4 text-gray-600" />
+                  <ChevronLast
+                    className={`h-4 w-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                  />
                 )}
               </button>
             </div>
@@ -197,7 +254,12 @@ function SidebarComponent({
             className={`px-2 py-3 transition-all duration-300 ${isCompactMode && !showContent ? 'px-1 py-2' : ''}`}
           >
             {showContent && (
-              <p className="mb-3 flex items-center justify-between px-3 text-xs font-semibold tracking-wider whitespace-nowrap text-gray-500 uppercase">
+              <p
+                className={`mb-3 flex items-center justify-between px-3 text-xs font-semibold tracking-wider whitespace-nowrap uppercase ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}
+                suppressHydrationWarning
+              >
                 <span>Main Menu</span>
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-xs ${
@@ -211,47 +273,6 @@ function SidebarComponent({
               </p>
             )}
             <ul className="space-y-1">{children}</ul>
-          </div>
-        </div>
-
-        {/* User Profile Section */}
-        <div className="border-t border-gray-200/50 p-3">
-          <div className="-m-2 flex items-center gap-3 rounded-lg p-2 transition-all duration-300 hover:bg-gray-50/50">
-            <div className="relative">
-              <Image
-                src="/images/Messi shooting.png"
-                width={32}
-                height={32}
-                className="rounded-full border-2 border-green-400 shadow-sm transition-all duration-300 hover:scale-110"
-                alt="User Avatar"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/logos/barcelona.png';
-                }}
-              />
-              <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-green-400"></div>
-            </div>
-
-            {showContent && (
-              <>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-semibold text-gray-800">
-                    Footex User
-                  </span>
-                  <span className="truncate text-xs text-gray-500">
-                    user@footex.com
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:scale-110 hover:bg-red-50 hover:text-red-600"
-                  title="Logout"
-                >
-                  <LogOut size={16} />
-                </button>
-              </>
-            )}
           </div>
         </div>
 

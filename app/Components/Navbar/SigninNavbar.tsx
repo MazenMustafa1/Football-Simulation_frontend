@@ -46,7 +46,7 @@ export default function SigninNavbar() {
             <Link href="/" className="flex items-center">
               <div className="relative mr-3 h-10 w-10">
                 <Image
-                  src="https://t4.ftcdn.net/jpg/02/11/51/53/240_F_211515361_bnIbyKadClzn3hJT0zCPPuPApcG7k3lC.jpg"
+                  src="/logos/PixelPitch.png"
                   fill
                   className="object-contain"
                   alt="Logo"
@@ -54,7 +54,7 @@ export default function SigninNavbar() {
               </div>
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-white">
-                  Football Simulator
+                  PixelPitchAI
                 </h1>
                 <p className="-mt-1 text-xs text-gray-300">
                   AI-Powered Match Engine

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSettings } from '../../contexts/EnhancedSettingsContext';
 
 type MatchCardProps = {
   teamA: string;
@@ -25,6 +26,8 @@ export default function MatchCard({
   HomeImage = '', // Default to empty string if no image URL is provided
   AwayImage = '', // Default to empty string if no image URL is provided
 }: MatchCardProps) {
+  // Get dark mode from settings
+  const { isDarkMode } = useSettings();
   // Format date if available
   const formattedDate = date
     ? new Intl.DateTimeFormat('en-US', {
@@ -57,7 +60,13 @@ export default function MatchCard({
       href={matchId ? `/matchdetails?matchId=${matchId}` : '/matchdetails'}
       className="block"
     >
-      <div className="list bg-base-100 rounded-box shadow-md transition-shadow hover:shadow-lg">
+      <div
+        className={`list rounded-box shadow-md transition-all hover:shadow-lg ${
+          isDarkMode
+            ? 'bg-gray-800 hover:bg-gray-700'
+            : 'bg-base-100 hover:bg-white'
+        }`}
+      >
         <div className="list-row items-center justify-between gap-4 p-4">
           {/* Team A */}
           <div className="flex items-center gap-2 px-8">
@@ -67,25 +76,61 @@ export default function MatchCard({
               alt={teamA}
             />
             <div>
-              <div className="font-semibold">{teamA}</div>
-              <div className="text-xl font-bold">{scoreA}</div>
+              <div
+                className={`font-semibold ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
+                }`}
+              >
+                {teamA}
+              </div>
+              <div
+                className={`text-xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
+                {scoreA}
+              </div>
             </div>
           </div>
 
           {/* Center - Status and Time */}
           <div className="flex flex-col items-center">
             {getStatusBadge()}
-            <div className="mt-1 text-center text-lg font-bold">VS</div>
+            <div
+              className={`mt-1 text-center text-lg font-bold ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-900'
+              }`}
+            >
+              VS
+            </div>
             {formattedDate && (
-              <div className="mt-1 text-xs text-gray-500">{formattedDate}</div>
+              <div
+                className={`mt-1 text-xs ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}
+              >
+                {formattedDate}
+              </div>
             )}
           </div>
 
           {/* Team B */}
           <div className="flex items-center gap-2 px-10">
             <div className="text-right">
-              <div className="font-semibold">{teamB}</div>
-              <div className="text-xl font-bold">{scoreB}</div>
+              <div
+                className={`font-semibold ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-900'
+                }`}
+              >
+                {teamB}
+              </div>
+              <div
+                className={`text-xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
+              >
+                {scoreB}
+              </div>
             </div>
             <img
               className="rounded-box size-10"

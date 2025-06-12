@@ -35,6 +35,10 @@ import matchSimulationService, {
   SimulateMatchRequest,
   SimulateMatchResponse,
 } from '@/Services/MatchSimulationService';
+import { useSettings } from '../contexts/EnhancedSettingsContext';
+
+// Force dynamic rendering to prevent prerender errors
+export const dynamic = 'force-dynamic';
 
 interface SimulationState {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -43,6 +47,9 @@ interface SimulationState {
 }
 
 export default function MatchSimulation() {
+  // Settings context for theme and preferences
+  const { isDarkMode, playSound } = useSettings();
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
@@ -50,11 +57,16 @@ export default function MatchSimulation() {
   const [awaySeasons, setAwaySeasons] = useState<TeamSeason[]>([]);
   const [homeSelectedSeason, setHomeSelectedSeason] = useState<string>('');
   const [awaySelectedSeason, setAwaySelectedSeason] = useState<string>('');
+  const [homeSelectedSeasonId, setHomeSelectedSeasonId] = useState<number>(-1);
+  const [awaySelectedSeasonId, setAwaySelectedSeasonId] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSeasons, setIsLoadingSeasons] = useState(false);
   const [simulation, setSimulation] = useState<SimulationState>({
     status: 'idle',
   });
+  const [simulationStartTime, setSimulationStartTime] = useState<number | null>(
+    null
+  );
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
@@ -103,10 +115,12 @@ export default function MatchSimulation() {
           setHomeTeam(team);
           setHomeSeasons(seasonsResponse.seasons);
           setHomeSelectedSeason('');
+          setHomeSelectedSeasonId(-1);
         } else {
           setAwayTeam(team);
           setAwaySeasons(seasonsResponse.seasons);
           setAwaySelectedSeason('');
+          setAwaySelectedSeasonId(-1);
         }
       } else {
         console.error(
@@ -134,6 +148,8 @@ export default function MatchSimulation() {
   const startSimulation = async () => {
     if (!canStartSimulation()) return;
 
+    const startTime = Date.now();
+    setSimulationStartTime(startTime);
     setSimulation({ status: 'loading' });
 
     try {
@@ -149,6 +165,8 @@ export default function MatchSimulation() {
         awayTeamName: awayTeam!.name,
         homeTeamSeason: homeSelectedSeason,
         awayTeamSeason: awaySelectedSeason,
+        homeSeasonId: homeSelectedSeasonId,
+        awaySeasonId: awaySelectedSeasonId,
       };
 
       const response = await matchSimulationService.simulateMatch(
@@ -156,12 +174,17 @@ export default function MatchSimulation() {
         simulationRequest
       );
 
-      setSimulation({ status: 'success', data: response });
+      const endTime = Date.now();
+      const simulationTime = endTime - startTime;
 
-      // Navigate to simulation view after a delay
+      setSimulation({ status: 'success', data: response });
+      localStorage.setItem('matchId', response.apiResponse.matchId.toString());
+
+      // Navigate to simulation view after a delay (simulation time x2)
+      const redirectDelay = simulationTime * 2;
       setTimeout(() => {
         router.push(`/simulationview/${response.apiResponse.simulationId}`);
-      }, 3000);
+      }, redirectDelay);
     } catch (error) {
       console.error('Error starting simulation:', error);
       setSimulation({
@@ -323,9 +346,19 @@ export default function MatchSimulation() {
                         </label>
                         <select
                           value={homeSelectedSeason}
-                          onChange={(e) =>
-                            setHomeSelectedSeason(e.target.value)
-                          }
+                          onChange={(e) => {
+                            const selectedSeasonName = e.target.value;
+                            setHomeSelectedSeason(selectedSeasonName);
+
+                            // Find and set the corresponding season ID
+                            const selectedSeason = homeSeasons.find(
+                              (season) =>
+                                season.seasonName === selectedSeasonName
+                            );
+                            setHomeSelectedSeasonId(
+                              selectedSeason ? selectedSeason.seasonId : -1
+                            );
+                          }}
                           disabled={!homeTeam || isLoadingSeasons}
                           className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100"
                         >
@@ -402,9 +435,19 @@ export default function MatchSimulation() {
                         </label>
                         <select
                           value={awaySelectedSeason}
-                          onChange={(e) =>
-                            setAwaySelectedSeason(e.target.value)
-                          }
+                          onChange={(e) => {
+                            const selectedSeasonName = e.target.value;
+                            setAwaySelectedSeason(selectedSeasonName);
+
+                            // Find and set the corresponding season ID
+                            const selectedSeason = awaySeasons.find(
+                              (season) =>
+                                season.seasonName === selectedSeasonName
+                            );
+                            setAwaySelectedSeasonId(
+                              selectedSeason ? selectedSeason.seasonId : -1
+                            );
+                          }}
                           disabled={!awayTeam || isLoadingSeasons}
                           className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
                         >
@@ -547,10 +590,17 @@ export default function MatchSimulation() {
                               {simulation.data.apiResponse.simulationId}
                             </p>
                             <p>Status: {simulation.data.apiResponse.status}</p>
+                            {simulationStartTime && (
+                              <p>
+                                Setup Time: {Date.now() - simulationStartTime}ms
+                              </p>
+                            )}
                           </div>
                           <div className="mt-4 rounded-lg bg-blue-50 p-3">
                             <p className="text-sm text-blue-800">
-                              Redirecting to simulation view in 3 seconds...
+                              {simulationStartTime
+                                ? `Redirecting to simulation view in ${Math.ceil(((Date.now() - simulationStartTime) * 2) / 1000)} seconds...`
+                                : 'Redirecting to simulation view...'}
                             </p>
                           </div>
                         </div>

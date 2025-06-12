@@ -20,6 +20,8 @@ export interface SimulateMatchRequest {
   awayTeamName: string;
   homeTeamSeason: string;
   awayTeamSeason: string;
+  homeSeasonId: number;
+  awaySeasonId: number;
 }
 
 export interface MatchEvent {

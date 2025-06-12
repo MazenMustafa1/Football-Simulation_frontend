@@ -22,13 +22,26 @@ import { useRouter } from 'next/navigation';
 import authService from '@/Services/AuthenticationService';
 import Image from 'next/image';
 import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
+import { useSettings } from '../contexts/EnhancedSettingsContext';
+
+// Force dynamic rendering to prevent prerender errors
+export const dynamic = 'force-dynamic';
 
 export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  // Use settings context for theme and other preferences
+  const { isDarkMode, playSound } = useSettings();
+
+  // Handle client-side mounting to prevent hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -81,7 +94,14 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
+      <div
+        className={`relative flex h-screen items-center justify-center overflow-hidden ${
+          isMounted && isDarkMode
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900'
+            : 'bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900'
+        }`}
+        suppressHydrationWarning
+      >
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
           {/* Floating Football Elements */}
@@ -136,8 +156,22 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-green-800 to-green-900">
-        <div className="rounded-lg border-l-4 border-red-500 bg-white p-6 text-red-700 shadow-lg">
+      <div
+        className={`flex h-screen items-center justify-center ${
+          isMounted && isDarkMode
+            ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+            : 'bg-gradient-to-br from-green-800 to-green-900'
+        }`}
+        suppressHydrationWarning
+      >
+        <div
+          className={`rounded-lg border-l-4 border-red-500 p-6 shadow-lg ${
+            isMounted && isDarkMode
+              ? 'bg-gray-800 text-red-400'
+              : 'bg-white text-red-700'
+          }`}
+          suppressHydrationWarning
+        >
           <p className="mb-2 text-xl font-bold">Error</p>
           <p className="mb-4">{error}</p>
           <button
@@ -216,7 +250,13 @@ export default function Dashboard() {
         {/* Enhanced Creative Background */}
         <div className="fixed inset-0 z-0">
           {/* Base Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
+          <div
+            className={`absolute inset-0 ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900'
+                : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+            }`}
+          ></div>
 
           {/* Stadium Silhouette Background */}
           <div className="absolute inset-0 opacity-[0.03]">

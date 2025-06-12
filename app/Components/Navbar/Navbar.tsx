@@ -1,14 +1,18 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Trash2, X, CheckCheck, Bell, Search } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import authService from '@/Services/AuthenticationService';
 import notificationService, {
   Notification,
   NotificationType,
 } from '@/Services/NotificationService';
+import useSignalRNotifications from '@/app/hooks/useSignalRNotifications';
+import { NotificationData } from '@/Services/SignalRService';
+import { SearchAutocomplete } from '@/app/Components/Search';
+import { useSettings } from '../../contexts/EnhancedSettingsContext';
 
 interface UserStorage {
   userId: string;
@@ -25,6 +29,7 @@ export default function Navbar() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [user, setUser] = useState<{
     username?: string;
     email?: string;
@@ -32,6 +37,92 @@ export default function Navbar() {
   } | null>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Get dark mode from settings context
+  const { isDarkMode } = useSettings();
+
+  // Handle client-side mounting to prevent hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Memoize the SignalR callback functions to prevent infinite re-renders
+  const handleSignalRNotification = useCallback(
+    (signalRNotification: NotificationData) => {
+      console.log(
+        '🔔 Navbar: Received SignalR notification:',
+        signalRNotification
+      );
+
+      // Handle case mismatch - the actual object has capitalized properties
+      const title =
+        (signalRNotification as any).Title || signalRNotification.title;
+      const content =
+        (signalRNotification as any).Content || signalRNotification.content;
+      const time =
+        (signalRNotification as any).Time || signalRNotification.time;
+      const isRead =
+        (signalRNotification as any).IsRead !== undefined
+          ? (signalRNotification as any).IsRead
+          : signalRNotification.isRead;
+
+      // Convert SignalR notification to our notification format and add to list
+      const notification: Notification = {
+        id: signalRNotification.id,
+        title: title,
+        content: content,
+        type: signalRNotification.type as NotificationType,
+        time: time,
+        isRead: isRead,
+        userId: signalRNotification.userId,
+      };
+
+      console.log('🔔 Navbar: Adding notification to state:', notification);
+      setNotifications((prev) => {
+        const newNotifications = [notification, ...prev];
+        console.log(
+          '🔔 Navbar: Updated notifications array:',
+          newNotifications
+        );
+        return newNotifications;
+      });
+
+      if (!notification.isRead) {
+        setUnreadCount((prev) => {
+          const newCount = prev + 1;
+          console.log('🔔 Navbar: Updated unread count:', newCount);
+          return newCount;
+        });
+      }
+    },
+    []
+  );
+
+  const handleMatchStart = useCallback(
+    (notification: NotificationData, simulationId: string) => {
+      console.log('Navbar: Match started, simulation ID:', simulationId);
+      // Show additional UI or handle navigation
+    },
+    []
+  );
+
+  const handleMatchEnd = useCallback(
+    (notification: NotificationData, simulationId: string) => {
+      console.log('Navbar: Match ended, simulation ID:', simulationId);
+    },
+    []
+  );
+
+  // Use the SignalR notifications hook with memoized callbacks
+  const { isConnected: signalRConnected, connectionStats } =
+    useSignalRNotifications({
+      autoConnect: true, // Enable auto-connect
+      showToasts: true,
+      autoRedirectOnMatchStart: false, // Let user decide
+      onNotificationReceived: handleSignalRNotification,
+      onMatchStart: handleMatchStart,
+      onMatchEnd: handleMatchEnd,
+    });
 
   useEffect(() => {
     // Close dropdowns when clicking outside
@@ -54,71 +145,8 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    // Initialize notification service and setup real-time notifications
-    const initializeNotifications = async () => {
-      if (authService.isAuthenticated()) {
-        try {
-          // Initialize the notification service
-          await notificationService.initialize();
-
-          // Setup real-time event listeners
-          notificationService.on(
-            'notificationReceived',
-            (notification: Notification) => {
-              setNotifications((prev) => [notification, ...prev]);
-              setUnreadCount((prev) => prev + 1);
-            }
-          );
-
-          notificationService.on(
-            'notificationUpdated',
-            (notification: Notification) => {
-              setNotifications((prev) =>
-                prev.map((n) => (n.id === notification.id ? notification : n))
-              );
-              if (notification.isread) {
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-              }
-            }
-          );
-
-          notificationService.on(
-            'notificationDeleted',
-            (notificationId: string) => {
-              setNotifications((prev) => {
-                const notification = prev.find((n) => n.id === notificationId);
-                const newNotifications = prev.filter(
-                  (n) => n.id !== notificationId
-                );
-                if (notification && !notification.isread) {
-                  setUnreadCount((prev) => Math.max(0, prev - 1));
-                }
-                return newNotifications;
-              });
-            }
-          );
-
-          // Fetch initial notifications and user data
-          await Promise.all([fetchUserData(), fetchNotifications()]);
-        } catch (error) {
-          console.error('Error initializing notifications:', error);
-          toast.error('Failed to initialize notifications');
-        }
-      }
-    };
-
-    initializeNotifications();
-
-    // Cleanup function
-    return () => {
-      notificationService.off('notificationReceived', () => {});
-      notificationService.off('notificationUpdated', () => {});
-      notificationService.off('notificationDeleted', () => {});
-    };
-  }, []);
-
-  const fetchUserData = async () => {
+  // Memoize fetch functions to prevent infinite re-renders
+  const fetchUserData = useCallback(async () => {
     if (authService.isAuthenticated()) {
       const currentUser: UserStorage =
         localStorage.getItem('user') &&
@@ -139,9 +167,9 @@ export default function Navbar() {
         }
       }
     }
-  };
+  }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!authService.isAuthenticated()) return;
 
     setIsLoading(true);
@@ -157,7 +185,24 @@ export default function Navbar() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Initialize notifications when authenticated - only run once
+    const initializeNotifications = async () => {
+      if (authService.isAuthenticated()) {
+        try {
+          // Fetch initial notifications and user data
+          await Promise.all([fetchUserData(), fetchNotifications()]);
+        } catch (error) {
+          console.error('Error initializing notifications:', error);
+          toast.error('Failed to initialize notifications');
+        }
+      }
+    };
+
+    initializeNotifications();
+  }, [fetchUserData, fetchNotifications]); // Only run when these functions change
 
   const handleLogout = () => {
     authService.logout();
@@ -170,7 +215,7 @@ export default function Navbar() {
       const success = await notificationService.markAllAsRead();
       if (success) {
         setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, isread: true }))
+          prev.map((notification) => ({ ...notification, isRead: true }))
         );
         setUnreadCount(0);
         toast.success('All notifications marked as read');
@@ -191,7 +236,7 @@ export default function Navbar() {
       if (success) {
         setNotifications((prev) =>
           prev.map((n) =>
-            n.id === notificationId ? { ...n, isread: true } : n
+            n.id === notificationId ? { ...n, isRead: true } : n
           )
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -209,7 +254,7 @@ export default function Navbar() {
       if (success) {
         const notification = notifications.find((n) => n.id === notificationId);
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-        if (notification && !notification.isread) {
+        if (notification && !notification.isRead) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
         }
         toast.success('Notification deleted');
@@ -221,6 +266,15 @@ export default function Navbar() {
       toast.error('Failed to delete notification');
     }
   };
+
+  const handleNavbarSearch = useCallback(
+    (query: string) => {
+      if (query.trim()) {
+        router.push(`/search?q=${encodeURIComponent(query)}`);
+      }
+    },
+    [router]
+  );
 
   const clearAllNotifications = async () => {
     try {
@@ -243,56 +297,41 @@ export default function Navbar() {
 
   return (
     <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#fff',
-            color: '#374151',
-            border: '1px solid #E5E7EB',
-            borderRadius: '0.5rem',
-            boxShadow:
-              '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-          },
-        }}
-      />
-      <div className="navbar bg-white px-4 py-2 shadow-sm transition-all duration-300 ease-in-out">
+      <div
+        className={`navbar px-4 py-2 shadow-sm transition-all duration-300 ease-in-out ${
+          isMounted && isDarkMode ? 'border-gray-700 bg-gray-800' : 'bg-white'
+        }`}
+        suppressHydrationWarning
+      >
         <div className="flex-1">
-          <div className="relative w-full max-w-md">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg
-                className="h-4 w-4 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-              </svg>
-            </div>
-            <input
-              type="search"
-              className="block w-full rounded-lg border border-gray-200 py-2 pr-3 pl-10 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Search..."
-            />
-          </div>
+          <SearchAutocomplete
+            onSearch={handleNavbarSearch}
+            placeholder="Search for players, teams, stadiums..."
+            className="w-full max-w-md"
+            showHistory={true}
+            showTrending={true}
+            maxSuggestions={5}
+          />
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="btn btn-ghost btn-circle relative p-2 transition-colors duration-200 hover:bg-gray-100"
+              className={`btn btn-ghost btn-circle relative p-2 transition-colors duration-200 ${
+                isMounted && isDarkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              suppressHydrationWarning
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-600"
+                className={`h-5 w-5 ${
+                  isMounted && isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}
                 fill="none"
+                suppressHydrationWarning
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
@@ -360,7 +399,7 @@ export default function Navbar() {
                           <div
                             key={notification.id || index}
                             className={`group border-b border-gray-100 p-3 transition-colors hover:bg-gray-50 ${
-                              !notification.isread
+                              !notification.isRead
                                 ? 'border-l-4 border-l-blue-500 bg-blue-50'
                                 : ''
                             }`}
@@ -370,7 +409,7 @@ export default function Navbar() {
                               <div className="flex flex-1 items-start">
                                 <div
                                   className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
-                                    !notification.isread
+                                    !notification.isRead
                                       ? 'bg-blue-500'
                                       : 'bg-transparent'
                                   }`}
@@ -382,7 +421,7 @@ export default function Navbar() {
                                     </p>
                                   )}
                                   <p className="text-sm break-words text-gray-700">
-                                    {notification.message}
+                                    {notification.content}
                                   </p>
                                   <div className="mt-1 flex items-center justify-between">
                                     <p className="text-xs text-gray-500">
@@ -413,7 +452,7 @@ export default function Navbar() {
                                 </div>
                               </div>
                               <div className="ml-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                {!notification.isread && (
+                                {!notification.isRead && (
                                   <button
                                     onClick={() => markAsRead(notification.id)}
                                     className="p-1 text-blue-600 hover:text-blue-800"
