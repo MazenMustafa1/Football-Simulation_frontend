@@ -344,7 +344,7 @@ export default function SimulationView() {
           await signalRService.joinSimulation(matchId);
 
           // Set up real-time event handlers
-          signalRService.onMatchEvent((eventData: MatchEventData) => {
+          signalRService.onMatchEvent((method:string ,match_id:string,eventData: MatchEventData) => {
             if (isRealTime) {
               // Add new event to the simulation in real-time
               setSimulation((prev) => ({

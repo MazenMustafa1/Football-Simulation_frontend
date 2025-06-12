@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSettings } from '../../contexts/EnhancedSettingsContext';
 import MatchCard from './MatchCard';
-import matchService, { Match } from '@/Services/MatchService';
+import matchService, { LatestMatch, Match } from '@/Services/MatchService';
 
 interface StorageUser {
   userId: string;
@@ -11,7 +11,7 @@ interface StorageUser {
 }
 
 export default function LatestMatches() {
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<LatestMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +33,17 @@ export default function LatestMatches() {
       const user: StorageUser = userData
         ? JSON.parse(userData)
         : { userId: '', roles: [''] };
+      
+      console.log('User data for latest matches:', user);
+      console.log('Calling API with userId:', user.userId);
+      
       const latestMatches = await matchService.getLatestMatches(user.userId);
       setMatches(latestMatches);
+      console.log('Latest matches fetched:', latestMatches);
+      console.log('Number of matches:', latestMatches.length);
     } catch (error) {
       console.error('Error fetching latest matches:', error);
+      console.error('Error details:', error);
       setError('Failed to load match data. Please try again later.');
     } finally {
       setIsLoading(false);
@@ -85,18 +92,22 @@ export default function LatestMatches() {
   return (
     <div className="flex flex-col gap-4">
       {matches
-        .filter((match: Match) => match.isLive === false)
-        .map((match: Match) => (
+        .filter((match: LatestMatch) => match.isLive === false)
+        .map((match: LatestMatch) => (
           <MatchCard
             key={match.id}
             teamA={match.homeTeamName || 'Unknown Team'}
             teamB={match.awayTeamName || 'Unknown Team'}
             scoreA={match.homeTeamScore || 0}
             scoreB={match.awayTeamScore || 0}
-            status={match.status}
+            status={match.matchStatus || 'Scheduled'}
             HomeImage={match.homeTeamLogo || ''}
             AwayImage={match.awayTeamLogo || ''}
-            date={match.date ? new Date(match.date) : new Date()}
+            date={
+              match.scheduledDateTimeUtc
+                ? new Date(match.scheduledDateTimeUtc)
+                : new Date()
+            }
             matchId={match.id}
           />
         ))}

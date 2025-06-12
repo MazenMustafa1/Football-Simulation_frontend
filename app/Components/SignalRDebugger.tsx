@@ -390,7 +390,7 @@ export default function SignalRDebugger() {
     // Match statistics listener
     if (matchSimulationConnected) {
       signalRService.onMatchStatisticsUpdate(
-        (receivedMatchId: number, statistics: MatchStatistics) => {
+        (method:String,receivedMatchId: number, statistics: MatchStatistics) => {
           addLog(
             'statistics',
             `📊 Match statistics received`,
@@ -413,7 +413,7 @@ export default function SignalRDebugger() {
       );
 
       // Match events listener
-      signalRService.onMatchEvent((eventData: MatchEventData) => {
+      signalRService.onMatchEvent((method:string ,match_id:string,eventData: MatchEventData) => {
         addLog(
           'message',
           `⚽ Match event received`,
@@ -1213,7 +1213,7 @@ export default function SignalRDebugger() {
                   </p>
                 </div>
                 <span className="text-xs text-gray-500">
-                  {new Date(stats.timeStamp).toLocaleTimeString()}
+                  {stats.timeStamp}
                 </span>
               </div>
 

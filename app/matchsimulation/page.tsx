@@ -178,12 +178,12 @@ export default function MatchSimulation() {
       const simulationTime = endTime - startTime;
 
       setSimulation({ status: 'success', data: response });
-      localStorage.setItem('matchId', response.apiResponse.matchId.toString());
+      localStorage.setItem('matchId', response.apiResponse.match_id.toString());
 
       // Navigate to simulation view after a delay (simulation time x2)
       const redirectDelay = simulationTime * 2;
       setTimeout(() => {
-        router.push(`/simulationview/${response.apiResponse.simulationId}`);
+        router.push(`/simulationview/${response.apiResponse.simulation_id}`);
       }, redirectDelay);
     } catch (error) {
       console.error('Error starting simulation:', error);
@@ -583,11 +583,11 @@ export default function MatchSimulation() {
                           </p>
                           <div className="space-y-1 text-sm text-gray-600">
                             <p>
-                              Match ID: {simulation.data.apiResponse.matchId}
+                              Match ID: {simulation.data.apiResponse.match_id}
                             </p>
                             <p>
                               Simulation ID:{' '}
-                              {simulation.data.apiResponse.simulationId}
+                              {simulation.data.apiResponse.simulation_id}
                             </p>
                             <p>Status: {simulation.data.apiResponse.status}</p>
                             {simulationStartTime && (

@@ -96,8 +96,8 @@ export default function SchedulePage() {
 
     // Sort by date
     filtered.sort((a, b) => {
-      const dateA = new Date(a.date || 0).getTime();
-      const dateB = new Date(b.date || 0).getTime();
+      const dateA = new Date(a.scheduledDateTimeUtc || 0).getTime();
+      const dateB = new Date(b.scheduledDateTimeUtc || 0).getTime();
       return dateB - dateA; // Most recent first
     });
 
@@ -340,7 +340,9 @@ export default function SchedulePage() {
                         <div className="text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-3 w-3" />
-                            <span>{formatDate(match.date)}</span>
+                            <span>
+                              {formatDate(match.scheduledDateTimeUtc)}
+                            </span>
                           </div>
                           {match.stadiumName && (
                             <div className="mt-1 flex items-center space-x-1">

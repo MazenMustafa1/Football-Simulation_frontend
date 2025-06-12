@@ -136,7 +136,7 @@ class SignalRService {
   constructor() {
     // Listen for logout events to disconnect SignalR
     authService.onLogout(() => {
-      this.disconnectDueToAuth();
+      this.disconnectDueToAuth().then();
     });
   }
 
@@ -337,7 +337,7 @@ class SignalRService {
         if (!connected) return false;
       }
 
-      await this.matchSimulationConnection!.invoke('JoinSimulation', matchId);
+      await this.matchSimulationConnection!.invoke('JoinMatchGroup', matchId);
       console.log(`Joined simulation: ${matchId.toString()}`);
       return true;
     } catch (error) {
@@ -376,11 +376,11 @@ class SignalRService {
   /**
    * Subscribe to match events for a specific simulation
    */
-  public onMatchEvent(callback: (data: MatchEventData) => void): void {
+  public onMatchEvent(callback: (method:string ,match_id:string,data: MatchEventData) => void): void {
     if (this.matchSimulationConnection) {
       // Remove existing listener to prevent duplicates
-      this.matchSimulationConnection.off('MatchEvent');
-      this.matchSimulationConnection.on('MatchEvent', callback);
+      this.matchSimulationConnection.off('SendMatchEventAsync');
+      this.matchSimulationConnection.on('SendMatchEventAsync', callback);
     }
   }
 
@@ -520,12 +520,12 @@ class SignalRService {
    * Subscribe to real-time match statistics updates
    */
   public onMatchStatisticsUpdate(
-    callback: (matchId: number, matchStatistics: MatchStatistics) => void
+    callback: (method:string ,matchId: number, matchStatistics: MatchStatistics) => void
   ): void {
     if (this.matchSimulationConnection) {
       // Remove existing listener to prevent duplicates
-      this.matchSimulationConnection.off('match_statistics_update');
-      this.matchSimulationConnection.on('match_statistics_update', callback);
+      this.matchSimulationConnection.off('SendMatchStatisticsAsync');
+      this.matchSimulationConnection.on('SendMatchStatisticsAsync', callback);
     }
   }
 

@@ -22,7 +22,7 @@ export default function useSignalREventStream(matchId: number) {
 
                 const joined = await signalRService.joinSimulation(matchId);
                 if (!joined) throw new Error('Failed to join simulation room');
-                signalRService.onMatchEvent((eventData: MatchEventData) => {
+                signalRService.onMatchEvent((method:string ,match_id:string,eventData: MatchEventData) => {
                     try {
                         const event: Event = {
                             timestamp: eventData.timestamp,

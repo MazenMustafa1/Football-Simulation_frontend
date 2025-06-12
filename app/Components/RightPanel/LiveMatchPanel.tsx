@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSettings } from '../../contexts/EnhancedSettingsContext';
 import matchService, {
@@ -111,126 +111,141 @@ export default function LiveMatchPanel({
   const [realtimeStatistics, setRealtimeStatistics] =
     useState<MatchStatistics | null>(null);
   const [signalRConnected, setSignalRConnected] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [updateCounter, setUpdateCounter] = useState(0); // Force re-render for time elapsed calculation
+  const [viewportKey, setViewportKey] = useState(0); // Force re-render on viewport changes
   const router = useRouter();
 
   // Get dark mode from settings
   const { isDarkMode } = useSettings();
 
+  // Main initialization effect - handles mounting, stored data loading, and resize events
   useEffect(() => {
     setIsMounted(true);
+
+    // Load stored real-time statistics on mount
+    const { statistics, updateTime } =
+      liveMatchStorageService.getRealtimeStatistics();
+    if (statistics && updateTime) {
+      setRealtimeStatistics(statistics);
+      setLastUpdateTime(updateTime);
+    }
+
+    // Listen for viewport changes to ensure consistent behavior across device sizes
+    const handleResize = () => {
+      setViewportKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Get user ID from authentication service or use prop
   const getUserId = (): string | null => {
     if (propUserId) {
-      console.log('👤 Using provided userId prop:', propUserId);
       return propUserId;
     }
 
     const currentUser = authService.getCurrentUser();
-    console.log('👤 Current user from auth service:', currentUser);
 
     if (currentUser) {
       // Extract user ID from the nameidentifier claim (your JWT structure)
       const userId = currentUser.claimNameId || currentUser.sub;
-      console.log('👤 Extracted user ID from token:', userId);
-      console.log('👤 Available claims:', {
-        claimNameId: currentUser.claimNameId,
-        sub: currentUser.sub,
-        email: currentUser.email,
-        name: currentUser.name,
-        role: currentUser.role,
-      });
       return userId;
     }
 
-    console.warn('⚠️ No user ID available from authentication or props');
     return null;
   };
 
   const userId = getUserId();
 
-  // Initialize SignalR connection for real-time statistics
+  // SignalR connection and statistics listener effect
   useEffect(() => {
+    let isSubscribed = true;
+
     const initSignalR = async () => {
       try {
-        console.log('🔄 Initializing SignalR for LiveMatchPanel...');
-
         // Only connect if user is authenticated
         if (!authService.isAuthenticated()) {
-          console.warn(
-            '❌ User not authenticated, skipping SignalR connection'
-          );
+          console.warn('User not authenticated, skipping SignalR connection');
           return;
         }
 
-        console.log('✅ User authenticated, connecting to SignalR...');
         const connected = await signalRService.connectMatchSimulation();
-        setSignalRConnected(connected);
+        if (isSubscribed) {
+          setSignalRConnected(connected);
+        }
 
-        if (connected) {
-          console.log('✅ SignalR connected for LiveMatchPanel');
-          console.log(
-            '📡 SignalR connection state:',
-            signalRService.getMatchSimulationConnectionState()
-          );
-        } else {
-          console.error('❌ Failed to connect SignalR');
+        if (!connected) {
+          console.error('Failed to connect SignalR');
         }
       } catch (error) {
-        console.error('❌ Failed to connect SignalR:', error);
-        setSignalRConnected(false);
+        console.error('Failed to connect SignalR:', error);
+        if (isSubscribed) {
+          setSignalRConnected(false);
+        }
+      }
+    };
+
+    // Handle visibility change to maintain connection
+    const handleVisibilityChange = () => {
+      if (!document.hidden && signalRConnected && liveMatchData?.id) {
+        // Tab became visible, ensure we're still in the match statistics group
+        signalRService.joinMatchStatistics(liveMatchData.id).then((joined) => {
+          if (!joined) {
+            console.warn(
+              'Failed to re-join match statistics group on tab focus'
+            );
+          }
+        });
+      }
+
+      // When tab becomes visible, refresh from stored data if available
+      if (!document.hidden && liveMatchData?.id) {
+        const { statistics, updateTime } =
+          liveMatchStorageService.getRealtimeStatistics();
+        if (
+          statistics &&
+          updateTime &&
+          liveMatchStorageService.isStoredStatisticsValid(liveMatchData.id)
+        ) {
+          if (isSubscribed) {
+            setRealtimeStatistics(statistics);
+            setLastUpdateTime(updateTime);
+          }
+        }
       }
     };
 
     initSignalR();
 
+    // Listen for visibility changes to maintain connection
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      isSubscribed = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       // Cleanup SignalR listeners on unmount
       if (signalRConnected && liveMatchData?.id) {
-        console.log(
-          '🧹 Cleaning up SignalR connection for match:',
-          liveMatchData.id
-        );
         signalRService.leaveMatchStatistics(liveMatchData.id);
       }
     };
-  }, []);
+  }, [signalRConnected, liveMatchData?.id]);
 
   // Set up real-time match statistics listener
   useEffect(() => {
     if (!signalRConnected || !liveMatchData?.id) {
-      console.log('⏳ Waiting for SignalR connection or live match data...', {
-        signalRConnected,
-        liveMatchId: liveMatchData?.id,
-        matchStatus: liveMatchData?.matchStatus,
-      });
       return;
     }
 
-    console.log(
-      '🔗 Setting up real-time statistics listener for match:',
-      liveMatchData.id
-    );
-    console.log('📊 Match details:', {
-      matchId: liveMatchData.id,
-      homeTeam: liveMatchData.homeTeam.name,
-      awayTeam: liveMatchData.awayTeam.name,
-      status: liveMatchData.matchStatus,
-      isLive: liveMatchData.isLive,
-      note: 'Will receive statistics regardless of match status',
-    });
-
     // Join match statistics group
     signalRService.joinMatchStatistics(liveMatchData.id).then((joined) => {
-      if (joined) {
-        console.log(
-          '✅ Successfully joined match statistics group for match:',
-          liveMatchData.id
-        );
-      } else {
+      if (!joined) {
         console.error(
-          '❌ Failed to join match statistics group for match:',
+          'Failed to join match statistics group for match:',
           liveMatchData.id
         );
       }
@@ -238,20 +253,15 @@ export default function LiveMatchPanel({
 
     // Listen for real-time match statistics updates
     signalRService.onMatchStatisticsUpdate(
-      (matchId: number, statistics: MatchStatistics) => {
-        console.log('📡 SignalR statistics update received:', {
-          receivedMatchId: matchId,
-          expectedMatchId: liveMatchData.id,
-          matches: matchId === liveMatchData.id,
-        });
-
+      (method: string, matchId: number, statistics: MatchStatistics) => {
         if (matchId === liveMatchData.id) {
-          console.log('📊 Received real-time match statistics:', statistics);
-          console.log(
-            '🏆 Score Update:',
-            `${statistics.homeTeam.name} ${statistics.homeTeam.score} - ${statistics.awayTeam.score} ${statistics.awayTeam.name}`
-          );
+          // Update statistics and record when the update was received
+          const now = new Date();
           setRealtimeStatistics(statistics);
+          setLastUpdateTime(now);
+
+          // Store complete real-time statistics for persistence
+          liveMatchStorageService.setRealtimeStatistics(statistics, now);
 
           // Store match data using the storage service
           liveMatchStorageService.setLiveMatchData({
@@ -269,10 +279,6 @@ export default function LiveMatchPanel({
 
     return () => {
       // Leave match statistics group when component unmounts or match changes
-      console.log(
-        '🚪 Leaving match statistics group for match:',
-        liveMatchData.id
-      );
       signalRService.leaveMatchStatistics(liveMatchData.id);
     };
   }, [signalRConnected, liveMatchData?.id]);
@@ -281,31 +287,37 @@ export default function LiveMatchPanel({
   useEffect(() => {
     const fetchLiveMatch = async () => {
       if (!userId) {
-        console.log('⏳ No userId provided for live match fetch');
         return;
       }
 
       try {
-        console.log('🔄 Fetching live match for user:', userId);
         setIsLoading(true);
         setError('');
 
         const response = await matchService.getLiveMatchForUser(userId);
-        console.log('📥 Live match response:', response);
 
         if (response.succeeded && response.hasLiveMatch && response.liveMatch) {
-          console.log('✅ Live match found:', {
-            matchId: response.liveMatch.id,
-            homeTeam: response.liveMatch.homeTeam.name,
-            awayTeam: response.liveMatch.awayTeam.name,
-            status: response.liveMatch.matchStatus,
-            isLive: response.liveMatch.isLive,
-            homeScore: response.liveMatch.homeTeamScore,
-            awayScore: response.liveMatch.awayTeamScore,
-          });
-
           setLiveMatchData(response.liveMatch);
           setHasLiveMatch(true);
+
+          // Check if we have valid stored statistics for this match
+          if (
+            liveMatchStorageService.isStoredStatisticsValid(
+              response.liveMatch.id
+            )
+          ) {
+            const { statistics, updateTime } =
+              liveMatchStorageService.getRealtimeStatistics();
+            if (statistics && updateTime) {
+              setRealtimeStatistics(statistics);
+              setLastUpdateTime(updateTime);
+            }
+          } else {
+            // Clear invalid stored statistics
+            liveMatchStorageService.clearRealtimeStatistics();
+            setRealtimeStatistics(null);
+            setLastUpdateTime(null);
+          }
 
           // Store initial match data using storage service
           liveMatchStorageService.setLiveMatchData({
@@ -317,12 +329,6 @@ export default function LiveMatchPanel({
             status: response.liveMatch.matchStatus,
           });
         } else {
-          console.log('📭 No live match available:', {
-            succeeded: response.succeeded,
-            hasLiveMatch: response.hasLiveMatch,
-            error: response.error,
-          });
-
           setHasLiveMatch(false);
           setLiveMatchData(null);
           setRealtimeStatistics(null);
@@ -330,12 +336,16 @@ export default function LiveMatchPanel({
           // Clear storage when no live match
           liveMatchStorageService.clearLiveMatchData();
 
-          if (response.error) {
+          // Only set error if the API call actually failed (succeeded: false)
+          if (!response.succeeded && response.error) {
             setError(response.error);
+          } else {
+            // Clear any previous errors since this is a successful "no match" response
+            setError('');
           }
         }
       } catch (err) {
-        console.error('❌ Error fetching live match:', err);
+        console.error('Error fetching live match:', err);
         setError('Failed to load live match');
         setHasLiveMatch(false);
         setLiveMatchData(null);
@@ -349,7 +359,6 @@ export default function LiveMatchPanel({
 
     // Reduced polling frequency since we're using SignalR for real-time updates
     const pollInterval = setInterval(() => {
-      console.log('🔄 Polling live match data (2-minute interval)...');
       fetchLiveMatch();
     }, 120000); // Every 2 minutes instead of 30 seconds
 
@@ -390,6 +399,109 @@ export default function LiveMatchPanel({
     }
   };
 
+  // Combined real-time data monitoring and updates effect
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let cleanupInterval: NodeJS.Timeout;
+
+    // Force immediate re-render when new statistics arrive
+    if (realtimeStatistics) {
+      setUpdateCounter((prev) => prev + 1);
+    }
+
+    // Set up periodic validation and cleanup of stored data
+    if (hasLiveMatch && liveMatchData) {
+      cleanupInterval = setInterval(() => {
+        // Check if stored statistics are still valid
+        if (
+          !liveMatchStorageService.isStoredStatisticsValid(liveMatchData.id, 60)
+        ) {
+          liveMatchStorageService.clearRealtimeStatistics();
+        }
+      }, 300000); // Check every 5 minutes
+    }
+
+    // Set up update counter for "time ago" display
+    if (realtimeStatistics && lastUpdateTime) {
+      const scheduleNextUpdate = () => {
+        timeoutId = setTimeout(() => {
+          setUpdateCounter((prev) => prev + 1);
+          scheduleNextUpdate(); // Schedule the next update
+        }, 10000);
+      };
+
+      // Start the update cycle
+      scheduleNextUpdate();
+    }
+
+    // Debug keyboard shortcut for force refresh
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Press Ctrl+Shift+R to force refresh data (for debugging)
+      if (event.key === 'r' && event.ctrlKey && event.shiftKey) {
+        setUpdateCounter((prev) => prev + 1);
+        setViewportKey((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (cleanupInterval) {
+        clearInterval(cleanupInterval);
+      }
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [realtimeStatistics, lastUpdateTime, hasLiveMatch, liveMatchData]);
+
+  // Get current match time for display - prioritize real-time data
+  const getCurrentMatchTime = (): string => {
+    if (realtimeStatistics) {
+      // First priority: Use timeStamp which is the match time in "MM:SS" format
+      if (realtimeStatistics.timeStamp) {
+        // timeStamp is already in match time format like "90:00"
+        return realtimeStatistics.timeStamp;
+      }
+      // Second priority: Use currentMinute if available
+      if (typeof realtimeStatistics.matchInfo.currentMinute === 'number') {
+        const timeStr = `${realtimeStatistics.matchInfo.currentMinute}'`;
+        return timeStr;
+      }
+    }
+
+    // Fallback to initial match data
+    if (liveMatchData?.scheduledDateTimeUtc) {
+      const fallbackTime = formatMatchTime(liveMatchData.scheduledDateTimeUtc);
+      return fallbackTime;
+    }
+
+    return '00:00';
+  };
+
+  // Get time elapsed since last update for live indicator
+  const getRealTimeTimestamp = (): string => {
+    if (realtimeStatistics && lastUpdateTime) {
+      const now = new Date();
+      const diffMs = now.getTime() - lastUpdateTime.getTime();
+      const diffSeconds = Math.floor(diffMs / 1000);
+      const diffMinutes = Math.floor(diffSeconds / 60);
+      const diffHours = Math.floor(diffMinutes / 60);
+
+      if (diffSeconds < 10) {
+        return 'just now';
+      } else if (diffSeconds < 60) {
+        return `${diffSeconds} seconds ago`;
+      } else if (diffMinutes < 60) {
+        return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      } else {
+        return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+      }
+    }
+    return '';
+  };
+
   // Use real-time statistics if available, otherwise fall back to initial match data
   const getCurrentStatistics = () => {
     if (realtimeStatistics) {
@@ -410,8 +522,8 @@ export default function LiveMatchPanel({
         awayTeamYellowCards: realtimeStatistics.awayTeam.yellowCards,
         homeTeamRedCards: realtimeStatistics.homeTeam.redCards,
         awayTeamRedCards: realtimeStatistics.awayTeam.redCards,
-        currentMinute: realtimeStatistics.matchInfo.currentMinute,
         matchStatus: realtimeStatistics.matchInfo.status,
+        isLive: realtimeStatistics.matchInfo.isLive,
       };
     } else if (liveMatchData) {
       return {
@@ -431,96 +543,125 @@ export default function LiveMatchPanel({
         awayTeamYellowCards: liveMatchData.awayTeamYellowCards,
         homeTeamRedCards: liveMatchData.homeTeamRedCards,
         awayTeamRedCards: liveMatchData.awayTeamRedCards,
-        currentMinute: formatMatchTime(liveMatchData.scheduledDateTimeUtc),
         matchStatus: liveMatchData.matchStatus,
+        isLive: liveMatchData.isLive,
       };
     }
     return null;
   };
 
-  const currentStats = getCurrentStatistics();
+  const currentStats = useMemo(
+    () => getCurrentStatistics(),
+    [realtimeStatistics, liveMatchData]
+  );
+  const currentMatchTime = useMemo(
+    () => getCurrentMatchTime(),
+    [realtimeStatistics, liveMatchData]
+  );
+  const realTimeTimestamp = useMemo(
+    () => getRealTimeTimestamp(),
+    [realtimeStatistics, lastUpdateTime, updateCounter]
+  );
 
   // Use live match data if available, fallback to props for display when no live match
-  const displayData =
-    hasLiveMatch && liveMatchData && currentStats
-      ? {
-          homeTeam: {
-            name:
-              liveMatchData.homeTeam.shortName || liveMatchData.homeTeam.name,
-            logo: liveMatchData.homeTeam.logo || '/logos/Footex.png',
-          },
-          awayTeam: {
-            name:
-              liveMatchData.awayTeam.shortName || liveMatchData.awayTeam.name,
-            logo: liveMatchData.awayTeam.logo || '/logos/Footex.png',
-          },
-          homeScore: currentStats.homeTeamScore,
-          awayScore: currentStats.awayTeamScore,
-          matchTime:
-            typeof currentStats.currentMinute === 'number'
-              ? `${currentStats.currentMinute}'`
-              : currentStats.currentMinute,
-          isLive: liveMatchData.isLive || currentStats.matchStatus === 'Live',
-          status: currentStats.matchStatus,
-          hasRealTimeData: !!realtimeStatistics,
-          stats: [
-            {
-              label: 'Possession',
-              homeValue: currentStats.homeTeamPossession,
-              awayValue: currentStats.awayTeamPossession,
+  const displayData = useMemo(() => {
+    const data =
+      hasLiveMatch && liveMatchData && currentStats
+        ? {
+            homeTeam: {
+              name:
+                liveMatchData.homeTeam.shortName || liveMatchData.homeTeam.name,
+              logo: liveMatchData.homeTeam.logo || '/logos/PixelPitch.png',
             },
-            {
-              label: 'Shots on Target',
-              homeValue: currentStats.homeTeamShotsOnTarget,
-              awayValue: currentStats.awayTeamShotsOnTarget,
+            awayTeam: {
+              name:
+                liveMatchData.awayTeam.shortName || liveMatchData.awayTeam.name,
+              logo: liveMatchData.awayTeam.logo || '/logos/PixelPitch.png',
             },
-            {
-              label: 'Shots',
-              homeValue: currentStats.homeTeamShots,
-              awayValue: currentStats.awayTeamShots,
+            homeScore: currentStats.homeTeamScore,
+            awayScore: currentStats.awayTeamScore,
+            matchTime: currentMatchTime,
+            realTimeTimestamp: realTimeTimestamp,
+            isLive: currentStats.isLive || currentStats.matchStatus === 'Live',
+            status: currentStats.matchStatus,
+            hasRealTimeData: !!realtimeStatistics,
+            stats: [
+              {
+                label: 'Possession',
+                homeValue: currentStats.homeTeamPossession,
+                awayValue: currentStats.awayTeamPossession,
+              },
+              {
+                label: 'Shots on Target',
+                homeValue: currentStats.homeTeamShotsOnTarget,
+                awayValue: currentStats.awayTeamShotsOnTarget,
+              },
+              {
+                label: 'Shots',
+                homeValue: currentStats.homeTeamShots,
+                awayValue: currentStats.awayTeamShots,
+              },
+              {
+                label: 'Corners',
+                homeValue: currentStats.homeTeamCorners,
+                awayValue: currentStats.awayTeamCorners,
+              },
+              {
+                label: 'Fouls',
+                homeValue: currentStats.homeTeamFouls,
+                awayValue: currentStats.awayTeamFouls,
+              },
+              {
+                label: 'Yellow Cards',
+                homeValue: currentStats.homeTeamYellowCards,
+                awayValue: currentStats.awayTeamYellowCards,
+              },
+            ],
+          }
+        : {
+            homeTeam: homeTeam || {
+              name: 'Team A',
+              logo: '/logos/barcelona.png',
             },
-            {
-              label: 'Corners',
-              homeValue: currentStats.homeTeamCorners,
-              awayValue: currentStats.awayTeamCorners,
+            awayTeam: awayTeam || {
+              name: 'Team B',
+              logo: '/logos/real madrid.png',
             },
-            {
-              label: 'Fouls',
-              homeValue: currentStats.homeTeamFouls,
-              awayValue: currentStats.awayTeamFouls,
-            },
-            {
-              label: 'Yellow Cards',
-              homeValue: currentStats.homeTeamYellowCards,
-              awayValue: currentStats.awayTeamYellowCards,
-            },
-          ],
-        }
-      : {
-          homeTeam: homeTeam || {
-            name: 'Team A',
-            logo: '/logos/barcelona.png',
-          },
-          awayTeam: awayTeam || {
-            name: 'Team B',
-            logo: '/logos/real madrid.png',
-          },
-          homeScore: homeScore || 0,
-          awayScore: awayScore || 0,
-          matchTime: matchTime || '00:00',
-          isLive: false,
-          status: 'No Live Match' as const,
-          hasRealTimeData: false,
-          stats: stats || [
-            { label: 'Possession', homeValue: 50, awayValue: 50 },
-            { label: 'Shots on Target', homeValue: 5, awayValue: 3 },
-            { label: 'Shots', homeValue: 10, awayValue: 7 },
-          ],
-        };
+            homeScore: homeScore || 0,
+            awayScore: awayScore || 0,
+            matchTime: matchTime || '00:00',
+            isLive: false,
+            status: 'No Live Match' as const,
+            hasRealTimeData: false,
+            stats: stats || [
+              { label: 'Possession', homeValue: 50, awayValue: 50 },
+              { label: 'Shots on Target', homeValue: 5, awayValue: 3 },
+              { label: 'Shots', homeValue: 10, awayValue: 7 },
+            ],
+          };
+
+    return data;
+  }, [
+    hasLiveMatch,
+    liveMatchData,
+    currentStats,
+    currentMatchTime,
+    realTimeTimestamp,
+    realtimeStatistics,
+    homeTeam,
+    awayTeam,
+    homeScore,
+    awayScore,
+    stats,
+    matchTime,
+    lastUpdateTime,
+    updateCounter,
+    viewportKey,
+  ]);
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-sm p-6">
+      <div className="mx-auto w-full max-w-md p-6">
         <div
           className={`relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl ${
             isMounted && isDarkMode
@@ -560,7 +701,7 @@ export default function LiveMatchPanel({
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-sm p-6">
+      <div className="mx-auto w-full max-w-md p-6">
         <div
           className={`relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl ${
             isMounted && isDarkMode
@@ -605,7 +746,7 @@ export default function LiveMatchPanel({
   // Show "No Live Match" state when user has no active live match
   if (!hasLiveMatch) {
     return (
-      <div className="mx-auto w-full max-w-sm p-6">
+      <div className="mx-auto w-full max-w-md p-6">
         <div
           className={`relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl ${
             isMounted && isDarkMode
@@ -646,7 +787,7 @@ export default function LiveMatchPanel({
   }
 
   return (
-    <div className="mx-auto w-full max-w-sm p-6">
+    <div className="mx-auto w-full max-w-md p-6">
       <div
         className={`relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 ${
           hasLiveMatch
@@ -693,6 +834,31 @@ export default function LiveMatchPanel({
             </div>
           </div>
 
+          {/* Match Time with Heartbeat Animation */}
+          {displayData.isLive && (
+            <div className="mb-4 flex items-center justify-center">
+              <div className="flex items-center gap-2 rounded-full border border-red-300/30 bg-red-100/20 px-3 py-1 backdrop-blur-sm">
+                <div className="relative">
+                  {/* Primary heartbeat indicator */}
+                  <div className="h-2 w-2 animate-ping rounded-full bg-red-600"></div>
+                  {/* Secondary heartbeat with different timing */}
+                  <div
+                    className="absolute inset-0 h-2 w-2 rounded-full bg-red-500"
+                    style={{
+                      animation:
+                        'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  ></div>
+                </div>
+                <span className="text-xs font-medium text-red-600">
+                  {displayData.realTimeTimestamp
+                    ? `Updated: ${displayData.realTimeTimestamp}`
+                    : displayData.matchTime}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Teams and Score */}
           <div className="mb-6 flex items-center justify-between">
             {/* Home Team */}
@@ -702,24 +868,24 @@ export default function LiveMatchPanel({
                 <Image
                   src={displayData.homeTeam.logo}
                   alt={displayData.homeTeam.name}
-                  width={48}
-                  height={48}
+                  width={52}
+                  height={52}
                   className="relative rounded-full border-2 border-white/30 shadow-xl transition-transform duration-300 group-hover:scale-110"
                   onError={(e) => {
                     e.currentTarget.src = '/logos/Footex.png';
                   }}
                 />
               </div>
-              <span className="max-w-[60px] text-center text-xs leading-tight font-medium text-gray-700">
+              <span className="max-w-[70px] text-center text-xs leading-tight font-medium text-gray-700">
                 {displayData.homeTeam.name}
               </span>
             </div>
 
             {/* Score */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 to-white/10 blur"></div>
-              <div className="relative rounded-2xl border border-white/30 bg-gradient-to-br from-white/40 to-white/20 px-6 py-3 shadow-xl backdrop-blur-sm">
-                <div className="text-2xl font-bold tracking-wider text-gray-800">
+              <div className="relative min-w-[120px] rounded-2xl border border-white/30 bg-gradient-to-br from-white/40 to-white/20 px-8 py-5 shadow-xl backdrop-blur-sm">
+                <div className="text-center text-3xl font-bold tracking-wide whitespace-nowrap text-gray-800">
                   {displayData.homeScore} - {displayData.awayScore}
                 </div>
               </div>
@@ -732,15 +898,15 @@ export default function LiveMatchPanel({
                 <Image
                   src={displayData.awayTeam.logo}
                   alt={displayData.awayTeam.name}
-                  width={48}
-                  height={48}
+                  width={52}
+                  height={52}
                   className="relative rounded-full border-2 border-white/30 shadow-xl transition-transform duration-300 group-hover:scale-110"
                   onError={(e) => {
                     e.currentTarget.src = '/logos/Footex.png';
                   }}
                 />
               </div>
-              <span className="max-w-[60px] text-center text-xs leading-tight font-medium text-gray-700">
+              <span className="max-w-[70px] text-center text-xs leading-tight font-medium text-gray-700">
                 {displayData.awayTeam.name}
               </span>
             </div>

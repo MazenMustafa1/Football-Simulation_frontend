@@ -1,165 +1,423 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚽ Football Simulation Frontend
 
-## Getting Started
+A modern, feature-rich Next.js application for football match simulation with real-time updates, 3D visualizations, and comprehensive management features.
 
-First, run the development server:
+## 🚀 Features
+
+- **Real-time Match Simulation** with SignalR integration
+- **3D Stadium Visualizations** using Three.js and React Three Fiber
+- **Multi-language Support** (English, Spanish, French) with next-intl
+- **Dark/Light Theme** with system preference detection
+- **User Authentication** with role-based access control
+- **Responsive Design** optimized for all devices
+- **Progressive Web App** capabilities
+- **Real-time Notifications** system
+- **Advanced Settings Management** with persistence
+
+## 🐳 Docker Deployment
+
+This project supports Docker deployment for both development and production environments with HTTPS security.
+
+### Quick Start with Docker
+
+1. **Prerequisites**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+2. **First-time setup**:
+
+   ```powershell
+   # Run the automated setup script
+   .\setup-docker.ps1
+   ```
+
+3. **Development environment**:
+
+   ```powershell
+   pnpm run docker:dev
+   # Access: http://localhost:3000
+   ```
+
+4. **Production environment with HTTPS**:
+
+   ```powershell
+   # Configure SSL certificates
+   .\setup-ssl.ps1 -LetsEncrypt -Domain "yourdomain.com" -Email "admin@yourdomain.com"
+
+   # Deploy to production
+   .\deploy-production.ps1 -Domain "yourdomain.com" -Email "admin@yourdomain.com"
+   # Access: https://yourdomain.com
+   ```
+
+### Available Docker Commands
+
+```powershell
+# Development
+pnpm run docker:dev        # Start development environment
+pnpm run docker:dev:bg     # Start development in background
+pnpm run docker:dev:down   # Stop development environment
+
+# Production
+pnpm run docker:prod       # Start production environment
+pnpm run docker:prod:bg    # Start production in background
+pnpm run docker:prod:down  # Stop production environment
+
+# SSL Setup
+pnpm run ssl:setup         # Interactive SSL setup
+pnpm run ssl:letsencrypt   # Let's Encrypt certificates
+pnpm run ssl:selfsigned    # Self-signed certificates
+
+# Monitoring & Maintenance
+pnpm run docker:prod:monitoring  # Start with monitoring stack
+pnpm run docker:logs:prod        # View production logs
+pnpm run docker:clean            # Clean Docker resources
+pnpm run validate:docker         # Validate Docker configuration
+```
+
+## 🔒 Security & HTTPS
+
+The production deployment includes enterprise-grade security features:
+
+- **HTTPS/TLS encryption** with Let's Encrypt or custom certificates
+- **Security headers** (HSTS, CSP, XSS protection, etc.)
+- **Rate limiting** for API endpoints and authentication
+- **Container security** with non-root users and minimal privileges
+- **Network isolation** with Docker networks
+- **Automated SSL certificate renewal**
+
+## 🌐 Hosting Options
+
+### Self-Hosting
+
+- **VPS/Cloud Server**: DigitalOcean, Linode, Vultr ($10-30/month)
+- **Home Server**: Raspberry Pi or dedicated hardware
+- **Enterprise**: Kubernetes clusters with auto-scaling
+
+### Cloud Platforms
+
+- **Vercel**: Zero-config deployment with global CDN
+- **Netlify**: JAMstack optimized with serverless functions
+- **AWS**: ECS/Fargate for containerized deployments
+- **Google Cloud**: Cloud Run for serverless containers
+- **Azure**: Container Instances with Application Gateway
+
+For detailed hosting instructions, see [HTTPS_HOSTING_GUIDE.md](./HTTPS_HOSTING_GUIDE.md).
+
+## 🔧 Development
+
+### Local Development Setup
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone <repository-url>
+   cd Football-Simulation_frontend
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**:
+
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+4. **Start the development server**:
+   ```bash
+   pnpm dev
+   # Access: http://localhost:3000
+   ```
+
+### Technology Stack
+
+- **Framework**: Next.js 15.3.2 with React 19
+- **Language**: TypeScript with strict type checking
+- **Styling**: Tailwind CSS v4 with DaisyUI components
+- **3D Graphics**: Three.js with React Three Fiber
+- **Real-time**: SignalR for live updates
+- **Authentication**: NextAuth.js with JWT
+- **Internationalization**: next-intl with multi-language support
+- **Theme**: next-themes with dark/light mode
+- **Package Manager**: pnpm for fast, efficient installs
+
+### Development Tools
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Code formatting
+pnpm format              # Format code with Prettier
+pnpm format:check        # Check code formatting
+
+# Linting
+pnpm lint               # Run ESLint checks
+
+# Type checking
+npx tsc --noEmit        # TypeScript type checking
+
+# Testing
+pnpm test               # Run test suite (if configured)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Project Structure
-
-The project structure is as follows:
+## 📁 Project Structure
 
 ```
-/app
-  /Components
-    /DashboardImage
-      DashboardImage.tsx
-    /Hero Section
-      Hero.tsx
-    /LatestMatches
-      LatestMatches.tsx
-      MatchCard.tsx
-  /dashboard
-    page.tsx
-  /firstpage
-    page.tsx
-  /login
-    page.tsx
-  /matchdetails
-    page.tsx
-  /profile
-    page.tsx
-  /register
-    page.tsx
-  /trial
-    page.tsx
-  layout.tsx
-  globals.css
-  page.tsx
-/public
-  /images
-  /models
-  next.svg
-  vercel.svg
-  window.svg
-  globe.svg
-  file.svg
-/components
-  /ui
-    alert.tsx
-    button.tsx
-    input.tsx
-    label.tsx
-/lib
-  utils.ts
-/hooks
-  useAuth.ts
-  useFetch.ts
-  useLocalStorage.ts
-  useTheme.ts
+Football-Simulation_frontend/
+├── app/                          # Next.js App Router
+│   ├── Components/              # Shared React components
+│   ├── api/                     # API routes
+│   ├── contexts/                # React Context providers
+│   ├── dashboard/               # Dashboard pages
+│   ├── login/                   # Authentication pages
+│   ├── settings/                # User settings
+│   └── ...                      # Other feature pages
+├── components/                   # UI components library
+│   ├── ui/                      # Reusable UI components
+│   ├── Scene3D.tsx             # 3D visualization components
+│   └── ...
+├── Services/                     # Business logic services
+├── types/                       # TypeScript type definitions
+├── messages/                    # Internationalization files
+├── public/                      # Static assets
+├── docker-compose.yml           # Development Docker setup
+├── docker-compose.prod.yml      # Production Docker setup
+├── Dockerfile                   # Multi-stage Docker build
+├── nginx.conf                   # Production web server config
+└── ...                          # Configuration files
 ```
 
-### Key Components
+## 🎯 Key Features Breakdown
 
-- **DashboardImage**: Displays an image on the dashboard.
-- **Hero**: The hero section of the landing page.
-- **LatestMatches**: Displays the latest football matches.
-- **MatchCard**: A card component to display match details.
+### 🏟️ Match Simulation
 
-### Usage Instructions
+- Real-time match visualization with 3D stadium
+- Live event tracking and commentary
+- Player positioning and movement
+- Match statistics and analytics
 
-1. Clone the repository.
-2. Install dependencies using `npm install` or `yarn install`.
-3. Run the development server using `npm run dev` or `yarn dev`.
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 👤 User Management
 
-## Contributing Guidelines
+- Role-based authentication (Admin, Coach, Player)
+- User profiles with customizable settings
+- Team and player management
+- Permission-based access control
 
-We welcome contributions! Please follow these guidelines:
+### 🌍 Internationalization
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -m 'Add some feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Open a pull request.
+- Multi-language support (English, Spanish, French)
+- RTL language support ready
+- Timezone-aware date/time handling
+- Localized number and currency formatting
 
-## Code of Conduct
+### 🎨 Theme System
 
-Please adhere to the [Code of Conduct](CODE_OF_CONDUCT.md) in all your interactions with the project.
+- Dark and light mode themes
+- System preference detection
+- Custom theme creation capability
+- Smooth theme transitions
 
-## Dependencies
+### 📱 Responsive Design
 
-- **@heroicons/react**: Icons for React.
-- **@radix-ui/react-label**: Label component for Radix UI.
-- **@radix-ui/react-slot**: Slot component for Radix UI.
-- **@react-three/drei**: Helper components for react-three-fiber.
-- **@react-three/fiber**: React renderer for three.js.
-- **class-variance-authority**: Utility for managing class names.
-- **clsx**: Utility for constructing `className` strings.
-- **lucide-react**: Icon library for React.
-- **next**: The Next.js framework.
-- **react**: React library.
-- **react-dom**: React DOM library.
-- **tailwind-merge**: Utility for merging Tailwind CSS classes.
-- **three**: JavaScript 3D library.
+- Mobile-first responsive layout
+- Touch-friendly interactions
+- Progressive Web App features
+- Offline capability planning
 
-## Deployment Steps
+## 🔧 Configuration
 
-1. Build the project using `npm run build` or `yarn build`.
-2. Start the server using `npm start` or `yarn start`.
-3. Deploy the project to Vercel or any other hosting platform.
+### Environment Variables
 
-## Environment Setup
+The application uses different environment files for different environments:
 
-1. Create a `.env` file in the root directory.
-2. Add your environment variables to the `.env` file.
+- `.env.local` - Local development
+- `.env.production` - Production deployment
+- `.env.example` - Template with all available variables
 
-## Screenshots
+Key configuration options:
 
-![Screenshot 1](public/images/screenshot1.png)
-![Screenshot 2](public/images/screenshot2.png)
+```bash
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_SIGNALR_URL=http://localhost:5000/hubs
 
-## FAQs
+# Authentication
+NEXTAUTH_SECRET=your-super-secure-secret
+NEXTAUTH_URL=http://localhost:3000
 
-### How do I run the project?
+# Features
+NEXT_PUBLIC_ENABLE_3D=true
+NEXT_PUBLIC_ENABLE_NOTIFICATIONS=true
+```
 
-Follow the instructions in the "Getting Started" section.
+### Customization
 
-### How do I contribute?
+#### Adding New Languages
 
-Follow the instructions in the "Contributing Guidelines" section.
+1. Create translation files in `messages/[locale].json`
+2. Update `i18n.ts` configuration
+3. Add locale to middleware configuration
 
-### How do I deploy the project?
+#### Theme Customization
 
-Follow the instructions in the "Deployment Steps" section.
+1. Update `tailwind.config.js` with custom colors
+2. Modify theme definitions in `app/globals.css`
+3. Update theme provider configuration
 
-## Learn More
+#### Adding New Features
 
-To learn more about Next.js, take a look at the following resources:
+1. Create feature components in `app/Components/`
+2. Add API routes in `app/api/`
+3. Update navigation and routing as needed
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deployment Options
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Quick Production Deployment
 
-## Deploy on Vercel
+```powershell
+# Automated production deployment with HTTPS
+.\deploy-production.ps1 -Domain "yourdomain.com" -Email "admin@yourdomain.com" -Monitoring -WithRedis
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Manual Deployment Steps
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Configure environment**:
+
+   ```bash
+   cp .env.production.example .env.production
+   # Edit with your production values
+   ```
+
+2. **Set up SSL certificates**:
+
+   ```bash
+   # For Let's Encrypt (recommended)
+   .\setup-ssl.ps1 -LetsEncrypt -Domain "yourdomain.com" -Email "admin@yourdomain.com"
+
+   # Or for self-signed (testing)
+   .\setup-ssl.ps1 -SelfSigned -Domain "localhost"
+   ```
+
+3. **Deploy with Docker**:
+
+   ```bash
+   # Build and start production containers
+   docker-compose -f docker-compose.prod.yml up --build -d
+   ```
+
+4. **Verify deployment**:
+
+   ```bash
+   # Check health
+   curl https://yourdomain.com/api/health
+
+   # View logs
+   docker-compose -f docker-compose.prod.yml logs -f
+   ```
+
+## 📊 Monitoring and Maintenance
+
+### Built-in Monitoring
+
+The production deployment includes optional monitoring stack:
+
+- **Health Checks**: Application and container health monitoring
+- **Prometheus**: Metrics collection and alerting
+- **Nginx**: Access logs and performance metrics
+- **Redis**: Session and cache monitoring (when enabled)
+
+### Log Management
+
+```bash
+# View application logs
+pnpm run docker:logs:prod
+
+# View specific service logs
+docker-compose -f docker-compose.prod.yml logs nginx
+docker-compose -f docker-compose.prod.yml logs football-frontend-prod
+
+# Follow logs in real-time
+docker-compose -f docker-compose.prod.yml logs -f --tail=100
+```
+
+### Backup and Recovery
+
+```bash
+# Backup application data
+docker run --rm -v football_app_logs:/data -v $(pwd)/backups:/backup alpine tar czf /backup/app-backup-$(date +%Y%m%d).tar.gz /data
+
+# Backup SSL certificates
+tar czf backups/ssl-backup-$(date +%Y%m%d).tar.gz ssl/
+
+# Create full deployment backup
+tar czf backups/full-backup-$(date +%Y%m%d).tar.gz --exclude=node_modules --exclude=.git .
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Port conflicts**:
+
+   ```bash
+   # Check what's using port 3000
+   netstat -ano | findstr :3000
+   # Kill the process if needed
+   taskkill /PID <PID> /F
+   ```
+
+2. **SSL certificate issues**:
+
+   ```bash
+   # Validate certificate
+   openssl x509 -in ssl/cert.pem -text -noout
+   # Test SSL connection
+   openssl s_client -connect yourdomain.com:443
+   ```
+
+3. **Docker issues**:
+   ```bash
+   # Check Docker daemon
+   docker ps
+   # Restart Docker if needed
+   docker system prune -f
+   ```
+
+### Getting Help
+
+- **Documentation**: Check the comprehensive guides in `/Docs/`
+- **Health Check**: `https://yourdomain.com/api/health`
+- **Logs**: Use `pnpm run docker:logs:prod` for debugging
+- **Configuration**: Validate setup with `pnpm run validate:docker`
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/Docs/` directory:
+
+- [Docker Deployment Guide](./DOCKER_DEPLOYMENT_GUIDE.md)
+- [HTTPS & Hosting Guide](./HTTPS_HOSTING_GUIDE.md)
+- [Settings System Guide](./Docs/SETTINGS_SYSTEM_COMPLETION_REPORT.md)
+- [Internationalization Setup](./Docs/NEXT_INTL_TIMEZONE_FIX.md)
+- [Theme Implementation](./Docs/DARK_MODE_FINAL_COMPLETION_REPORT.md)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Next.js team for the amazing framework
+- Vercel for hosting and deployment tools
+- The open-source community for excellent packages and tools
+
+---
+
+**Built with ❤️ for football simulation enthusiasts**

@@ -11,7 +11,7 @@ export interface Match {
   awayTeamLogo?: string;
   homeTeamScore?: number;
   awayTeamScore?: number;
-  date?: string;
+  scheduledDateTimeUtc?: string;
   time?: string;
   status?: string;
   stadiumId?: number;
@@ -199,6 +199,24 @@ export interface MatchesResponse {
   error?: string;
 }
 
+export interface LatestMatchesResponse {
+  matches: LatestMatch[];
+  succeeded: boolean;
+  error?: string;
+}
+export interface LatestMatch {
+  id: number;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  scheduledDateTimeUtc: string;
+  matchStatus: string;
+  isLive: boolean;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
+}
+
 export interface MatchResponse {
   id: number;
   seasonId: number;
@@ -266,6 +284,13 @@ export interface LiveMatchResponse {
   succeeded: boolean;
   error?: string;
   matchId?: number;
+}
+
+export interface DirectLiveMatchResponse {
+  succeeded: boolean;
+  error?: string;
+  hasLiveMatch: boolean;
+  liveMatch?: LiveMatch;
 }
 
 class MatchService {
@@ -403,7 +428,7 @@ class MatchService {
     liveMatch?: LiveMatch;
   }> {
     try {
-      const response = await apiService.getWithCache<LiveMatchResponse>(
+      const response = await apiService.getWithCache<DirectLiveMatchResponse>(
         `/matches/livematch/${userId}`,
         {
           cacheKey: `live-match-${userId}`,
@@ -411,62 +436,31 @@ class MatchService {
         }
       );
 
-      // If no live match (matchId is 0, null, or undefined)
-      if (!response.succeeded || !response.matchId || response.matchId === 0) {
+      console.log('Live match API response:', response);
+
+      // Check if the request succeeded
+      if (!response.succeeded) {
         return {
-          succeeded: response.succeeded,
-          error: response.error,
+          succeeded: false,
+          error: response.error || 'Failed to fetch live match',
           hasLiveMatch: false,
         };
       }
 
-      // Fetch match details for the live match
-      try {
-        const matchDetails = await this.getMatchDetails(response.matchId);
+      // Check if there's a live match
+      if (!response.hasLiveMatch || !response.liveMatch) {
         return {
           succeeded: true,
-          hasLiveMatch: true,
-          liveMatch: {
-            id: matchDetails.id,
-            isLive: true,
-            homeTeam: matchDetails.homeTeam,
-            awayTeam: matchDetails.awayTeam,
-            homeTeamScore: matchDetails.homeTeamScore,
-            awayTeamScore: matchDetails.awayTeamScore,
-            scheduledDateTimeUtc: matchDetails.scheduledDateTimeUtc,
-            matchStatus: matchDetails.matchStatus as
-              | 'Live'
-              | 'Scheduled'
-              | 'Completed'
-              | 'Postponed'
-              | 'Cancelled',
-            homeTeamPossession: matchDetails.homeTeamPossession,
-            awayTeamPossession: matchDetails.awayTeamPossession,
-            homeTeamShots: matchDetails.homeTeamShots,
-            awayTeamShots: matchDetails.awayTeamShots,
-            homeTeamShotsOnTarget: matchDetails.homeTeamShotsOnTarget,
-            awayTeamShotsOnTarget: matchDetails.awayTeamShotsOnTarget,
-            homeTeamCorners: matchDetails.homeTeamCorners,
-            awayTeamCorners: matchDetails.awayTeamCorners,
-            homeTeamFouls: matchDetails.homeTeamFouls,
-            awayTeamFouls: matchDetails.awayTeamFouls,
-            homeTeamYellowCards: matchDetails.homeTeamYellowCards,
-            awayTeamYellowCards: matchDetails.awayTeamYellowCards,
-            homeTeamRedCards: matchDetails.homeTeamRedCards,
-            awayTeamRedCards: matchDetails.awayTeamRedCards,
-          },
-        };
-      } catch (matchError) {
-        console.error(
-          `Error fetching match details for live match ${response.matchId}:`,
-          matchError
-        );
-        return {
-          succeeded: false,
-          error: 'Failed to fetch live match details',
           hasLiveMatch: false,
         };
       }
+
+      // Return the live match data directly from the response
+      return {
+        succeeded: true,
+        hasLiveMatch: true,
+        liveMatch: response.liveMatch,
+      };
     } catch (error) {
       console.error(`Error fetching live match for user ${userId}:`, error);
       return {
@@ -480,15 +474,16 @@ class MatchService {
   /**
    * Get latest matches
    */
-  public async getLatestMatches(userId: string): Promise<Match[]> {
+  public async getLatestMatches(userId: string): Promise<LatestMatch[]> {
     try {
-      const latestMatches = await apiService.getWithCache<MatchesResponse>(
-        `/matches/${userId}`,
-        {
-          cacheKey: `latest-matches-${userId}`,
-          cacheTtl: 2 * 60 * 1000, // 2 minutes cache (very short for latest matches)
-        }
-      );
+      const latestMatches =
+        await apiService.getWithCache<LatestMatchesResponse>(
+          `/matches/${userId}`,
+          {
+            cacheKey: `latest-matches-${userId}`,
+            cacheTtl: 2 * 60 * 1000, // 2 minutes cache (very short for latest matches)
+          }
+        );
       return latestMatches.matches;
     } catch (error) {
       console.error('Error fetching latest matches:', error);

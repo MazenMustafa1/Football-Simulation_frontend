@@ -54,15 +54,15 @@ export interface MatchEvent {
 }
 
 export interface SimulationApiResponse {
-  matchId: number;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeTeamSeason: string;
-  awayTeamSeason: string;
-  eventsCount: number;
-  executionTime: number;
+  match_id: number;
+  home_team_name: string;
+  away_team_name: string;
+  home_team_season: string;
+  away_team_season: string;
+  events_count: number;
+  execution_time: number;
   preview: string;
-  simulationId: string;
+  simulation_id: string;
   status: string;
 }
 

@@ -26,12 +26,33 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check authentication on the client side
-    const user: LoggedUser =
-      JSON.parse(localStorage.getItem('user') || '') || null;
+    const userString = localStorage.getItem('user');
+    let user: LoggedUser | null = null;
 
-    if (!user.accessToken) {
+    if (userString) {
+      try {
+        user = JSON.parse(userString);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+        // Handle the error, e.g., redirect to login or clear corrupted data
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
+    }
+
+    if (!user || !user.accessToken) {
       router.push('/login');
+      return;
+    }
+
+    // Check if token is expired
+    const tokenExpires = new Date(user.tokenExpires);
+    const now = new Date();
+    if (tokenExpires <= now) {
+      localStorage.removeItem('user');
+      setIsAuthorized(false);
+      router.push('/login'); // Redirect to login after token expiration
       return;
     }
 
@@ -43,17 +64,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     setIsAuthorized(true);
   }, [router, pathname, allowedRoles]);
 
-  // Show nothing while checking authorization
+  // Show loading state while checking authorization
   if (isAuthorized === null) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        Loading...
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
 
-  // Only render children if authorized
-  return isAuthorized ? <>{children}</> : null;
+  // Show nothing if not authorized (redirect will happen)
+  if (!isAuthorized) {
+    return null;
+  }
+
+  // Render children if authorized
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;
