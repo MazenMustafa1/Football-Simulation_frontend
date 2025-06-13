@@ -12,7 +12,6 @@ export interface SignalREvent {
   timestamp: string;
 }
 
-
 export interface Score {
   home: number;
   away: number;
@@ -376,7 +375,9 @@ class SignalRService {
   /**
    * Subscribe to match events for a specific simulation
    */
-  public onMatchEvent(callback: (method:string ,match_id:string,data: MatchEventData) => void): void {
+  public onMatchEvent(
+    callback: (method: string, match_id: string, data: MatchEventData) => void
+  ): void {
     if (this.matchSimulationConnection) {
       // Remove existing listener to prevent duplicates
       this.matchSimulationConnection.off('SendMatchEventAsync');
@@ -520,7 +521,11 @@ class SignalRService {
    * Subscribe to real-time match statistics updates
    */
   public onMatchStatisticsUpdate(
-    callback: (method:string ,matchId: number, matchStatistics: MatchStatistics) => void
+    callback: (
+      method: string,
+      matchId: number,
+      matchStatistics: MatchStatistics
+    ) => void
   ): void {
     if (this.matchSimulationConnection) {
       // Remove existing listener to prevent duplicates

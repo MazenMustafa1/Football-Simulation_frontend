@@ -23,12 +23,14 @@ type ProfileCardProps = {
   initialProfile: Profile;
   onProfileSave?: (profile: Profile, avatarFile?: File) => Promise<SaveResult>;
   isLoading?: boolean;
+  isDarkMode?: boolean;
 };
 
 export const ProfileCard: FC<ProfileCardProps> = ({
   initialProfile,
   onProfileSave,
   isLoading = false,
+  isDarkMode = false,
 }) => {
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [editField, setEditField] = useState<keyof Profile | null>(null);
@@ -131,20 +133,28 @@ export const ProfileCard: FC<ProfileCardProps> = ({
 
   return (
     <motion.div
-      className="w-full overflow-hidden rounded-3xl border border-amber-100 bg-white shadow-2xl"
+      className={`w-full overflow-hidden rounded-3xl border shadow-2xl transition-colors duration-300 ${
+        isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-amber-100 bg-white'
+      }`}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{
         scale: 1.02,
         rotateX: 2,
         rotateY: 2,
-        boxShadow: '0 25px 50px -12px rgba(245, 158, 11, 0.5)',
+        boxShadow: isDarkMode
+          ? '0 25px 50px -12px rgba(59, 130, 246, 0.5)'
+          : '0 25px 50px -12px rgba(245, 158, 11, 0.5)',
       }}
       transition={{ duration: 0.5 }}
     >
       {/* Header with wave animation */}
       <motion.div
-        className="relative h-24 overflow-hidden bg-gradient-to-r from-amber-300 to-amber-100"
+        className={`relative h-24 overflow-hidden transition-colors duration-300 ${
+          isDarkMode
+            ? 'bg-gradient-to-r from-blue-600 to-blue-400'
+            : 'bg-gradient-to-r from-amber-300 to-amber-100'
+        }`}
         initial={{ backgroundPosition: '0% 50%' }}
         animate={{
           backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
@@ -161,7 +171,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
       {/* Avatar section - separated from header for proper positioning */}
       <div className="relative flex justify-center">
         <motion.div
-          className="group absolute -top-14 z-10 h-28 w-28 rounded-full border-4 border-white bg-white shadow-lg"
+          className={`group absolute -top-14 z-10 h-28 w-28 rounded-full border-4 shadow-lg transition-colors duration-300 ${
+            isDarkMode ? 'border-gray-700 bg-gray-700' : 'border-white bg-white'
+          }`}
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
@@ -207,7 +219,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
       >
         <motion.div className="mb-4 text-center">
           <motion.h2
-            className="text-2xl font-bold text-gray-800"
+            className={`text-2xl font-bold transition-colors duration-300 ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -215,7 +229,9 @@ export const ProfileCard: FC<ProfileCardProps> = ({
             {profile.username}
           </motion.h2>
           <motion.p
-            className="text-sm text-gray-500"
+            className={`text-sm transition-colors duration-300 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-500'
+            }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -230,12 +246,22 @@ export const ProfileCard: FC<ProfileCardProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <span className="inline-block rounded-full bg-gradient-to-r from-amber-100 to-amber-200 px-4 py-1 text-xs font-semibold text-amber-800">
+            <span
+              className={`inline-block rounded-full px-4 py-1 text-xs font-semibold transition-colors duration-300 ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-blue-800 to-blue-700 text-blue-200'
+                  : 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800'
+              }`}
+            >
               Favorite Team: {profile.favoriteTeam}
             </span>
           </motion.div>
         )}
-        <div className="divide-y divide-gray-200">
+        <div
+          className={`divide-y transition-colors duration-300 ${
+            isDarkMode ? 'divide-gray-600' : 'divide-gray-200'
+          }`}
+        >
           {(['email', 'username', 'age'] as (keyof Profile)[]).map(
             (field, index) => {
               const label = field.charAt(0).toUpperCase() + field.slice(1);
@@ -253,7 +279,13 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
                 >
-                  <div className="w-28 font-medium text-gray-600">{label}</div>
+                  <div
+                    className={`w-28 font-medium transition-colors duration-300 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}
+                  >
+                    {label}
+                  </div>
                   <AnimatePresence mode="wait">
                     {isEditing ? (
                       <motion.div
@@ -269,7 +301,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                           onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setDraftValue(e.target.value)
                           }
-                          className="w-full rounded border px-2 py-1 transition-all focus:border-amber-400 focus:ring-amber-400"
+                          className={`w-full rounded border px-2 py-1 transition-all ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-blue-400 focus:ring-blue-400'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-amber-400 focus:ring-amber-400'
+                          }`}
                           aria-label={`Edit ${label}`}
                           autoFocus
                         />
@@ -282,7 +318,13 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                         exit={{ opacity: 0 }}
                         key="viewing"
                       >
-                        <span className="text-gray-800">{value}</span>
+                        <span
+                          className={`transition-colors duration-300 ${
+                            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                          }`}
+                        >
+                          {value}
+                        </span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -299,7 +341,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                           <motion.button
                             onClick={saveEdit}
                             disabled={saving}
-                            className="cursor-pointer rounded-full bg-green-50 p-1 text-green-600 transition-colors hover:bg-green-100"
+                            className={`cursor-pointer rounded-full p-1 transition-colors ${
+                              isDarkMode
+                                ? 'bg-green-900 text-green-400 hover:bg-green-800'
+                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                            }`}
                             aria-label="Save changes"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -309,7 +355,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                           <motion.button
                             onClick={cancelEdit}
                             disabled={saving}
-                            className="cursor-pointer rounded-full bg-red-50 p-1 text-red-600 transition-colors hover:bg-red-100"
+                            className={`cursor-pointer rounded-full p-1 transition-colors ${
+                              isDarkMode
+                                ? 'bg-red-900 text-red-400 hover:bg-red-800'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100'
+                            }`}
                             aria-label="Cancel editing"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -320,7 +370,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                       ) : (
                         <motion.button
                           onClick={() => startEdit(field)}
-                          className="cursor-pointer rounded-full bg-blue-50 p-1 text-blue-600 transition-colors hover:bg-blue-100"
+                          className={`cursor-pointer rounded-full p-1 transition-colors ${
+                            isDarkMode
+                              ? 'bg-blue-900 text-blue-400 hover:bg-blue-800'
+                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                          }`}
                           aria-label={`Edit ${label}`}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -342,12 +396,18 @@ export const ProfileCard: FC<ProfileCardProps> = ({
           {/* Gender Selection with Dropdown */}
           <motion.div
             key="gender-field"
-            className={`flex items-center justify-between rounded-lg py-3 ${highlighted === 'gender' ? 'highlight-field' : ''}`}
+            className={`flex items-center justify-between rounded-lg py-3 ${highlighted === 'gender' ? 'highlight-field' : ''} `}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <div className="w-28 font-medium text-gray-600">Gender</div>
+            <div
+              className={`w-28 font-medium transition-colors duration-300 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
+              Gender
+            </div>
             <AnimatePresence mode="wait">
               {editField === 'gender' ? (
                 <motion.div
@@ -360,7 +420,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                   <select
                     value={draftValue}
                     onChange={(e) => setDraftValue(e.target.value)}
-                    className="w-full rounded border px-2 py-1 transition-all focus:border-amber-400 focus:ring-amber-400"
+                    className={`w-full rounded border px-2 py-1 transition-all ${
+                      isDarkMode
+                        ? 'border-gray-600 bg-gray-700 text-white focus:border-blue-400 focus:ring-blue-400'
+                        : 'border-gray-300 bg-white text-gray-900 focus:border-amber-400 focus:ring-amber-400'
+                    }`}
                     aria-label="Edit Gender"
                     autoFocus
                   >
@@ -379,7 +443,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                   exit={{ opacity: 0 }}
                   key="viewing-gender"
                 >
-                  <span className="text-gray-800">
+                  <span
+                    className={`transition-colors duration-300 ${
+                      isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                    }`}
+                  >
                     {profile.gender || 'Not specified'}
                   </span>
                 </motion.div>
@@ -398,7 +466,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                     <motion.button
                       onClick={saveEdit}
                       disabled={saving}
-                      className="cursor-pointer rounded-full bg-green-50 p-1 text-green-600 transition-colors hover:bg-green-100"
+                      className={`cursor-pointer rounded-full p-1 transition-colors ${
+                        isDarkMode
+                          ? 'bg-green-900 text-green-400 hover:bg-green-800'
+                          : 'bg-green-50 text-green-600 hover:bg-green-100'
+                      }`}
                       aria-label="Save changes"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -408,7 +480,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                     <motion.button
                       onClick={cancelEdit}
                       disabled={saving}
-                      className="cursor-pointer rounded-full bg-red-50 p-1 text-red-600 transition-colors hover:bg-red-100"
+                      className={`cursor-pointer rounded-full p-1 transition-colors ${
+                        isDarkMode
+                          ? 'bg-red-900 text-red-400 hover:bg-red-800'
+                          : 'bg-red-50 text-red-600 hover:bg-red-100'
+                      }`}
                       aria-label="Cancel editing"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -419,7 +495,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({
                 ) : (
                   <motion.button
                     onClick={() => startEdit('gender')}
-                    className="cursor-pointer rounded-full bg-blue-50 p-1 text-blue-600 transition-colors hover:bg-blue-100"
+                    className={`cursor-pointer rounded-full p-1 transition-colors ${
+                      isDarkMode
+                        ? 'bg-blue-900 text-blue-400 hover:bg-blue-800'
+                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                    }`}
                     aria-label="Edit Gender"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}

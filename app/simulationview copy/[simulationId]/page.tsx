@@ -344,21 +344,23 @@ export default function SimulationView() {
           await signalRService.joinSimulation(matchId);
 
           // Set up real-time event handlers
-          signalRService.onMatchEvent((method:string ,match_id:string,eventData: MatchEventData) => {
-            if (isRealTime) {
-              // Add new event to the simulation in real-time
-              setSimulation((prev) => ({
-                ...prev,
-                events: [...prev.events, convertToMatchEvent(eventData)],
-                currentMinute: eventData.minute,
-                homeScore: eventData.Score?.home || prev.homeScore,
-                awayScore: eventData.Score?.away || prev.awayScore,
-              }));
+          signalRService.onMatchEvent(
+            (method: string, match_id: string, eventData: MatchEventData) => {
+              if (isRealTime) {
+                // Add new event to the simulation in real-time
+                setSimulation((prev) => ({
+                  ...prev,
+                  events: [...prev.events, convertToMatchEvent(eventData)],
+                  currentMinute: eventData.minute,
+                  homeScore: eventData.Score?.home || prev.homeScore,
+                  awayScore: eventData.Score?.away || prev.awayScore,
+                }));
 
-              // Auto-advance to new event
-              setCurrentEventIndex((prev) => prev + 1);
+                // Auto-advance to new event
+                setCurrentEventIndex((prev) => prev + 1);
+              }
             }
-          });
+          );
 
           signalRService.onSimulationProgress(
             (progressData: SimulationProgressData) => {

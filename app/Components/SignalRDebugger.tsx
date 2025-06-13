@@ -390,7 +390,11 @@ export default function SignalRDebugger() {
     // Match statistics listener
     if (matchSimulationConnected) {
       signalRService.onMatchStatisticsUpdate(
-        (method:String,receivedMatchId: number, statistics: MatchStatistics) => {
+        (
+          method: String,
+          receivedMatchId: number,
+          statistics: MatchStatistics
+        ) => {
           addLog(
             'statistics',
             `📊 Match statistics received`,
@@ -413,23 +417,25 @@ export default function SignalRDebugger() {
       );
 
       // Match events listener
-      signalRService.onMatchEvent((method:string ,match_id:string,eventData: MatchEventData) => {
-        addLog(
-          'message',
-          `⚽ Match event received`,
-          {
-            action: eventData.action,
-            team: eventData.team,
-            player: eventData.player,
-            minute: eventData.minute,
-            eventType: eventData.event_type,
-            outcome: eventData.outcome,
-          },
-          'match'
-        );
+      signalRService.onMatchEvent(
+        (method: string, match_id: string, eventData: MatchEventData) => {
+          addLog(
+            'message',
+            `⚽ Match event received`,
+            {
+              action: eventData.action,
+              team: eventData.team,
+              player: eventData.player,
+              minute: eventData.minute,
+              eventType: eventData.event_type,
+              outcome: eventData.outcome,
+            },
+            'match'
+          );
 
-        setReceivedMatchEvents((prev) => [eventData, ...prev.slice(0, 19)]);
-      });
+          setReceivedMatchEvents((prev) => [eventData, ...prev.slice(0, 19)]);
+        }
+      );
 
       // Simulation progress listener
       signalRService.onSimulationProgress(
@@ -1212,9 +1218,7 @@ export default function SignalRDebugger() {
                     {stats.matchInfo.eventType} by {stats.matchInfo.eventTeam}
                   </p>
                 </div>
-                <span className="text-xs text-gray-500">
-                  {stats.timeStamp}
-                </span>
+                <span className="text-xs text-gray-500">{stats.timeStamp}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4">

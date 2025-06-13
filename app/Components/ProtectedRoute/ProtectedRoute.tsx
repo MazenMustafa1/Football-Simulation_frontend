@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import authService from '@/Services/AuthenticationService';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,6 +28,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   useEffect(() => {
     const userString = localStorage.getItem('user');
+    const accessToken = localStorage.getItem('accessToken');
+    // If accessToken is present, we can assume the user is logged in
     let user: LoggedUser | null = null;
 
     if (userString) {
@@ -41,22 +44,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
     }
 
-    if (!user || !user.accessToken) {
+    if (!user || !user.accessToken || !accessToken) {
       router.push('/login');
       return;
     }
 
     // Check if token is expired
-    const tokenExpires = new Date(user.tokenExpires);
+    const tokenExpires = new Date(user?.tokenExpires);
     const now = new Date();
-    if (tokenExpires <= now) {
+    if (tokenExpires <= now || authService.getValidAccessToken() == null) {
       localStorage.removeItem('user');
       setIsAuthorized(false);
       router.push('/login'); // Redirect to login after token expiration
       return;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user.roles[0] || '')) {
+    if (allowedRoles && !allowedRoles.includes(user?.roles[0]) || authService.hasRoleOptimized(allowedRoles) === false) {
       router.push('/unauthorized');
       return;
     }

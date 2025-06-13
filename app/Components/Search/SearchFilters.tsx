@@ -34,14 +34,14 @@ interface FilterSection {
 }
 
 export default ({
-                  filters,
-                  onFiltersChange,
-                  onApplyFilters,
-                  onResetFilters,
-                  isVisible,
-                  onToggle,
-                  className = '',
-                }: SearchFiltersProps) => {
+  filters,
+  onFiltersChange,
+  onApplyFilters,
+  onResetFilters,
+  isVisible,
+  onToggle,
+  className = '',
+}: SearchFiltersProps) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     entityTypes: true,
     location: false,
@@ -497,4 +497,4 @@ export default ({
       </AnimatePresence>
     </>
   );
-}
+};

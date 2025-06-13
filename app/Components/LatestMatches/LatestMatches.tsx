@@ -33,10 +33,10 @@ export default function LatestMatches() {
       const user: StorageUser = userData
         ? JSON.parse(userData)
         : { userId: '', roles: [''] };
-      
+
       console.log('User data for latest matches:', user);
       console.log('Calling API with userId:', user.userId);
-      
+
       const latestMatches = await matchService.getLatestMatches(user.userId);
       setMatches(latestMatches);
       console.log('Latest matches fetched:', latestMatches);

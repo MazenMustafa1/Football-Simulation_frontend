@@ -269,9 +269,16 @@ export default function MatchSimulation() {
         }
       >
         <div className="relative min-h-screen flex-1">
+          {' '}
           {/* Enhanced Background */}
           <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
+            <div
+              className={`absolute inset-0 ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+                  : 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50'
+              }`}
+            ></div>
             <div className="absolute inset-0 opacity-[0.03]">
               <Image
                 src="/images/Stadium dark.png"
@@ -281,23 +288,36 @@ export default function MatchSimulation() {
               />
             </div>
           </div>
-
           <div className="relative z-10">
             <Navbar />
 
             <div className="p-6">
               {/* Header */}
               <div className="mb-6 flex items-center gap-4">
+                {' '}
                 <Link href="/dashboard">
-                  <button className="rounded-full bg-white/90 p-2 shadow-lg transition-all hover:shadow-xl">
-                    <ArrowLeft size={24} className="text-green-700" />
+                  <button
+                    className={`rounded-full p-2 shadow-lg transition-all hover:shadow-xl ${
+                      isDarkMode
+                        ? 'bg-gray-800/90 hover:bg-gray-700/90'
+                        : 'bg-white/90 hover:bg-white'
+                    }`}
+                  >
+                    <ArrowLeft
+                      size={24}
+                      className={
+                        isDarkMode ? 'text-green-400' : 'text-green-700'
+                      }
+                    />
                   </button>
-                </Link>
+                </Link>{' '}
                 <div>
-                  <h1 className="text-3xl font-bold text-green-800">
+                  <h1
+                    className={`text-3xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-800'}`}
+                  >
                     Match Simulation
                   </h1>
-                  <p className="text-gray-600">
+                  <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
                     Create and simulate custom matches between teams
                   </p>
                 </div>
@@ -307,18 +327,25 @@ export default function MatchSimulation() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Team Selection */}
                 <div className="space-y-6 lg:col-span-2">
+                  {' '}
                   {/* Home Team Selection */}
-                  <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
+                  <div
+                    className={`rounded-2xl p-6 shadow-xl ${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'}`}
+                  >
                     <div className="mb-4 flex items-center gap-2">
                       <Users className="text-green-600" size={20} />
-                      <h2 className="text-xl font-semibold text-green-800">
+                      <h2
+                        className={`text-xl font-semibold ${isDarkMode ? 'text-green-400' : 'text-green-800'}`}
+                      >
                         Home Team
                       </h2>
                     </div>
-
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {' '}
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                        <label
+                          className={`mb-2 block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                        >
                           Select Team
                         </label>
                         <select
@@ -329,7 +356,11 @@ export default function MatchSimulation() {
                             );
                             if (team) handleTeamSelection(team, 'home');
                           }}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500"
+                          className={`w-full rounded-lg border px-3 py-2 focus:ring-green-500 ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-green-500'
+                          }`}
                         >
                           <option value="">Choose home team...</option>
                           {teams.map((team) => (
@@ -338,10 +369,11 @@ export default function MatchSimulation() {
                             </option>
                           ))}
                         </select>
-                      </div>
-
+                      </div>{' '}
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                        <label
+                          className={`mb-2 block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                        >
                           Select Season
                         </label>
                         <select
@@ -360,7 +392,11 @@ export default function MatchSimulation() {
                             );
                           }}
                           disabled={!homeTeam || isLoadingSeasons}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100"
+                          className={`w-full rounded-lg border px-3 py-2 focus:ring-green-500 disabled:opacity-50 ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400 disabled:bg-gray-800'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-green-500 disabled:bg-gray-100'
+                          }`}
                         >
                           <option value="">Choose season...</option>
                           {homeSeasons.map((season) => (
@@ -373,18 +409,25 @@ export default function MatchSimulation() {
                           ))}
                         </select>
                       </div>
-                    </div>
-
+                    </div>{' '}
                     {homeTeam && (
-                      <div className="mt-4 flex items-center gap-4 rounded-lg bg-green-50 p-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                      <div
+                        className={`mt-4 flex items-center gap-4 rounded-lg p-4 ${isDarkMode ? 'bg-green-900/50' : 'bg-green-50'}`}
+                      >
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${isDarkMode ? 'bg-green-800' : 'bg-green-100'}`}
+                        >
                           <ClubIcon className="text-green-600" size={24} />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-green-800">
+                          <h3
+                            className={`font-semibold ${isDarkMode ? 'text-green-400' : 'text-green-800'}`}
+                          >
                             {homeTeam.name}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p
+                            className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
                             {homeSelectedSeason
                               ? `Season: ${homeSelectedSeason}`
                               : 'Select a season'}
@@ -392,20 +435,25 @@ export default function MatchSimulation() {
                         </div>
                       </div>
                     )}
-                  </div>
-
+                  </div>{' '}
                   {/* Away Team Selection */}
-                  <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
+                  <div
+                    className={`rounded-2xl p-6 shadow-xl ${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'}`}
+                  >
                     <div className="mb-4 flex items-center gap-2">
                       <Users className="text-blue-600" size={20} />
-                      <h2 className="text-xl font-semibold text-blue-800">
+                      <h2
+                        className={`text-xl font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'}`}
+                      >
                         Away Team
                       </h2>
                     </div>
-
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {' '}
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                        <label
+                          className={`mb-2 block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                        >
                           Select Team
                         </label>
                         <select
@@ -416,7 +464,11 @@ export default function MatchSimulation() {
                             );
                             if (team) handleTeamSelection(team, 'away');
                           }}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          className={`w-full rounded-lg border px-3 py-2 focus:ring-blue-500 ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-blue-400 focus:ring-blue-400'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-blue-500'
+                          }`}
                         >
                           <option value="">Choose away team...</option>
                           {teams
@@ -427,10 +479,11 @@ export default function MatchSimulation() {
                               </option>
                             ))}
                         </select>
-                      </div>
-
+                      </div>{' '}
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                        <label
+                          className={`mb-2 block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                        >
                           Select Season
                         </label>
                         <select
@@ -449,7 +502,11 @@ export default function MatchSimulation() {
                             );
                           }}
                           disabled={!awayTeam || isLoadingSeasons}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
+                          className={`w-full rounded-lg border px-3 py-2 focus:ring-blue-500 disabled:opacity-50 ${
+                            isDarkMode
+                              ? 'border-gray-600 bg-gray-700 text-white focus:border-blue-400 focus:ring-blue-400 disabled:bg-gray-800'
+                              : 'border-gray-300 bg-white text-gray-900 focus:border-blue-500 disabled:bg-gray-100'
+                          }`}
                         >
                           <option value="">Choose season...</option>
                           {awaySeasons.map((season) => (
@@ -462,18 +519,25 @@ export default function MatchSimulation() {
                           ))}
                         </select>
                       </div>
-                    </div>
-
+                    </div>{' '}
                     {awayTeam && (
-                      <div className="mt-4 flex items-center gap-4 rounded-lg bg-blue-50 p-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                      <div
+                        className={`mt-4 flex items-center gap-4 rounded-lg p-4 ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-50'}`}
+                      >
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${isDarkMode ? 'bg-blue-800' : 'bg-blue-100'}`}
+                        >
                           <ClubIcon className="text-blue-600" size={24} />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-800">
+                          <h3
+                            className={`font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'}`}
+                          >
                             {awayTeam.name}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p
+                            className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
                             {awaySelectedSeason
                               ? `Season: ${awaySelectedSeason}`
                               : 'Select a season'}
@@ -486,21 +550,35 @@ export default function MatchSimulation() {
 
                 {/* Simulation Panel */}
                 <div className="space-y-6">
+                  {' '}
                   {/* Match Preview */}
-                  <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-800">
+                  <div
+                    className={`rounded-2xl p-6 shadow-xl ${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'}`}
+                  >
+                    <h3
+                      className={`mb-4 text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
+                    >
                       Match Preview
                     </h3>
 
                     {homeTeam && awayTeam ? (
                       <div className="space-y-4">
                         <div className="text-center">
-                          <div className="mb-4 text-2xl font-bold text-gray-800">
+                          {' '}
+                          <div
+                            className={`mb-4 text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
+                          >
                             {homeTeam.name}
-                            <span className="mx-2 text-gray-400">VS</span>
+                            <span
+                              className={`mx-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}
+                            >
+                              VS
+                            </span>
                             {awayTeam.name}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div
+                            className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
                             {homeSelectedSeason && awaySelectedSeason ? (
                               <div className="space-y-1">
                                 <div>Home: {homeSelectedSeason}</div>
@@ -540,7 +618,9 @@ export default function MatchSimulation() {
                         </button>
                       </div>
                     ) : (
-                      <div className="py-8 text-center text-gray-500">
+                      <div
+                        className={`py-8 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                      >
                         <Play
                           size={48}
                           className="mx-auto mb-4 text-gray-300"
@@ -549,7 +629,6 @@ export default function MatchSimulation() {
                       </div>
                     )}
                   </div>
-
                   {/* Simulation Status */}
                   {simulation.status !== 'idle' && (
                     <div className="rounded-2xl bg-white/90 p-6 shadow-xl">
@@ -566,7 +645,9 @@ export default function MatchSimulation() {
                           <p className="font-medium text-blue-600">
                             Initializing match simulation...
                           </p>
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p
+                            className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                          >
                             This may take a few moments
                           </p>
                         </div>
@@ -581,7 +662,9 @@ export default function MatchSimulation() {
                           <p className="mb-2 font-medium text-green-600">
                             Simulation Started Successfully!
                           </p>
-                          <div className="space-y-1 text-sm text-gray-600">
+                          <div
+                            className={`space-y-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
                             <p>
                               Match ID: {simulation.data.apiResponse.match_id}
                             </p>
@@ -615,7 +698,9 @@ export default function MatchSimulation() {
                           <p className="mb-2 font-medium text-red-600">
                             Simulation Failed
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p
+                            className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                          >
                             {simulation.error}
                           </p>
                           <button
@@ -627,17 +712,31 @@ export default function MatchSimulation() {
                         </div>
                       )}
                     </div>
-                  )}
-
+                  )}{' '}
                   {/* Tips */}
-                  <div className="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-6 shadow-xl">
+                  <div
+                    className={`rounded-2xl border p-6 shadow-xl ${
+                      isDarkMode
+                        ? 'border-yellow-600/30 bg-gradient-to-br from-yellow-900/30 to-orange-900/30'
+                        : 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50'
+                    }`}
+                  >
                     <div className="mb-3 flex items-center gap-2">
-                      <Zap className="text-yellow-600" size={20} />
-                      <h3 className="text-lg font-semibold text-yellow-800">
+                      <Zap
+                        className={
+                          isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+                        }
+                        size={20}
+                      />
+                      <h3
+                        className={`text-lg font-semibold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-800'}`}
+                      >
                         Tips
                       </h3>
                     </div>
-                    <ul className="space-y-2 text-sm text-yellow-700">
+                    <ul
+                      className={`space-y-2 text-sm ${isDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}
+                    >
                       <li>• Different seasons can create unique matchups</li>
                       <li>• Teams cannot play against themselves</li>
                       <li>

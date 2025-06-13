@@ -20,10 +20,8 @@ import authService, {
   UpdateUserRequest,
 } from '@/Services/AuthenticationService';
 import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
+import { useSettings } from '@/app/contexts/EnhancedSettingsContext';
 import './profile.css';
-
-// Number of footballs to animate in the background
-const FOOTBALL_COUNT = 5;
 
 interface UserStorage {
   userId: string;
@@ -38,7 +36,16 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  // Get dark mode from Enhanced Settings Context
+  const { isDarkMode } = useSettings();
+
+  // Handle client-side mounting to prevent hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -166,78 +173,35 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute allowedRoles={['User', 'Admin', 'Coach', 'Player']}>
-      <div className="profile-page-container relative min-h-screen overflow-hidden">
+      <div
+        className={`profile-page-container relative min-h-screen overflow-hidden transition-colors duration-300 ${
+          isMounted && isDarkMode ? 'bg-gray-900' : ''
+        }`}
+        suppressHydrationWarning
+      >
         {/* Replace existing background with football field */}
-        <div className="profile-background fixed inset-0 z-0">
-          <div className="football-field-bg">
-            {/* Field lines */}
-            <div className="field-line"></div>
-            <div className="center-circle"></div>
-            <div className="penalty-box-top"></div>
-            <div className="penalty-box-bottom"></div>
-            <div className="goal-top"></div>
-            <div className="goal-bottom"></div>
-
-            {/* Animated footballs */}
-            {[...Array(FOOTBALL_COUNT)].map((_, i) => (
-              <motion.div
-                key={`ball-${i}`}
-                className="football"
-                initial={{
-                  x:
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerWidth
-                      : Math.random() * 1920,
-                  y:
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerHeight
-                      : Math.random() * 1080,
-                }}
-                animate={{
-                  x: [
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerWidth
-                      : Math.random() * 1920,
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerWidth
-                      : Math.random() * 1920,
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerWidth
-                      : Math.random() * 1920,
-                  ],
-                  y: [
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerHeight
-                      : Math.random() * 1080,
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerHeight
-                      : Math.random() * 1080,
-                    typeof window !== 'undefined'
-                      ? Math.random() * window.innerHeight
-                      : Math.random() * 1080,
-                  ],
-                  rotate: [0, 360, 720],
-                }}
-                transition={{
-                  duration: 20 + Math.random() * 10,
-                  ease: 'linear',
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
-              />
-            ))}
-          </div>
-
+        <div
+          className={`profile-background fixed inset-0 z-0 ${
+            isMounted && isDarkMode ? 'bg-gray-900' : ''
+          }`}
+        >
           {/* Overlay to soften the background */}
-          <div className="bg-opacity-40 absolute inset-0 bg-white"></div>
+          <div
+            className={`absolute inset-0 transition-colors duration-300 ${
+              isMounted && isDarkMode
+                ? 'bg-opacity-70 bg-gray-900'
+                : 'bg-opacity-40 bg-white'
+            }`}
+          ></div>
         </div>
 
-        <div className="relative z-10 flex min-h-screen flex-col md:flex-row">
+        <div className="relative z-10 flex min-h-screen">
           <AnimatePresence>
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="fixed top-0 left-0 z-20 h-full w-16"
             >
               <Sidebar>
                 {/* Fixed nested anchor issue by using div wrappers with onClick */}
@@ -270,12 +234,13 @@ export default function ProfilePage() {
             </motion.div>
           </AnimatePresence>
 
-          <div className="ml-0 w-full transition-all duration-300 ease-in-out md:ml-16 md:w-[calc(100%-4rem)]">
+          <div className="ml-16 flex-1 transition-all duration-300 ease-in-out">
             <AnimatePresence>
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
+                className="w-full"
               >
                 <Navbar />
               </motion.div>
@@ -289,7 +254,9 @@ export default function ProfilePage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <div className="loader">
+                  <div
+                    className={`loader ${isMounted && isDarkMode ? 'dark-mode' : ''}`}
+                  >
                     <svg viewBox="0 0 80 80">
                       <circle
                         cx="40"
@@ -314,7 +281,11 @@ export default function ProfilePage() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="error-icon mb-4">❌</div>
-                  <div className="mb-4 text-center font-medium text-red-500">
+                  <div
+                    className={`mb-4 text-center font-medium ${
+                      isMounted && isDarkMode ? 'text-red-400' : 'text-red-500'
+                    }`}
+                  >
                     {error}
                   </div>
                   <motion.button
@@ -346,6 +317,7 @@ export default function ProfilePage() {
                       }}
                       onProfileSave={handleProfileSave}
                       isLoading={saving}
+                      isDarkMode={isMounted && isDarkMode}
                     />
                   </div>
 

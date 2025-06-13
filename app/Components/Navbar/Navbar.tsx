@@ -350,9 +350,27 @@ export default function Navbar() {
             </button>
 
             {isNotificationsOpen && (
-              <div className="animate-dropdown absolute right-0 z-50 mt-2 w-80 origin-top-right overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
-                <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-3">
-                  <h3 className="text-sm font-medium text-gray-700">
+              <div
+                className={`animate-dropdown absolute right-0 z-50 mt-2 w-80 origin-top-right overflow-hidden rounded-lg border shadow-lg ${
+                  isMounted && isDarkMode
+                    ? 'border-gray-600 bg-gray-800'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div
+                  className={`flex items-center justify-between border-b p-3 ${
+                    isMounted && isDarkMode
+                      ? 'border-gray-600 bg-gray-700'
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <h3
+                    className={`text-sm font-medium ${
+                      isMounted && isDarkMode
+                        ? 'text-gray-200'
+                        : 'text-gray-700'
+                    }`}
+                  >
                     Notifications
                   </h3>
                   <div className="flex items-center gap-2">
@@ -360,7 +378,11 @@ export default function Navbar() {
                       <button
                         onClick={markAllAsRead}
                         disabled={isLoading}
-                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                        className={`flex items-center gap-1 text-xs disabled:opacity-50 ${
+                          isMounted && isDarkMode
+                            ? 'text-blue-400 hover:text-blue-300'
+                            : 'text-blue-600 hover:text-blue-800'
+                        }`}
                         title="Mark all as read"
                       >
                         <CheckCheck size={12} />
@@ -371,7 +393,11 @@ export default function Navbar() {
                       <button
                         onClick={clearAllNotifications}
                         disabled={isLoading}
-                        className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                        className={`flex items-center gap-1 text-xs disabled:opacity-50 ${
+                          isMounted && isDarkMode
+                            ? 'text-red-400 hover:text-red-300'
+                            : 'text-red-600 hover:text-red-800'
+                        }`}
                         title="Clear all notifications"
                       >
                         <Trash2 size={12} />
@@ -383,13 +409,38 @@ export default function Navbar() {
 
                 <div className="max-h-96 overflow-y-auto">
                   {isLoading ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      <div className="mx-auto mb-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                    <div
+                      className={`p-4 text-center text-sm ${
+                        isMounted && isDarkMode
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
+                      }`}
+                    >
+                      <div
+                        className={`mx-auto mb-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent ${
+                          isMounted && isDarkMode
+                            ? 'border-blue-400'
+                            : 'border-blue-500'
+                        }`}
+                      ></div>
                       Loading notifications...
                     </div>
                   ) : notifications.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      <Bell size={24} className="mx-auto mb-2 text-gray-400" />
+                    <div
+                      className={`p-4 text-center text-sm ${
+                        isMounted && isDarkMode
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
+                      }`}
+                    >
+                      <Bell
+                        size={24}
+                        className={`mx-auto mb-2 ${
+                          isMounted && isDarkMode
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                        }`}
+                      />
                       No notifications
                     </div>
                   ) : (
@@ -398,10 +449,18 @@ export default function Navbar() {
                         (notification: Notification, index) => (
                           <div
                             key={notification.id || index}
-                            className={`group border-b border-gray-100 p-3 transition-colors hover:bg-gray-50 ${
-                              !notification.isRead
-                                ? 'border-l-4 border-l-blue-500 bg-blue-50'
-                                : ''
+                            className={`group border-b p-3 transition-colors ${
+                              isMounted && isDarkMode
+                                ? `border-gray-600 hover:bg-gray-700 ${
+                                    !notification.isRead
+                                      ? 'bg-gray-750 border-l-4 border-l-blue-400'
+                                      : ''
+                                  }`
+                                : `border-gray-100 hover:bg-gray-50 ${
+                                    !notification.isRead
+                                      ? 'border-l-4 border-l-blue-500 bg-blue-50'
+                                      : ''
+                                  }`
                             }`}
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
@@ -410,21 +469,41 @@ export default function Navbar() {
                                 <div
                                   className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
                                     !notification.isRead
-                                      ? 'bg-blue-500'
+                                      ? isMounted && isDarkMode
+                                        ? 'bg-blue-400'
+                                        : 'bg-blue-500'
                                       : 'bg-transparent'
                                   }`}
                                 ></div>
                                 <div className="ml-2 min-w-0 flex-grow">
                                   {notification.title && (
-                                    <p className="mb-1 text-sm font-semibold text-gray-800">
+                                    <p
+                                      className={`mb-1 text-sm font-semibold ${
+                                        isMounted && isDarkMode
+                                          ? 'text-gray-200'
+                                          : 'text-gray-800'
+                                      }`}
+                                    >
                                       {notification.title}
                                     </p>
                                   )}
-                                  <p className="text-sm break-words text-gray-700">
+                                  <p
+                                    className={`text-sm break-words ${
+                                      isMounted && isDarkMode
+                                        ? 'text-gray-300'
+                                        : 'text-gray-700'
+                                    }`}
+                                  >
                                     {notification.content}
                                   </p>
                                   <div className="mt-1 flex items-center justify-between">
-                                    <p className="text-xs text-gray-500">
+                                    <p
+                                      className={`text-xs ${
+                                        isMounted && isDarkMode
+                                          ? 'text-gray-400'
+                                          : 'text-gray-500'
+                                      }`}
+                                    >
                                       {new Date(
                                         notification.time
                                       ).toLocaleTimeString([], {
@@ -436,14 +515,22 @@ export default function Navbar() {
                                       className={`rounded-full px-2 py-1 text-xs ${
                                         notification.type ===
                                         NotificationType.Error
-                                          ? 'bg-red-100 text-red-800'
+                                          ? isMounted && isDarkMode
+                                            ? 'bg-red-900 text-red-300'
+                                            : 'bg-red-100 text-red-800'
                                           : notification.type ===
                                               NotificationType.Warning
-                                            ? 'bg-yellow-100 text-yellow-800'
+                                            ? isMounted && isDarkMode
+                                              ? 'bg-yellow-900 text-yellow-300'
+                                              : 'bg-yellow-100 text-yellow-800'
                                             : notification.type ===
                                                 NotificationType.Success
-                                              ? 'bg-green-100 text-green-800'
-                                              : 'bg-blue-100 text-blue-800'
+                                              ? isMounted && isDarkMode
+                                                ? 'bg-green-900 text-green-300'
+                                                : 'bg-green-100 text-green-800'
+                                              : isMounted && isDarkMode
+                                                ? 'bg-blue-900 text-blue-300'
+                                                : 'bg-blue-100 text-blue-800'
                                       }`}
                                     >
                                       {notification.type}
@@ -455,7 +542,11 @@ export default function Navbar() {
                                 {!notification.isRead && (
                                   <button
                                     onClick={() => markAsRead(notification.id)}
-                                    className="p-1 text-blue-600 hover:text-blue-800"
+                                    className={`p-1 ${
+                                      isMounted && isDarkMode
+                                        ? 'text-blue-400 hover:text-blue-300'
+                                        : 'text-blue-600 hover:text-blue-800'
+                                    }`}
                                     title="Mark as read"
                                   >
                                     <CheckCheck size={14} />
@@ -465,7 +556,11 @@ export default function Navbar() {
                                   onClick={() =>
                                     deleteNotification(notification.id)
                                   }
-                                  className="p-1 text-red-600 hover:text-red-800"
+                                  className={`p-1 ${
+                                    isMounted && isDarkMode
+                                      ? 'text-red-400 hover:text-red-300'
+                                      : 'text-red-600 hover:text-red-800'
+                                  }`}
                                   title="Delete notification"
                                 >
                                   <X size={14} />
@@ -479,10 +574,20 @@ export default function Navbar() {
                   )}
                 </div>
 
-                <div className="border-t border-gray-200 bg-gray-50 p-2 text-center">
+                <div
+                  className={`border-t p-2 text-center ${
+                    isMounted && isDarkMode
+                      ? 'border-gray-600 bg-gray-700'
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
                   <Link
                     href="/notifications"
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className={`text-xs ${
+                      isMounted && isDarkMode
+                        ? 'text-blue-400 hover:text-blue-300'
+                        : 'text-blue-600 hover:text-blue-800'
+                    }`}
                   >
                     View all notifications
                   </Link>
@@ -494,10 +599,20 @@ export default function Navbar() {
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center rounded-full p-1 transition-colors duration-200 hover:bg-gray-100"
+              className={`flex items-center rounded-full p-1 transition-colors duration-200 ${
+                isMounted && isDarkMode
+                  ? 'hover:bg-gray-700'
+                  : 'hover:bg-gray-100'
+              }`}
             >
               <div className="avatar">
-                <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-gray-200 transition-all duration-200 hover:border-blue-400">
+                <div
+                  className={`h-10 w-10 overflow-hidden rounded-full border-2 transition-all duration-200 ${
+                    isMounted && isDarkMode
+                      ? 'border-gray-600 hover:border-blue-400'
+                      : 'border-gray-200 hover:border-blue-400'
+                  }`}
+                >
                   <img
                     src={user?.avatarUrl || '/default-avatar.jpeg'}
                     alt="User avatar"
@@ -506,18 +621,38 @@ export default function Navbar() {
                 </div>
               </div>
               <div className="ml-2 hidden text-left md:block">
-                <h1 className="text-sm font-semibold text-gray-800">
+                <h1
+                  className={`text-sm font-semibold ${
+                    isMounted && isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                  }`}
+                >
                   {user?.username || 'Guest User'}
                 </h1>
-                <h3 className="text-xs font-normal text-gray-400">
+                <h3
+                  className={`text-xs font-normal ${
+                    isMounted && isDarkMode ? 'text-gray-400' : 'text-gray-400'
+                  }`}
+                >
                   {user?.email || 'Welcome to our site'}
                 </h3>
               </div>
             </button>
 
             {isProfileOpen && (
-              <div className="animate-dropdown absolute right-0 z-50 mt-2 w-56 origin-top-right overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
-                <div className="border-b border-gray-200 bg-gray-50 p-3">
+              <div
+                className={`animate-dropdown absolute right-0 z-50 mt-2 w-56 origin-top-right overflow-hidden rounded-lg border shadow-lg ${
+                  isMounted && isDarkMode
+                    ? 'border-gray-600 bg-gray-800'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div
+                  className={`border-b p-3 ${
+                    isMounted && isDarkMode
+                      ? 'border-gray-600 bg-gray-700'
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
                   <div className="flex items-center">
                     <div className="mr-3 h-10 w-10 overflow-hidden rounded-full">
                       <img
@@ -527,10 +662,22 @@ export default function Navbar() {
                       />
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-800">
+                      <h3
+                        className={`text-sm font-medium ${
+                          isMounted && isDarkMode
+                            ? 'text-gray-200'
+                            : 'text-gray-800'
+                        }`}
+                      >
                         {user?.username || 'Guest User'}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p
+                        className={`text-xs ${
+                          isMounted && isDarkMode
+                            ? 'text-gray-400'
+                            : 'text-gray-500'
+                        }`}
+                      >
                         {user?.email || 'guest@example.com'}
                       </p>
                     </div>
@@ -540,11 +687,19 @@ export default function Navbar() {
                 <div className="py-1">
                   <Link
                     href="/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                      isMounted && isDarkMode
+                        ? 'text-gray-300 hover:bg-gray-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="mr-2 h-4 w-4 text-gray-500"
+                      className={`mr-2 h-4 w-4 ${
+                        isMounted && isDarkMode
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
+                      }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -560,11 +715,19 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                    className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                      isMounted && isDarkMode
+                        ? 'text-gray-300 hover:bg-gray-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="mr-2 h-4 w-4 text-gray-500"
+                      className={`mr-2 h-4 w-4 ${
+                        isMounted && isDarkMode
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
+                      }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -586,11 +749,19 @@ export default function Navbar() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center px-4 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                    className={`flex w-full items-center px-4 py-2 text-left text-sm transition-colors ${
+                      isMounted && isDarkMode
+                        ? 'text-red-400 hover:bg-red-900/20'
+                        : 'text-red-600 hover:bg-red-50'
+                    }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="mr-2 h-4 w-4 text-red-500"
+                      className={`mr-2 h-4 w-4 ${
+                        isMounted && isDarkMode
+                          ? 'text-red-400'
+                          : 'text-red-500'
+                      }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

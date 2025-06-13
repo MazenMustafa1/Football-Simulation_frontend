@@ -15,7 +15,7 @@ import {
   renderThrowInPassEvent,
   renderCardEvent,
   renderSaveEvent,
-  ScoreboardDisplay
+  ScoreboardDisplay,
 } from './plotters/eventPlottingHandlers';
 import {
   getTeamNameWithFallback,

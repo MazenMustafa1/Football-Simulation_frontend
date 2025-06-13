@@ -52,11 +52,27 @@
   transform: translateX(-50%);
 }
 
+/* Dark mode styles for football field */
+.dark-field {
+  background: linear-gradient(to bottom, #1f2937, #111827) !important;
+}
+
+.dark-field .field-line,
+.dark-field .center-circle,
+.dark-field .penalty-box-top,
+.dark-field .penalty-box-bottom,
+.dark-field .goal-top,
+.dark-field .goal-bottom {
+  border-color: rgba(156, 163, 175, 0.5) !important;
+  background-color: rgba(156, 163, 175, 0.5) !important;
+}
+
 /* Profile page layout fixes */
 .profile-page-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: linear-gradient(to bottom, #1f2937, #111827);
 }
 
 .profile-content-wrapper {
