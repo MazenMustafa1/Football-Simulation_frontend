@@ -431,16 +431,15 @@ function ScheduleSidebar({ isAdmin }: { isAdmin: boolean }) {
         <>
           <SidebarSection title="Admin" color="text-amber-600" />
           <Link href="/admin">
-            <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
+            <SidebarItem
+              icon={<Settings size={20} />}
+              text="Admin Dashboard"
+            />{' '}
           </Link>
         </>
       )}
 
-      {/* Shop & Notifications */}
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
+      {/* Notifications */}
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>

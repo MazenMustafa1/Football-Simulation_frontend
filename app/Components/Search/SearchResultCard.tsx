@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -13,7 +12,6 @@ import {
   Trophy,
   MapPin,
   Clock,
-  ExternalLink,
 } from 'lucide-react';
 import { SearchResultItem } from '@/Services/SearchService';
 
@@ -123,18 +121,14 @@ export default function SearchResultCard({
   };
 
   const metadata = formatMetadata(result.type, result.additionalData);
-
   const cardContent = (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className={`group relative overflow-hidden rounded-xl border border-gray-200/50 bg-white/80 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:bg-white/90 hover:shadow-xl ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-gray-200/50 bg-white/80 shadow-lg backdrop-blur-sm ${className}`}
       onClick={onClick}
     >
-      {/* Gradient overlay for enhanced visual appeal */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
       <div className="relative p-6">
         <div className="flex items-start space-x-4">
           {/* Thumbnail/Image */}
@@ -145,11 +139,11 @@ export default function SearchResultCard({
                   src={result.thumbnailUrl}
                   alt={result.name}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="object-cover"
                 />
               </div>
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 transition-all duration-300 group-hover:from-blue-100 group-hover:to-purple-100 group-hover:text-blue-600">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600">
                 {getTypeIcon(result.type)}
               </div>
             )}
@@ -157,7 +151,7 @@ export default function SearchResultCard({
 
           {/* Content */}
           <div className="min-w-0 flex-1">
-            {/* Header with type badge and external link icon */}
+            {/* Header with type badge */}
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <span
@@ -169,11 +163,10 @@ export default function SearchResultCard({
                   <span className="ml-1 capitalize">{result.type}</span>
                 </span>
               </div>
-              <ExternalLink className="h-4 w-4 text-gray-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </div>
 
             {/* Title */}
-            <h3 className="mb-2 line-clamp-1 text-lg font-semibold text-gray-900 transition-colors duration-200 group-hover:text-blue-700">
+            <h3 className="mb-2 line-clamp-1 text-lg font-semibold text-gray-900">
               {result.name}
             </h3>
 
@@ -227,17 +220,10 @@ export default function SearchResultCard({
             )}
           </div>
         </div>
-
-        {/* Hover effect border */}
-        <div className="absolute inset-0 rounded-xl border-2 border-transparent transition-colors duration-300 group-hover:border-blue-200" />
       </div>
     </motion.div>
   );
 
-  // If URL is provided, wrap in Link, otherwise just return the card
-  if (result.url && !onClick) {
-    return <Link href={result.url}>{cardContent}</Link>;
-  }
-
+  // Always return the card content without Link wrapper
   return cardContent;
 }

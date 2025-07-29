@@ -179,6 +179,10 @@ export default function MatchSimulation() {
 
       setSimulation({ status: 'success', data: response });
       localStorage.setItem('matchId', response.apiResponse.match_id.toString());
+      localStorage.setItem(
+        'simulationId',
+        response.apiResponse.simulation_id.toString()
+      );
 
       // Navigate to simulation view after a delay (simulation time x2)
       const redirectDelay = simulationTime * 2;
@@ -218,12 +222,9 @@ export default function MatchSimulation() {
                 text="Dashboard"
                 active
               />
-            </Link>
+            </Link>{' '}
             <Link href="/teams">
               <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-            </Link>
-            <Link href="/schedule">
-              <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
             </Link>
             <Link href="/players">
               <SidebarItem icon={<User size={20} />} text="Players" />
@@ -234,7 +235,6 @@ export default function MatchSimulation() {
             <Link href="/stadiums">
               <SidebarItem icon={<Home size={20} />} text="Stadiums" />
             </Link>
-
             {/* Admin Section - only show if user is admin */}
             {isAdmin && (
               <>
@@ -244,19 +244,13 @@ export default function MatchSimulation() {
                     icon={<Settings size={20} />}
                     text="Admin Dashboard"
                   />
-                </Link>
+                </Link>{' '}
               </>
             )}
-
-            {/* Shop & Notifications */}
-            <SidebarSection title="Shop & Updates" />
-            <Link href="/products">
-              <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-            </Link>
+            {/* Notifications */}
             <Link href="/notifications">
               <SidebarItem icon={<Bell size={20} />} text="Notifications" />
             </Link>
-
             {/* Search & Settings */}
             <SidebarSection title="Other" />
             <Link href="/search">

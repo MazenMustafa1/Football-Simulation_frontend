@@ -8,7 +8,7 @@ import {
   renderPassEvent,
   renderShotEvent,
   renderFoulEvent,
-  renderMatchStartEvent,
+  renderMatchStatusEvent,
   renderBallReceiptEvent,
   renderCarryEvent,
   renderPressureEvent,
@@ -204,18 +204,34 @@ const EventPlotter = ({ events, timer }: EventPlotterProps) => {
 
     filteredEvents.push(event);
   }
+  // Only show the last 5 relevant events, but handle system events differently
+  const allRelevantEvents = filteredEvents.filter((event) =>
+    allowedTypes.includes(event.event_type as (typeof allowedTypes)[number])
+  );
 
-  // Only show the last 5 relevant events
-  const visibleEvents = filteredEvents
-    .filter((event) =>
-      allowedTypes.includes(event.event_type as (typeof allowedTypes)[number])
-    )
-    .slice(-5);
-
+  // For system events like match_start, first_half_end, match_end,
+  // only show them if they are among the very recent events
+  const visibleEvents = allRelevantEvents
+    .slice(-5)
+    .filter((event, index, arr) => {
+      // System events only show if they are one of the last 3 events
+      if (
+        event.team === 'SYSTEM' &&
+        ['match_start', 'first_half_end', 'match_end'].includes(
+          event.event_type
+        )
+      ) {
+        const systemEventIndex = arr.length - 1 - index; // How many events ago
+        return systemEventIndex <= 2; // Only show if it's within the last 3 events
+      }
+      return true; // Show all non-system events
+    });
   const renderEvent = (event: Event, key: number) => {
     switch (event?.event_type) {
       case 'match_start':
-        return <group key={key}>{renderMatchStartEvent(event)}</group>;
+      case 'match_end':
+      case 'first_half_end':
+        return <group key={key}>{renderMatchStatusEvent(event)}</group>;
       case 'pass':
       case 'free_kick_pass':
       case 'corner_pass':

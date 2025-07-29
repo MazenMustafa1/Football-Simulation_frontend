@@ -228,12 +228,9 @@ export default function SettingsPage() {
                 icon={<LayoutDashboardIcon size={20} />}
                 text="Dashboard"
               />
-            </Link>
+            </Link>{' '}
             <Link href="/teams">
               <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-            </Link>
-            <Link href="/schedule">
-              <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
             </Link>
             <Link href="/players">
               <SidebarItem icon={<User size={20} />} text="Players" />
@@ -244,7 +241,6 @@ export default function SettingsPage() {
             <Link href="/stadiums">
               <SidebarItem icon={<Home size={20} />} text="Stadiums" />
             </Link>
-
             {/* Admin Section */}
             {isAdmin && (
               <>
@@ -257,16 +253,10 @@ export default function SettingsPage() {
                 </Link>
               </>
             )}
-
-            {/* Shop & Notifications */}
-            <SidebarSection title="Shop & Updates" />
-            <Link href="/products">
-              <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-            </Link>
+            {/* Notifications */}
             <Link href="/notifications">
               <SidebarItem icon={<Bell size={20} />} text="Notifications" />
             </Link>
-
             {/* Search & Settings */}
             <SidebarSection title="Other" />
             <Link href="/search">

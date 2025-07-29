@@ -5,13 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Search,
-  Filter,
   MapPin,
   Users,
   Trophy,
   Calendar,
   Star,
-  TrendingUp,
   Settings,
   ClubIcon,
   Bell,
@@ -43,8 +41,6 @@ export default function StadiumsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [countryFilter, setCountryFilter] = useState('');
-  const [surfaceFilter, setSurfaceFilter] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
@@ -60,7 +56,7 @@ export default function StadiumsPage() {
 
   useEffect(() => {
     filterStadiums();
-  }, [stadiums, searchQuery, countryFilter, surfaceFilter]);
+  }, [stadiums, searchQuery]);
 
   const fetchStadiums = async () => {
     try {
@@ -74,7 +70,6 @@ export default function StadiumsPage() {
       setLoading(false);
     }
   };
-
   const filterStadiums = () => {
     let filtered = [...stadiums];
 
@@ -86,22 +81,6 @@ export default function StadiumsPage() {
           stadium.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           stadium.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           stadium.address?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Filter by country
-    if (countryFilter) {
-      filtered = filtered.filter(
-        (stadium) =>
-          stadium.country?.toLowerCase() === countryFilter.toLowerCase()
-      );
-    }
-
-    // Filter by surface type
-    if (surfaceFilter) {
-      filtered = filtered.filter(
-        (stadium) =>
-          stadium.surfaceType?.toLowerCase() === surfaceFilter.toLowerCase()
       );
     }
 
@@ -119,25 +98,6 @@ export default function StadiumsPage() {
       rating: Math.round((4.0 + Math.random() * 1.0) * 10) / 10, // 4.0-5.0 rating
     };
   };
-
-  const getUniqueCountries = () => {
-    const countries = stadiums
-      .map((stadium) => stadium.country)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    return countries;
-  };
-
-  const getUniqueSurfaces = () => {
-    const surfaces = stadiums
-      .map((stadium) => stadium.surfaceType)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    return surfaces;
-  };
-
   const getSurfaceColor = (surface?: string) => {
     switch (surface?.toLowerCase()) {
       case 'grass':
@@ -233,8 +193,7 @@ export default function StadiumsPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
+            </div>{' '}
             {/* Search and Filters */}
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative max-w-md flex-1">
@@ -247,52 +206,17 @@ export default function StadiumsPage() {
                 />
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
               </div>
-
-              <div className="flex items-center space-x-4">
-                <select
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
-                >
-                  <option value="">All Countries</option>
-                  {getUniqueCountries().map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={surfaceFilter}
-                  onChange={(e) => setSurfaceFilter(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
-                >
-                  <option value="">All Surfaces</option>
-                  {getUniqueSurfaces().map((surface) => (
-                    <option key={surface} value={surface}>
-                      {surface}
-                    </option>
-                  ))}
-                </select>
-
-                <button className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm transition-colors hover:bg-gray-50">
-                  <Filter className="h-4 w-4" />
-                  <span>Filters</span>
-                </button>
-              </div>
-            </div>
-
+            </div>{' '}
             {/* Stadiums Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredStadiums.map((stadium) => {
                 const stats = getStadiumStats(stadium);
                 return (
-                  <Link
+                  <div
                     key={stadium.id}
-                    href={`/stadiums/${stadium.id}`}
-                    className="group transform transition-all duration-200 hover:scale-105"
+                    className="transform transition-all duration-200"
                   >
-                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl">
+                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm">
                       {/* Stadium Image */}
                       <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg bg-gradient-to-br from-green-400 to-blue-500">
                         {stadium.image || stadium.imageUrl ? (
@@ -300,7 +224,7 @@ export default function StadiumsPage() {
                             src={stadium.image || stadium.imageUrl || ''}
                             alt={stadium.name}
                             fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
@@ -309,7 +233,7 @@ export default function StadiumsPage() {
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                         <div className="absolute right-3 bottom-3 left-3">
-                          <h3 className="text-lg font-bold text-white transition-colors group-hover:text-green-200">
+                          <h3 className="text-lg font-bold text-white">
                             {stadium.name}
                           </h3>
                         </div>
@@ -391,7 +315,7 @@ export default function StadiumsPage() {
                           </div>
                         )}
 
-                        {/* View Details */}
+                        {/* Rating */}
                         <div className="flex items-center justify-between pt-3">
                           <div className="flex items-center space-x-1">
                             <Star className="h-4 w-4 fill-current text-yellow-500" />
@@ -399,18 +323,13 @@ export default function StadiumsPage() {
                               {stats.rating} / 5.0
                             </span>
                           </div>
-                          <div className="flex items-center space-x-1 text-sm text-gray-600">
-                            <TrendingUp className="h-4 w-4" />
-                            <span>View Details</span>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
-            </div>
-
+            </div>{' '}
             {/* Empty State */}
             {filteredStadiums.length === 0 && !loading && (
               <div className="py-12 text-center">
@@ -419,8 +338,8 @@ export default function StadiumsPage() {
                   No stadiums found
                 </h3>
                 <p className="text-gray-600">
-                  {searchQuery || countryFilter || surfaceFilter
-                    ? 'Try adjusting your search or filters.'
+                  {searchQuery
+                    ? 'Try adjusting your search.'
                     : 'No stadiums are available at the moment.'}
                 </p>
               </div>
@@ -445,9 +364,6 @@ function StadiumsSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
       </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-      </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
       </Link>
@@ -463,16 +379,15 @@ function StadiumsSidebar({ isAdmin }: { isAdmin: boolean }) {
         <>
           <SidebarSection title="Admin" color="text-amber-600" />
           <Link href="/admin">
-            <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
+            <SidebarItem
+              icon={<Settings size={20} />}
+              text="Admin Dashboard"
+            />{' '}
           </Link>
         </>
       )}
 
-      {/* Shop & Notifications */}
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
+      {/* Notifications */}
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>

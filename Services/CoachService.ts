@@ -108,9 +108,9 @@ class CoachService {
       // Add all fields to form data
       Object.entries(coachData).forEach(([key, value]) => {
         if (value !== undefined) {
-          if (key === 'image' && value instanceof File) {
+          if (key === 'Photo' && value instanceof File) {
             formData.append('Photo', value); // Changed to 'Photo' to match API
-          } else if (key !== 'image') {
+          } else if (key !== 'Photo') {
             formData.append(key, String(value));
           }
         }
@@ -142,9 +142,9 @@ class CoachService {
       // Add all fields to form data
       Object.entries(coachData).forEach(([key, value]) => {
         if (value !== undefined) {
-          if (key === 'image' && value instanceof File) {
+          if (key === 'Photo' && value instanceof File) {
             formData.append('Photo', value); // Changed to 'Photo' to match API
-          } else if (key !== 'image') {
+          } else if (key !== 'Photo') {
             formData.append(key, String(value));
           }
         }

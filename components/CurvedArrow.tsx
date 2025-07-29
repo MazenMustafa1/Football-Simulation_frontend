@@ -75,12 +75,12 @@ const CurvedArrow = ({ event, moveBall, endY }: Props) => {
     }
   }, [points]);
 
-  return (
-    <line ref={lineRef as any}>
+  return lineRef.current ? (
+    <primitive object={lineRef.current} ref={lineRef}>
       <bufferGeometry />
       <lineBasicMaterial color="white" linewidth={2} />
-    </line>
-  );
+    </primitive>
+  ) : null;
 };
 
 export default CurvedArrow;

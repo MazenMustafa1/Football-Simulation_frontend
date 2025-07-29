@@ -5,13 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Search,
-  Filter,
   Users,
   Trophy,
   Calendar,
   MapPin,
-  Star,
-  TrendingUp,
   Settings,
   ClubIcon,
   Bell,
@@ -26,15 +23,6 @@ import { SidebarSection } from '../Components/Sidebar/SidebarSection';
 import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 import teamService, { Team } from '@/Services/TeamService';
 import authService from '@/Services/AuthenticationService';
-
-interface TeamStats {
-  wins: number;
-  losses: number;
-  draws: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  points: number;
-}
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -70,7 +58,6 @@ export default function TeamsPage() {
       setFilteredTeams(filtered);
     }
   }, [teams, searchQuery]);
-
   const fetchTeams = async () => {
     try {
       setLoading(true);
@@ -83,18 +70,6 @@ export default function TeamsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getTeamStats = (team: Team): TeamStats => {
-    // Mock stats - replace with actual data from your API
-    return {
-      wins: Math.floor(Math.random() * 20),
-      losses: Math.floor(Math.random() * 10),
-      draws: Math.floor(Math.random() * 8),
-      goalsFor: Math.floor(Math.random() * 50) + 20,
-      goalsAgainst: Math.floor(Math.random() * 30) + 10,
-      points: Math.floor(Math.random() * 60) + 20,
-    };
   };
 
   if (loading) {
@@ -169,11 +144,10 @@ export default function TeamsPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Search and Filter Section */}
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
+            </div>{' '}
+            {/* Search Section */}
+            <div className="mb-6">
+              <div className="relative">
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -183,102 +157,52 @@ export default function TeamsPage() {
                   className="w-full rounded-lg border border-gray-200 bg-white/80 py-3 pr-4 pl-10 text-gray-900 placeholder-gray-500 backdrop-blur-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
                 />
               </div>
-              <button className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm transition-colors hover:bg-gray-50">
-                <Filter className="h-4 w-4" />
-                <span>Filters</span>
-              </button>
-            </div>
-
+            </div>{' '}
             {/* Teams Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredTeams.map((team) => {
-                const stats = getTeamStats(team);
                 return (
-                  <Link
+                  <div
                     key={team.id}
-                    href={`/teams/${team.id}`}
-                    className="group transform transition-all duration-200 hover:scale-105"
+                    className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm"
                   >
-                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl">
-                      {/* Team Header */}
-                      <div className="mb-4 flex items-center space-x-4">
-                        <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 p-1">
-                          <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                            {team.logo ? (
-                              <Image
-                                src={team.logo}
-                                alt={`${team.name} logo`}
-                                width={48}
-                                height={48}
-                                className="rounded-full object-cover"
-                              />
-                            ) : (
-                              <ClubIcon className="h-8 w-8 text-green-600" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 transition-colors group-hover:text-green-600">
-                            {team.name}
-                          </h3>
-                          <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <MapPin className="h-4 w-4" />
-                            <span>{team.city || 'City not specified'}</span>
-                          </div>
-                          {team.league && (
-                            <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              <Trophy className="h-4 w-4" />
-                              <span>{team.league}</span>
-                            </div>
+                    {/* Team Header */}
+                    <div className="mb-4 flex items-center space-x-4">
+                      <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 p-1">
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
+                          {team.logo ? (
+                            <Image
+                              src={team.logo}
+                              alt={`${team.name} logo`}
+                              width={48}
+                              height={48}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <ClubIcon className="h-8 w-8 text-green-600" />
                           )}
                         </div>
                       </div>
-
-                      {/* Team Stats */}
-                      <div className="grid grid-cols-3 gap-4 rounded-lg bg-gray-50/50 p-4">
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-green-600">
-                            {stats.points}
-                          </p>
-                          <p className="text-xs text-gray-600">Points</p>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {team.name}
+                        </h3>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <MapPin className="h-4 w-4" />
+                          <span>{team.city || 'City not specified'}</span>
                         </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-blue-600">
-                            {stats.wins}
-                          </p>
-                          <p className="text-xs text-gray-600">Wins</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-bold text-gray-600">
-                            {stats.goalsFor}
-                          </p>
-                          <p className="text-xs text-gray-600">Goals</p>
-                        </div>
-                      </div>
-
-                      {/* Team Performance Indicator */}
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-current text-yellow-500" />
-                          <span className="text-sm font-medium text-gray-700">
-                            {(
-                              (stats.wins /
-                                (stats.wins + stats.losses + stats.draws)) *
-                              5
-                            ).toFixed(1)}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-sm text-gray-600">
-                          <TrendingUp className="h-4 w-4" />
-                          <span>View Details</span>
-                        </div>
+                        {team.league && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                            <Trophy className="h-4 w-4" />
+                            <span>{team.league}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
-
             {/* Empty State */}
             {filteredTeams.length === 0 && !loading && (
               <div className="py-12 text-center">
@@ -313,9 +237,6 @@ function TeamsSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" active />
       </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-      </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
       </Link>
@@ -331,16 +252,15 @@ function TeamsSidebar({ isAdmin }: { isAdmin: boolean }) {
         <>
           <SidebarSection title="Admin" color="text-amber-600" />
           <Link href="/admin">
-            <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
+            <SidebarItem
+              icon={<Settings size={20} />}
+              text="Admin Dashboard"
+            />{' '}
           </Link>
         </>
       )}
 
-      {/* Shop & Notifications */}
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
+      {/* Notifications */}
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>

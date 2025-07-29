@@ -174,13 +174,48 @@ export default function Register() {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      console.log('THIS');
+      console.log(error?.message);
       setServerError(
-        error.response?.data?.message ||
-          'Registration failed. Please try again.'
+        error?.message || 'Registration failed. Please try again.'
       );
     } finally {
       setIsLoading(false);
     }
+  };
+  const formatPasswordErrors = (errorMessage: string): string[] => {
+    // Check if the error message contains password validation errors
+    if (!errorMessage || typeof errorMessage !== 'string') {
+      return ['An error occurred. Please try again.'];
+    }
+
+    const errorMap: { [key: string]: string } = {
+      PasswordTooShort: 'Password must be at least 6 characters long',
+      PasswordRequiresNonAlphanumeric:
+        'Password must contain at least one special character (!@#$%^&*)',
+      PasswordRequiresLower:
+        'Password must contain at least one lowercase letter (a-z)',
+      PasswordRequiresUpper:
+        'Password must contain at least one uppercase letter (A-Z)',
+      PasswordRequiresDigit: 'Password must contain at least one number (0-9)',
+      DuplicateUserName:
+        'This username is already taken. Please choose a different one.',
+      DuplicateEmail:
+        'This email is already registered. Please use a different email or try logging in.',
+      InvalidEmail: 'Please enter a valid email address',
+      InvalidUserName:
+        'Username contains invalid characters. Use only letters, numbers, and underscores.',
+      PasswordMismatch: 'Password and confirm password do not match',
+    };
+
+    // Handle comma-separated errors (from server validation)
+    if (errorMessage.includes(',')) {
+      const errors = errorMessage.split(',').map((error) => error.trim());
+      return errors.map((error) => errorMap[error] || error).filter(Boolean);
+    }
+
+    // Handle single error or unknown format
+    return [errorMap[errorMessage.trim()] || errorMessage];
   };
 
   return (
@@ -284,21 +319,18 @@ export default function Register() {
               </div>
             </div>
           </div>
-
           <h2 className="mt-6 text-center text-2xl font-bold text-gray-800 dark:text-gray-200">
             Create Your Account
           </h2>
-
           <p className="mt-2 text-center text-gray-600 dark:text-gray-400">
             Be part of the action. Join today!
-          </p>
-
+          </p>{' '}
           {serverError && (
             <div className="mt-4 rounded-lg border border-red-400 bg-red-100 p-3 text-sm text-red-700">
-              <div className="flex items-center">
+              <div className="flex items-start">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="mr-2 h-5 w-5"
+                  className="mt-0.5 mr-2 h-5 w-5 flex-shrink-0"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -308,11 +340,27 @@ export default function Register() {
                     clipRule="evenodd"
                   />
                 </svg>
-                {serverError}
+                <div className="flex-1">
+                  {formatPasswordErrors(serverError).length > 1 ? (
+                    <div>
+                      <div className="mb-1 font-medium">
+                        Please fix the following issues:
+                      </div>
+                      <ul className="list-inside list-disc space-y-1">
+                        {formatPasswordErrors(serverError).map(
+                          (error, index) => (
+                            <li key={index}>{error}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div>{formatPasswordErrors(serverError)[0]}</div>
+                  )}
+                </div>
               </div>
             </div>
           )}
-
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             {/* FirstName Input */}
             <div>
@@ -544,9 +592,115 @@ export default function Register() {
                     </svg>
                   )}
                 </button>
-              </div>
+              </div>{' '}
               {errors.password && (
                 <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+              )}
+              {/* Password Requirements */}
+              {formData.password && (
+                <div className="mt-2 rounded-lg border bg-gray-50 p-3 dark:bg-gray-700">
+                  <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+                    Password Requirements:
+                  </p>
+                  <div className="space-y-1">
+                    <div
+                      className={`flex items-center text-xs ${formData.password.length >= 6 ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${formData.password.length >= 6 ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      At least 6 characters
+                    </div>
+                    <div
+                      className={`flex items-center text-xs ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      One uppercase letter
+                    </div>
+                    <div
+                      className={`flex items-center text-xs ${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      One lowercase letter
+                    </div>
+                    <div
+                      className={`flex items-center text-xs ${/\d/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${/\d/.test(formData.password) ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      One number
+                    </div>
+                    <div
+                      className={`flex items-center text-xs ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      One special character (!@#$%^&*)
+                    </div>
+                    <div
+                      className={`flex items-center text-xs ${formData.confirmPassword && formData.password === formData.confirmPassword ? 'text-green-600' : 'text-gray-500'}`}
+                    >
+                      <svg
+                        className={`mr-2 h-3 w-3 ${formData.confirmPassword && formData.password === formData.confirmPassword ? 'text-green-600' : 'text-gray-400'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Passwords match
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

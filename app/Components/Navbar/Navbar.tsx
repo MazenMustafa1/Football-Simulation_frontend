@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Trash2, X, CheckCheck, Bell, Search } from 'lucide-react';
+import { Trash2, X, CheckCheck, Bell, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import authService from '@/Services/AuthenticationService';
 import notificationService, {
@@ -311,10 +311,23 @@ export default function Navbar() {
             showHistory={true}
             showTrending={true}
             maxSuggestions={5}
-          />
-        </div>
-
+          />{' '}
+        </div>{' '}
         <div className="flex items-center gap-3">
+          {' '}
+          {/* Try Demo Button */}
+          <Link
+            href="/demo-simulation"
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-md transition-all duration-200 hover:shadow-lg ${
+              isMounted && isDarkMode
+                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-500 hover:to-emerald-500'
+                : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-400 hover:to-emerald-400'
+            }`}
+            suppressHydrationWarning
+          >
+            <Zap size={16} />
+            <span>Try Demo</span>
+          </Link>
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -595,7 +608,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}

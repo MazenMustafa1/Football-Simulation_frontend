@@ -48,7 +48,8 @@ class LiveMatchStorageService {
    */
   public getLiveSimulationId(): string | null {
     try {
-      return localStorage.getItem(this.LIVE_SIMULATION_ID_KEY);
+      // return localStorage.getItem(this.LIVE_SIMULATION_ID_KEY);
+            return localStorage.getItem('simulation_Id');
     } catch (error) {
       console.error('Failed to get live simulation ID:', error);
       return null;

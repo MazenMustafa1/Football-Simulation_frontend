@@ -71,18 +71,7 @@ export default function SigninNavbar() {
             >
               Home
             </Link>
-            <Link
-              href="/features"
-              className="text-gray-300 transition-colors duration-200 hover:text-white"
-            >
-              Features
-            </Link>
-            <Link
-              href="/teams"
-              className="text-gray-300 transition-colors duration-200 hover:text-white"
-            >
-              Teams
-            </Link>
+
             <Link
               href="/about"
               className="text-gray-300 transition-colors duration-200 hover:text-white"

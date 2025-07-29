@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function Hero() {
   const router = useRouter();
@@ -14,7 +13,7 @@ export default function Hero() {
   }, []);
 
   const handleGetStarted = () => {
-    router.push('/login');
+    router.push('/register');
   };
 
   const containerVariants = {
@@ -34,7 +33,7 @@ export default function Hero() {
       y: 0,
       opacity: 1,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 100,
         damping: 10,
       },
@@ -49,7 +48,7 @@ export default function Hero() {
       }}
     >
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/71 via-black/50 to-black/70"></div>
 
       {/* Animated pattern */}
       <div className="absolute inset-0 bg-[url('/images/football-pattern.png')] bg-repeat opacity-5"></div>
@@ -88,14 +87,9 @@ export default function Hero() {
               className="group relative transform overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-2xl active:scale-95"
               onClick={handleGetStarted}
             >
-              <span className="relative z-10">Get Started</span>
+              <span className="relative z-10">Sign Up</span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
             </button>
-            <Link href="/trial">
-              <button className="group relative overflow-hidden rounded-xl border-2 border-white/70 bg-transparent px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-white hover:bg-white hover:text-gray-900 active:scale-95">
-                <span className="relative z-10">Try Demo</span>
-              </button>
-            </Link>
           </motion.div>
 
           {/* Feature highlights */}

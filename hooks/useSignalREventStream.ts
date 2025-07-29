@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Event, EventType } from '@/types/Event';
 import signalRService, { MatchEventData } from '@/Services/SignalRService';
+import { storeTeamNames, storeScores, storeMatchTime } from '@/lib/teamStorage';
 
 export default function useSignalREventStream(matchId: number) {
   const [streamedEvents, setStreamedEvents] = useState<Event[]>([]);
@@ -14,7 +15,7 @@ export default function useSignalREventStream(matchId: number) {
       try {
         setIsConnected(false);
 
-        const connected = await signalRService.connectMatchSimulation();
+        const connected = await signalRService.ensurePageConnection();
         if (!connected) throw new Error('Failed to connect to SignalR');
 
         setIsConnected(true);
@@ -49,6 +50,33 @@ export default function useSignalREventStream(matchId: number) {
                   ? { Home: eventData.Score.home, Away: eventData.Score.away }
                   : undefined,
               };
+
+              // Store match_start event data in localStorage
+              if (event.event_type === 'match_start') {
+                // Store team names
+                if (event.home_team && event.away_team) {
+                  storeTeamNames(event.home_team, event.away_team);
+                  console.log(
+                    `[SignalR] Stored team names from match_start - Home: ${event.home_team}, Away: ${event.away_team}`
+                  );
+                }
+
+                // Store scores if available
+                if (event.Score) {
+                  storeScores(event.Score.Home, event.Score.Away);
+                  console.log(
+                    `[SignalR] Stored scores from match_start - Home: ${event.Score.Home}, Away: ${event.Score.Away}`
+                  );
+                }
+
+                // Store match time if available
+                if (event.time_seconds !== undefined) {
+                  storeMatchTime(event.time_seconds);
+                  console.log(
+                    `[SignalR] Stored match time from match_start: ${event.time_seconds}`
+                  );
+                }
+              }
 
               // Add event directly to state without delay
               setStreamedEvents((prev) => [...prev, event]);

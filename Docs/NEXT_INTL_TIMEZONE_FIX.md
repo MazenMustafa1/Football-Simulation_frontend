@@ -111,13 +111,11 @@ if (typeof window !== 'undefined') {
 ### 🔄 **UPDATE FLOW:**
 
 1. **Page Load**:
-
    - Check localStorage for user timezone preference
    - Fall back to browser timezone if no user preference
    - Default to UTC if detection fails
 
 2. **Settings Change**:
-
    - User changes timezone in settings
    - Settings saved to localStorage
    - Custom event dispatched

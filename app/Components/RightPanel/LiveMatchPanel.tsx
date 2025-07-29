@@ -320,7 +320,7 @@ export default function LiveMatchPanel({
     const initSignalR = async () => {
       try {
         if (!authService.isAuthenticated()) return;
-        const connected = await signalRService.connectMatchSimulation();
+        const connected = await signalRService.ensurePageConnection();
         if (isSubscribed) setSignalRConnected(connected);
       } catch (error) {
         console.error('Failed to connect SignalR:', error);

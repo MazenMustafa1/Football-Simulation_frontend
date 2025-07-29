@@ -122,7 +122,7 @@ class StadiumService {
       );
 
       // Invalidate stadiums cache after successful creation
-      apiService.clearCache('^stadiums');
+      apiService.clearCache('^stadiums-');
 
       return result;
     } catch (error) {

@@ -196,13 +196,11 @@ app/
 ### 📋 **Next Steps for Full Implementation**
 
 1. **Backend API Development**
-
    - Implement the required API endpoints
    - Set up SignalR hub for real-time communication
    - Configure authentication middleware
 
 2. **End-to-End Testing**
-
    - Test complete simulation flow
    - Verify real-time event streaming
    - Performance testing with multiple concurrent simulations

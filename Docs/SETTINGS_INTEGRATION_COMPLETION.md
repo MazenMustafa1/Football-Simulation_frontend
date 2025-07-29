@@ -109,7 +109,6 @@ next.config.ts (updated with next-intl plugin)
 ## Next Steps for Testing
 
 1. **Manual Testing**:
-
    - Visit `/settings` page
    - Test theme switching
    - Test language switching

@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   HOME_SCORE: 'homeScore',
   AWAY_SCORE: 'awayScore',
   MATCH_TIME: 'matchTime',
+  MATCH_ID: 'matchId',
 } as const;
 
 /**
@@ -43,6 +44,20 @@ export const storeScores = (homeScore: number, awayScore: number): void => {
     );
   } catch (error) {
     console.warn('[TeamStorage] Failed to store scores:', error);
+  }
+};
+
+/**
+ * Store match ID in localStorage
+ */
+export const storeMatchId = (matchId: string): void => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(STORAGE_KEYS.MATCH_ID, matchId);
+    console.log(`[TeamStorage] Stored match ID: ${matchId}`);
+  } catch (error) {
+    console.warn('[TeamStorage] Failed to store match ID:', error);
   }
 };
 
@@ -85,6 +100,22 @@ export const getStoredScores = (): { homeScore: number; awayScore: number } => {
   } catch (error) {
     console.warn('[TeamStorage] Failed to retrieve scores:', error);
     return { homeScore: 0, awayScore: 0 };
+  }
+};
+
+/**
+ * Retrieve match ID from localStorage
+ */
+export const getStoredMatchId = (): string | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(STORAGE_KEYS.MATCH_ID);
+  } catch (error) {
+    console.warn('[TeamStorage] Failed to retrieve match ID:', error);
+    return null;
   }
 };
 
@@ -163,12 +194,27 @@ export const clearStoredMatchTime = (): void => {
 };
 
 /**
- * Clear all stored match data (teams, scores, and match time)
+ * Clear match ID from localStorage
+ */
+export const clearStoredMatchId = (): void => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.removeItem(STORAGE_KEYS.MATCH_ID);
+    console.log('[TeamStorage] Cleared stored match ID');
+  } catch (error) {
+    console.warn('[TeamStorage] Failed to clear match ID:', error);
+  }
+};
+
+/**
+ * Clear all stored match data (teams, scores, match time, and match ID)
  */
 export const clearAllMatchData = (): void => {
   clearStoredTeamNames();
   clearStoredScores();
   clearStoredMatchTime();
+  clearStoredMatchId();
 };
 
 /**

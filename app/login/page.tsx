@@ -78,7 +78,7 @@ export default function SignIn() {
         setError('No response from server. Please check your connection.');
       } else {
         // Something happened in setting up the request that triggered an Error
-        setError('An error occurred. Please try again.');
+        setError('Incorrect Email or Password. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -332,38 +332,38 @@ export default function SignIn() {
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
               backgroundSize: '30px 30px',
             }}
-          ></div>
-
+          ></div>{' '}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6, ease: 'easeOut' }}
             className="relative mx-auto flex justify-center"
           >
-            {/* Enhanced football logo */}
-            <motion.div
-              className="relative h-28 w-28"
-              whileHover={{ scale: 1.1, rotate: 360 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-white/50 bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
-                <Image
-                  src="/logos/PixelPitch.png"
-                  alt="PixelPitch Logo"
-                  width={124}
-                  height={124}
-                  className="rounded-full object-cover"
-                />
-              </div>
-              {/* Animated ring */}
+            {/* Enhanced football logo - Made clickable */}
+            <Link href="/" className="cursor-pointer">
               <motion.div
-                className="absolute inset-0 rounded-full border-2 border-blue-400/50"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.div>
+                className="relative h-28 w-28"
+                whileHover={{ scale: 1.1, rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-white/50 bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl">
+                  <Image
+                    src="/logos/PixelPitch.png"
+                    alt="PixelPitch Logo"
+                    width={124}
+                    height={124}
+                    className="rounded-full object-cover"
+                  />
+                </div>
+                {/* Animated ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-blue-400/50"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+            </Link>
           </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -372,7 +372,6 @@ export default function SignIn() {
           >
             Welcome Back!
           </motion.h1>
-
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -381,7 +380,6 @@ export default function SignIn() {
           >
             Enter the arena and lead your team to victory
           </motion.p>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -390,7 +388,6 @@ export default function SignIn() {
           >
             Sign in to continue your football journey
           </motion.p>
-
           {/* Enhanced error message with animation */}
           {error && (
             <motion.div
@@ -418,7 +415,6 @@ export default function SignIn() {
               </div>
             </motion.div>
           )}
-
           {/* Login Form */}
           <form
             onSubmit={(e) => {
@@ -657,8 +653,7 @@ export default function SignIn() {
                 )}
               </motion.button>
             </div>
-          </form>
-
+          </form>{' '}
           {/* Sign Up Link with animation */}
           <motion.div
             className="relative z-50 mt-8 text-center"
@@ -674,6 +669,35 @@ export default function SignIn() {
               className="relative z-50 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline dark:text-blue-400"
             >
               Create an account
+            </Link>
+          </motion.div>
+          {/* Back to Home Button */}
+          <motion.div
+            className="relative z-50 mt-4 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+          >
+            <Link
+              href="/"
+              className="inline-flex items-center text-sm font-medium text-gray-600 transition-colors hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+            >
+              <motion.svg
+                className="mr-2 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                whileHover={{ x: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </motion.svg>
+              Back to Home
             </Link>
           </motion.div>
         </div>

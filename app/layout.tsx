@@ -86,6 +86,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="PixelPitch" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script src="/ultra-aggressive-event-interceptor.js" defer></script>
+        <script src="/emergency-hot-fix.js" defer></script>
+
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -15,12 +15,8 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
-import Sidebar from '../../Components/Sidebar/Sidebar';
-import { SidebarItem } from '../../Components/Sidebar/SidebarItem';
 import {
   Settings,
-  Package,
-  LayoutDashboardIcon,
   ClubIcon,
   Bell,
   User,
@@ -38,6 +34,8 @@ import signalRService, {
   MatchEventData,
   SimulationProgressData,
 } from '@/Services/SignalRService';
+import Sidebar from '@/app/Components/Sidebar/Sidebar';
+import { SidebarItem } from '@/app/Components/Sidebar/SidebarItem';
 
 interface SimulationState {
   status: 'loading' | 'playing' | 'paused' | 'completed' | 'error';
@@ -331,12 +329,10 @@ export default function SimulationView() {
     if (!matchId) {
       router.push('/dashboard');
       return;
-    }
-
-    // Initialize SignalR connection
+    } // Initialize SignalR connection
     const initializeSignalR = async () => {
       try {
-        const connected = await signalRService.connect();
+        const connected = await signalRService.ensurePageConnection();
         setSignalRConnected(connected);
 
         if (connected) {
@@ -612,7 +608,6 @@ export default function SimulationView() {
   const handleSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
   };
-
   if (simulation.status === 'loading') {
     return (
       <div className="flex min-h-screen bg-gray-50">
@@ -620,7 +615,6 @@ export default function SimulationView() {
           <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
           <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
           <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
           <SidebarItem
             icon={<Bell />}
             text="Notifications"
@@ -658,7 +652,6 @@ export default function SimulationView() {
       </div>
     );
   }
-
   if (simulation.status === 'error') {
     return (
       <div className="flex min-h-screen bg-gray-50">
@@ -666,7 +659,6 @@ export default function SimulationView() {
           <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
           <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
           <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
           <SidebarItem
             icon={<Bell />}
             text="Notifications"
@@ -709,7 +701,6 @@ export default function SimulationView() {
           <SidebarItem icon={<Home />} text="Dashboard" href="/dashboard" />
           <SidebarItem icon={<ClubIcon />} text="Teams" href="/teams" />
           <SidebarItem icon={<Users />} text="Players" href="/players" />
-          <SidebarItem icon={<Package />} text="Seasons" href="/seasons" />
           <SidebarItem
             icon={<Bell />}
             text="Notifications"

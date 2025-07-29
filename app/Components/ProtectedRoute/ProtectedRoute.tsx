@@ -59,7 +59,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user?.roles[0]) || authService.hasRoleOptimized(allowedRoles) === false) {
+    if (
+      (allowedRoles && !allowedRoles.includes(user?.roles[0])) ||
+      authService.hasRoleOptimized(allowedRoles) === false
+    ) {
       router.push('/unauthorized');
       return;
     }

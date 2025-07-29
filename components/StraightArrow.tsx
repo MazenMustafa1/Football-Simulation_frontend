@@ -77,10 +77,10 @@ const StraightArrow = ({ event, moveBall, startY, endY }: Props) => {
   }, [points]);
 
   return (
-    <line ref={lineRef as any}>
+    <primitive object={new THREE.Line()} ref={lineRef}>
       <bufferGeometry />
       <lineBasicMaterial color="white" linewidth={2} />
-    </line>
+    </primitive>
   );
 };
 

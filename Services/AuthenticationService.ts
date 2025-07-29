@@ -359,13 +359,17 @@ class AuthenticationService {
     updateData: UpdateUserRequest
   ): Promise<UserProfile> {
     try {
-      const result = await apiService.putWithRetry<UserProfile>(
-        '/auth/update',
+      const result = await apiService.putFormWithRetry<UserProfile>(
+        'auth/update',
         updateData
       );
 
-      // Invalidate user profile cache after successful update
-      apiService.clearCache(`user-profile-${updateData.Id}`);
+      // Update user profile cache after successful update
+      apiService.updateCache(
+        `user-profile-${updateData.Id}`,
+        result,
+        10 * 60 * 1000
+      ); // Cache for 10 minutes
 
       // Update stored user data if username or email changed
       if (updateData.username || updateData.email) {
@@ -379,7 +383,7 @@ class AuthenticationService {
           this.clearRolesCache(); // Clear cache since user data changed
         }
       }
-
+      console.log('✅ Profile updated successfully and cache refreshed');
       return result;
     } catch (error) {
       console.error('Profile update failed:', error);

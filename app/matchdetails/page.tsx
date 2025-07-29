@@ -16,10 +16,8 @@ import Navbar from '@/app/Components/Navbar/Navbar';
 import { LogoBackground } from '@/app/Components/Logo3d/logo3d';
 import Link from 'next/link';
 import matchService, { MatchDetail } from '@/Services/MatchService';
-import authService from '@/Services/AuthenticationService';
 import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 import liveMatchStorageService from '@/Services/LiveMatchStorageService';
-import { match } from 'assert';
 
 function MatchDetailsContent() {
   const [activeTab, setActiveTab] = useState<'stats' | 'lineup' | 'info'>(
@@ -35,6 +33,7 @@ function MatchDetailsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const matchId = searchParams.get('matchId');
+  const simulationId = localStorage.getItem('simulationId');
 
   // Enhanced tab change handler with animation
   const handleTabChange = (tab: 'stats' | 'lineup' | 'info') => {
@@ -145,7 +144,6 @@ function MatchDetailsContent() {
               text="Dashboard"
             />
             <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-            <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
             <SidebarItem icon={<Package size={20} />} text="Products" alert />
             <SidebarItem icon={<Settings size={20} />} text="Settings" />
             <SidebarItem icon={<LogOutIcon size={20} />} text="Logout" />
@@ -294,7 +292,7 @@ function MatchDetailsContent() {
                             )
                           ) {
                             // This is the current live match, attempt to navigate using matchId
-                            router.push(`/simulationview/${matchId}`);
+                            router.push(`/simulationview/${simulationId}`);
                           }
                         }}
                         className="group relative overflow-hidden rounded-lg border border-purple-400/30 bg-purple-500/20 px-4 py-2 text-sm font-semibold text-purple-400 backdrop-blur-sm transition-all duration-300 hover:bg-purple-500/30 hover:text-purple-300"

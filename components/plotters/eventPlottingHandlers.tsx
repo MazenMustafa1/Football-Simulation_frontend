@@ -18,7 +18,7 @@ function getMirroredPosition(
   homeTeam?: string,
   awayTeam?: string
 ): [number, number] {
-  if (!pos) return pos;
+  if (!pos) return [0, 0]; // Return default position instead of undefined/null
   if (team !== awayTeam) return pos;
   const fieldCenterX = 60;
   const fieldCenterY = 40;
@@ -28,135 +28,63 @@ function getMirroredPosition(
   ];
 }
 
-// Create a separate component for match start event
-function MatchStartAnimation({ event }: { event: Event }) {
-  const textRef = useRef<THREE.Group>(null);
-  const [scale, setScale] = useState(0);
-  const [showFireworks, setShowFireworks] = useState(false);
-
-  // Firework particles
-  const fireworksRef = useRef<THREE.Group>(null);
-
-  useEffect(() => {
-    // Simple pop animation - start from 0 and grow to 1
-    const startTime = Date.now();
-    const duration = 800; // 800ms animation
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Ease-out elastic effect
-      const easeOutElastic = (t: number) => {
-        const c4 = (2 * Math.PI) / 3;
-        return t === 0
-          ? 0
-          : t === 1
-            ? 1
-            : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
-      };
-
-      setScale(easeOutElastic(progress));
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    // Start fireworks after text animation
-    setTimeout(() => setShowFireworks(true), 0);
-
-    requestAnimationFrame(animate);
-  }, []);
-
-  // Animate fireworks
-  useFrame(({ clock }) => {
-    const time = clock.getElapsedTime();
-
-    if (fireworksRef.current && showFireworks) {
-      fireworksRef.current.children.forEach((child, index) => {
-        const particle = child as THREE.Mesh;
-        const phase = (time * 2 + index * 0.5) % 6;
-
-        if (phase < 3) {
-          // Explosion outward
-          const angle = (index / 12) * Math.PI * 2;
-          const distance = phase * 15;
-          particle.position.x = Math.cos(angle) * distance;
-          particle.position.z = Math.sin(angle) * distance;
-          particle.position.y = 25 + phase * 8 - phase * phase * 2;
-          particle.scale.setScalar(1 - phase / 3);
-          (particle.material as THREE.MeshStandardMaterial).opacity =
-            1 - phase / 3;
-        } else {
-          // Reset for next explosion
-          particle.position.set(0, 25, -45);
-          particle.scale.setScalar(0);
-        }
-      });
-    }
-  });
-
-  // Create firework particles
-  const createFireworks = () => {
-    const particles = [];
-    for (let i = 0; i < 24; i++) {
-      const colors = [
-        '#ff6b6b',
-        '#4ecdc4',
-        '#45b7d1',
-        '#f9ca24',
-        '#6c5ce7',
-        '#a55eea',
-      ];
-      particles.push(
-        <mesh key={i} position={[0, 25, -45]}>
-          <sphereGeometry args={[0.3, 8, 8]} />
-          <meshStandardMaterial
-            color={colors[i % colors.length]}
-            transparent
-            opacity={1}
-            emissive={colors[i % colors.length]}
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-      );
-    }
-    return particles;
-  };
-
+// Create a simple component for match status events that behaves like other events
+function MatchStatusAnimation({ event }: { event: Event }) {
   return (
-    <group>
-      {/* Single text that pops in */}
-      <group
-        ref={textRef}
-        position={[0, 25, -45]}
-        scale={[scale, scale, scale]}
+    <group position={[0, 25, -45]}>
+      <Text
+        fontSize={6}
+        color="yellow"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.3}
+        outlineColor="#ff6600"
       >
-        <Text
-          fontSize={6}
-          color="yellow"
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={0.3}
-          outlineColor="#ff6600"
-        >
-          Match Started
-        </Text>
-      </group>
+        {event.event_type === 'match_start'
+          ? 'Match Started'
+          : event.event_type === 'first_half_end'
+            ? 'HALF TIME'
+            : 'Match Ended'}
+      </Text>
 
-      {/* Fireworks */}
-      {showFireworks && (
-        <group ref={fireworksRef} position={[0, 0, -45]}>
-          {createFireworks()}
-        </group>
-      )}
+      {/* Simple fireworks that exist as long as the event is visible */}
+      <group position={[0, 0, 0]}>
+        {[...Array(8)].map((_, i) => {
+          const colors = [
+            '#ff6b6b',
+            '#4ecdc4',
+            '#45b7d1',
+            '#f9ca24',
+            '#6c5ce7',
+            '#a55eea',
+          ];
+          const angle = (i / 8) * Math.PI * 2;
+          const distance = 15;
+          return (
+            <mesh
+              key={i}
+              position={[
+                Math.cos(angle) * distance,
+                25 + Math.sin(i * 0.5) * 3,
+                -45 + Math.sin(angle) * distance,
+              ]}
+            >
+              <sphereGeometry args={[0.5, 8, 8]} />
+              <meshStandardMaterial
+                color={colors[i % colors.length]}
+                emissive={colors[i % colors.length]}
+                emissiveIntensity={0.5}
+              />
+            </mesh>
+          );
+        })}
+      </group>
     </group>
   );
 }
 
-export function renderMatchStartEvent(event: Event) {
-  return <MatchStartAnimation event={event} />;
+export function renderMatchStatusEvent(event: Event) {
+  return <MatchStatusAnimation event={event} />;
 }
 
 export function renderPassEvent(
@@ -709,6 +637,22 @@ export function renderShotEvent(
         startY={0}
         endY={1.5}
       />
+
+      {/* Shot text display - only for non-goals */}
+      {event.outcome !== 'Goal' && (
+        <group position={[0, 25, -45]}>
+          <Text
+            fontSize={6}
+            color="#ff6600"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.3}
+            outlineColor="#ffffff"
+          >
+            🥅 SHOT! 🥅
+          </Text>
+        </group>
+      )}
 
       {/* JAW-DROPPING GOAL ANIMATION - replaces the simple text */}
       {event.outcome === 'Goal' && <GoalAnimation event={event} />}

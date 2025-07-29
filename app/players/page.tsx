@@ -5,13 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Search,
-  Filter,
   Users,
   Trophy,
   Calendar,
   MapPin,
-  Star,
-  TrendingUp,
   Settings,
   ClubIcon,
   Bell,
@@ -19,8 +16,6 @@ import {
   Package,
   Home,
   LayoutDashboardIcon,
-  Activity,
-  Zap,
 } from 'lucide-react';
 import { SidebarLayout } from '../Components/Sidebar/Sidebar';
 import { SidebarItem } from '../Components/Sidebar/SidebarItem';
@@ -29,24 +24,14 @@ import ProtectedRoute from '@/app/Components/ProtectedRoute/ProtectedRoute';
 import playerService, { Player } from '@/Services/PlayerService';
 import authService from '@/Services/AuthenticationService';
 
-interface PlayerStats {
-  goals: number;
-  assists: number;
-  matches: number;
-  rating: number;
-}
-
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [positionFilter, setPositionFilter] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
-
-  const positions = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
   useEffect(() => {
     // Check if user is authenticated
@@ -58,9 +43,8 @@ export default function PlayersPage() {
     setIsAdmin(authService.hasRole('Admin'));
     fetchPlayers();
   }, [router]);
-
   useEffect(() => {
-    // Filter players based on search query and position
+    // Filter players based on search query
     let filtered = players;
 
     if (searchQuery.trim() !== '') {
@@ -74,15 +58,8 @@ export default function PlayersPage() {
       );
     }
 
-    if (positionFilter !== '') {
-      filtered = filtered.filter(
-        (player) => player.position === positionFilter
-      );
-    }
-
     setFilteredPlayers(filtered);
-  }, [players, searchQuery, positionFilter]);
-
+  }, [players, searchQuery]);
   const fetchPlayers = async () => {
     try {
       setLoading(true);
@@ -95,16 +72,6 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getPlayerStats = (player: Player): PlayerStats => {
-    // Mock stats - replace with actual data from your API
-    return {
-      goals: Math.floor(Math.random() * 25),
-      assists: Math.floor(Math.random() * 15),
-      matches: Math.floor(Math.random() * 30) + 10,
-      rating: Math.random() * 2 + 7, // 7.0 to 9.0
-    };
   };
 
   const getPositionColor = (position: string): string => {
@@ -194,11 +161,10 @@ export default function PlayersPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Search and Filter Section */}
-            <div className="mb-6 flex flex-col gap-4 lg:flex-row">
-              <div className="relative flex-1">
+            </div>{' '}
+            {/* Search Section */}
+            <div className="mb-6">
+              <div className="relative">
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -208,129 +174,65 @@ export default function PlayersPage() {
                   className="w-full rounded-lg border border-gray-200 bg-white/80 py-3 pr-4 pl-10 text-gray-900 placeholder-gray-500 backdrop-blur-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
                 />
               </div>
-              <select
-                value={positionFilter}
-                onChange={(e) => setPositionFilter(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
-              >
-                <option value="">All Positions</option>
-                {positions.map((position) => (
-                  <option key={position} value={position}>
-                    {position}
-                  </option>
-                ))}
-              </select>
-              <button className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm transition-colors hover:bg-gray-50">
-                <Filter className="h-4 w-4" />
-                <span>More Filters</span>
-              </button>
             </div>
-
             {/* Players Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredPlayers.map((player) => {
-                const stats = getPlayerStats(player);
                 return (
-                  <Link
+                  <div
                     key={player.id}
-                    href={`/players/${player.id}`}
-                    className="group transform transition-all duration-200 hover:scale-105"
+                    className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm"
                   >
-                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl">
-                      {/* Player Header */}
-                      <div className="mb-4 text-center">
-                        <div className="relative mx-auto mb-3 h-20 w-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 p-1">
-                          <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                            {player.image ? (
-                              <Image
-                                src={player.image}
-                                alt={`${player.fullName} ${player.knownName}`}
-                                width={64}
-                                height={64}
-                                className="rounded-full object-cover"
-                              />
-                            ) : (
-                              <User className="h-10 w-10 text-green-600" />
-                            )}
-                          </div>
+                    {/* Player Header */}
+                    <div className="mb-4 text-center">
+                      <div className="relative mx-auto mb-3 h-20 w-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 p-1">
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
+                          {player.image ? (
+                            <Image
+                              src={player.image}
+                              alt={`${player.fullName} ${player.knownName}`}
+                              width={64}
+                              height={64}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-10 w-10 text-green-600" />
+                          )}
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 transition-colors group-hover:text-green-600">
-                          {player.fullName} {player.knownName}
-                        </h3>
-                        <span
-                          className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getPositionColor(player.position)}`}
-                        >
-                          {player.position}
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {player.fullName} {player.knownName}
+                      </h3>
+                      <span
+                        className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getPositionColor(player.position)}`}
+                      >
+                        {player.position}
+                      </span>
+                    </div>
+
+                    {/* Player Info */}
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center justify-between">
+                        <span>Nationality:</span>
+                        <span className="font-medium text-gray-900">
+                          {player.nationality || 'Unknown'}
                         </span>
                       </div>
-
-                      {/* Player Info */}
-                      <div className="mb-4 space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center justify-between">
-                          <span>Nationality:</span>
-                          <span className="font-medium text-gray-900">
-                            {player.nationality || 'Unknown'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Player Stats */}
-                      <div className="grid grid-cols-2 gap-3 rounded-lg bg-gray-50/50 p-3">
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-green-600">
-                            {stats.goals}
-                          </p>
-                          <p className="text-xs text-gray-600">Goals</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-blue-600">
-                            {stats.assists}
-                          </p>
-                          <p className="text-xs text-gray-600">Assists</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-purple-600">
-                            {stats.matches}
-                          </p>
-                          <p className="text-xs text-gray-600">Matches</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-orange-600">
-                            {stats.rating.toFixed(1)}
-                          </p>
-                          <p className="text-xs text-gray-600">Rating</p>
-                        </div>
-                      </div>
-
-                      {/* Performance Indicator */}
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-current text-yellow-500" />
-                          <span className="text-sm font-medium text-gray-700">
-                            {stats.rating.toFixed(1)}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-sm text-gray-600">
-                          <Activity className="h-4 w-4" />
-                          <span>View Profile</span>
-                        </div>
-                      </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
-
             {/* Empty State */}
             {filteredPlayers.length === 0 && !loading && (
               <div className="py-12 text-center">
                 <User className="mx-auto mb-4 h-16 w-16 text-gray-400" />
                 <h3 className="mb-2 text-lg font-medium text-gray-900">
                   No players found
-                </h3>
+                </h3>{' '}
                 <p className="text-gray-600">
-                  {searchQuery || positionFilter
-                    ? 'Try adjusting your search terms or filters.'
+                  {searchQuery
+                    ? 'Try adjusting your search terms.'
                     : 'No players available at the moment.'}
                 </p>
               </div>
@@ -355,9 +257,6 @@ function PlayersSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
       </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-      </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" active />
       </Link>
@@ -378,11 +277,7 @@ function PlayersSidebar({ isAdmin }: { isAdmin: boolean }) {
         </>
       )}
 
-      {/* Shop & Notifications */}
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
+      {/* Notifications */}
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>

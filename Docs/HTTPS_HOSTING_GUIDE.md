@@ -320,7 +320,6 @@ docker-compose -f docker-compose.prod.yml up -d
    ```
 
 2. **Configure CDN**:
-
    - CloudFlare (recommended)
    - AWS CloudFront
    - Google Cloud CDN
@@ -340,7 +339,6 @@ docker-compose -f docker-compose.prod.yml up -d
    ```
 
 2. **Access monitoring dashboards**:
-
    - Prometheus: http://yourdomain.com:9090
    - Grafana: Configure via Prometheus
 

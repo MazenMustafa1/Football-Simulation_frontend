@@ -373,6 +373,36 @@ class ApiService {
   }
 
   /**
+   * PUT method with retry logic for form data
+   */
+  public async putFormWithRetry<T>(
+    url: string,
+    data?: any,
+    config?: RequestConfig
+  ): Promise<T> {
+    // Convert data to FormData
+    const formData = new FormData();
+    if (data) {
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (value !== null && value !== undefined) {
+          // Handle file uploads and regular form fields
+          if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value);
+          } else {
+            formData.append(key, String(value));
+          }
+        }
+      });
+    }
+
+    return this.executeWithRetry(
+      () => this.uploadForm<T>(url, formData, 'put', config),
+      config
+    );
+  }
+
+  /**
    * Execute request with retry logic
    */
   private async executeWithRetry<T>(
@@ -438,6 +468,18 @@ class ApiService {
       timestamp: Date.now(),
       ttl,
     });
+  }
+
+  /**
+   * Update cache with fresh data
+   */
+  public updateCache(
+    key: string,
+    data: any,
+    ttl: number = this.DEFAULT_CACHE_TTL
+  ): void {
+    this.setCache(key, data, ttl);
+    console.log(`[API] Cache updated for key: ${key}`);
   }
 
   /**

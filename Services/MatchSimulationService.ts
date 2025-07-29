@@ -124,7 +124,7 @@ class MatchSimulationService {
   ): Promise<SimulateMatchResponse> {
     try {
       const response = await apiService.postWithRetry<SimulateMatchResponse>(
-        `/simulatematch/${userId}`,
+        `matches/simulatematch/${userId}`,
         matchData
       );
 
@@ -147,7 +147,7 @@ class MatchSimulationService {
   ): Promise<SimulationTrackResponse> {
     try {
       return await apiService.getWithCache<SimulationTrackResponse>(
-        `/match/simulation/track/${simulationId}`,
+        `/matches/simulation/track/${simulationId}`,
         {
           cacheKey: `simulation-track-${simulationId}`,
           cacheTtl: 2 * 1000, // 2 seconds cache for real-time tracking
@@ -167,7 +167,7 @@ class MatchSimulationService {
   ): Promise<SimulationResultResponse> {
     try {
       return await apiService.getWithCache<SimulationResultResponse>(
-        `/match/simulation/result/${simulationId}`,
+        `/matches/simulation/result/${simulationId}`,
         {
           cacheKey: `simulation-result-${simulationId}`,
           cacheTtl: 30 * 60 * 1000, // 30 minutes cache for completed results

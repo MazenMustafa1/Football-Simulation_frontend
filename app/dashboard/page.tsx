@@ -15,6 +15,7 @@ import {
   User,
   Search,
   Home,
+  BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -197,23 +198,19 @@ export default function Dashboard() {
                 text="Dashboard"
                 active
               />
-            </Link>
+            </Link>{' '}
             <Link href="/teams">
               <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-            </Link>
-            <Link href="/schedule">
-              <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
             </Link>
             <Link href="/players">
               <SidebarItem icon={<User size={20} />} text="Players" />
             </Link>
             <Link href="/coaches">
               <SidebarItem icon={<Users size={20} />} text="Coaches" />
-            </Link>
+            </Link>{' '}
             <Link href="/stadiums">
               <SidebarItem icon={<Home size={20} />} text="Stadiums" />
             </Link>
-
             {/* Admin Section - only show if user is admin */}
             {isAdmin && (
               <>
@@ -225,17 +222,11 @@ export default function Dashboard() {
                   />
                 </Link>
               </>
-            )}
-
-            {/* Shop & Notifications */}
-            <SidebarSection title="Shop & Updates" />
-            <Link href="/products">
-              <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-            </Link>
+            )}{' '}
+            {/* Notifications */}
             <Link href="/notifications">
               <SidebarItem icon={<Bell size={20} />} text="Notifications" />
             </Link>
-
             {/* Search & Settings */}
             <SidebarSection title="Other" />
             <Link href="/search">

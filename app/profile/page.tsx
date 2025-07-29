@@ -136,7 +136,7 @@ export default function ProfilePage() {
             ? updatedProfile.gender
             : undefined,
       };
-
+      console.log(profile.userId, 'profile.userId');
       // Only include fields that have changed
       const filteredUpdateData: UpdateUserRequest = {
         Id: profile.userId,
@@ -147,7 +147,8 @@ export default function ProfilePage() {
 
       // Only send update request if there are changes
       if (Object.keys(filteredUpdateData).length > 1) {
-        console.log(filteredUpdateData);
+        console.log('Updating profile with data:', filteredUpdateData);
+
         await authService.updateProfile(filteredUpdateData);
 
         // Refresh profile data after update
@@ -210,12 +211,9 @@ export default function ProfilePage() {
                     icon={<LayoutDashboardIcon size={20} />}
                     text="Dashboard"
                   />
-                </div>
+                </div>{' '}
                 <div onClick={() => router.push('/teams')}>
                   <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-                </div>
-                <div onClick={() => router.push('/schedule')}>
-                  <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
                 </div>
                 <div onClick={() => router.push('/products')}>
                   <SidebarItem

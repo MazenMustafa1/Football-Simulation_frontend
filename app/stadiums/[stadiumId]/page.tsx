@@ -513,12 +513,9 @@ function StadiumDetailSidebar({ isAdmin }: { isAdmin: boolean }) {
           icon={<LayoutDashboardIcon size={20} />}
           text="Dashboard"
         />
-      </Link>
+      </Link>{' '}
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-      </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
       </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
@@ -529,24 +526,17 @@ function StadiumDetailSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/stadiums">
         <SidebarItem icon={<Home size={20} />} text="Stadiums" active />
       </Link>
-
       {isAdmin && (
         <>
           <SidebarSection title="Admin" color="text-amber-600" />
           <Link href="/admin">
             <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
-          </Link>
+          </Link>{' '}
         </>
       )}
-
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>
-
       <SidebarSection title="Other" />
       <Link href="/search">
         <SidebarItem icon={<Search size={20} />} text="Search" />

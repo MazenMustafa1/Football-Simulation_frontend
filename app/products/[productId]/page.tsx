@@ -627,12 +627,9 @@ function ProductDetailSidebar({ isAdmin }: { isAdmin: boolean }) {
           icon={<LayoutDashboardIcon size={20} />}
           text="Dashboard"
         />
-      </Link>
+      </Link>{' '}
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
-      </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
       </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
@@ -643,7 +640,6 @@ function ProductDetailSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/stadiums">
         <SidebarItem icon={<Home size={20} />} text="Stadiums" />
       </Link>
-
       {isAdmin && (
         <>
           <SidebarSection title="Admin" color="text-amber-600" />
@@ -652,15 +648,9 @@ function ProductDetailSidebar({ isAdmin }: { isAdmin: boolean }) {
           </Link>
         </>
       )}
-
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" active alert />
-      </Link>
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>
-
       <SidebarSection title="Other" />
       <Link href="/search">
         <SidebarItem icon={<Search size={20} />} text="Search" />

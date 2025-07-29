@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -62,7 +62,8 @@ interface SearchState {
   analytics: SearchAnalyticsType | null;
 }
 
-export default function SearchPage() {
+// SearchContent component that uses useSearchParams
+function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -781,12 +782,9 @@ function SearchSidebar({ isAdmin }: { isAdmin: boolean }) {
           icon={<LayoutDashboardIcon size={20} />}
           text="Dashboard"
         />
-      </Link>
+      </Link>{' '}
       <Link href="/teams">
         <SidebarItem icon={<Trophy size={20} />} text="Teams" />
-      </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
       </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
@@ -797,24 +795,17 @@ function SearchSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/stadiums">
         <SidebarItem icon={<Home size={20} />} text="Stadiums" />
       </Link>
-
       {isAdmin && (
         <>
-          <SidebarSection title="Admin" color="text-amber-600" />
+          <SidebarSection title="Admin" color="text-amber-600" />{' '}
           <Link href="/admin">
             <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
           </Link>
         </>
       )}
-
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>
-
       <SidebarSection title="Other" />
       <Link href="/search">
         <SidebarItem icon={<SearchIcon size={20} />} text="Search" active />
@@ -832,7 +823,6 @@ function BackgroundElements() {
     <div className="fixed inset-0 z-0">
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"></div>
-
       {/* Stadium Background Image */}
       <div className="absolute inset-0 opacity-[0.02]">
         <Image
@@ -843,7 +833,6 @@ function BackgroundElements() {
           priority={false}
         />
       </div>
-
       {/* Animated Floating Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -898,8 +887,7 @@ function BackgroundElements() {
           className="absolute right-20 bottom-20 h-2 w-2 rounded-full bg-blue-300/20"
         />
       </div>
-
-      {/* Subtle Mesh Pattern */}
+      {/* Subtle Mesh Pattern */}{' '}
       <div className="absolute inset-0 opacity-[0.01]">
         <div
           className="h-full w-full"
@@ -909,5 +897,26 @@ function BackgroundElements() {
         />
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function SearchLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-32 w-32 animate-spin rounded-full border-b-2 border-white"></div>
+        <p className="text-xl">Loading search...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main SearchPage component with Suspense boundary
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<SearchLoading />}>
+      <SearchContent />
+    </Suspense>
   );
 }

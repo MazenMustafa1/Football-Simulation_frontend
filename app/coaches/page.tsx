@@ -11,7 +11,6 @@ import {
   Calendar,
   MapPin,
   Star,
-  TrendingUp,
   Settings,
   ClubIcon,
   Bell,
@@ -210,7 +209,6 @@ export default function CoachesPage() {
                 </div>
               </div>
             </div>
-
             {/* Search and Filters */}
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative max-w-md flex-1">
@@ -236,26 +234,23 @@ export default function CoachesPage() {
                       {nationality}
                     </option>
                   ))}
-                </select>
-
-                <button className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white/80 px-4 py-3 text-gray-700 backdrop-blur-sm transition-colors hover:bg-gray-50">
+                </select>{' '}
+                <div className="flex items-center space-x-2 px-4 py-3 text-gray-700">
                   <Filter className="h-4 w-4" />
                   <span>Filters</span>
-                </button>
+                </div>
               </div>
-            </div>
-
+            </div>{' '}
             {/* Coaches Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredCoaches.map((coach) => {
                 const stats = getCoachStats(coach);
                 return (
-                  <Link
+                  <div
                     key={coach.id}
-                    href={`/coaches/${coach.id}`}
-                    className="group transform transition-all duration-200 hover:scale-105"
+                    className="transform transition-all duration-200"
                   >
-                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl">
+                    <div className="rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-sm">
                       {/* Coach Header */}
                       <div className="mb-4 flex items-center space-x-4">
                         <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 p-0.5">
@@ -274,7 +269,7 @@ export default function CoachesPage() {
                           </div>
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 transition-colors group-hover:text-green-600">
+                          <h3 className="font-bold text-gray-900">
                             {coach.firstName} {coach.lastName}
                           </h3>
                           {coach.role && (
@@ -341,10 +336,6 @@ export default function CoachesPage() {
                             {stats.achievements} Achievements
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1 text-sm text-gray-600">
-                          <TrendingUp className="h-4 w-4" />
-                          <span>View Profile</span>
-                        </div>
                       </div>
 
                       {/* Biography Preview */}
@@ -356,11 +347,10 @@ export default function CoachesPage() {
                         </div>
                       )}
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
-
             {/* Empty State */}
             {filteredCoaches.length === 0 && !loading && (
               <div className="py-12 text-center">
@@ -395,9 +385,6 @@ function CoachesSidebar({ isAdmin }: { isAdmin: boolean }) {
       <Link href="/teams">
         <SidebarItem icon={<ClubIcon size={20} />} text="Teams" />
       </Link>
-      <Link href="/schedule">
-        <SidebarItem icon={<Calendar size={20} />} text="Schedule" />
-      </Link>
       <Link href="/players">
         <SidebarItem icon={<User size={20} />} text="Players" />
       </Link>
@@ -414,15 +401,11 @@ function CoachesSidebar({ isAdmin }: { isAdmin: boolean }) {
           <SidebarSection title="Admin" color="text-amber-600" />
           <Link href="/admin">
             <SidebarItem icon={<Settings size={20} />} text="Admin Dashboard" />
-          </Link>
+          </Link>{' '}
         </>
       )}
 
-      {/* Shop & Notifications */}
-      <SidebarSection title="Shop & Updates" />
-      <Link href="/products">
-        <SidebarItem icon={<Package size={20} />} text="Shop" alert />
-      </Link>
+      {/* Notifications */}
       <Link href="/notifications">
         <SidebarItem icon={<Bell size={20} />} text="Notifications" />
       </Link>
